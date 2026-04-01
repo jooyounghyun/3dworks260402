@@ -1,91 +1,123 @@
 body {
-  background-color: orange;
-  font-family: 'Arial', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #0f172a;
+  color: white;
 }
 
 .container {
-  text-align: center;
-}
-
-h1 {
-  color: white;
-  margin-bottom: 20px;
-}
-
-.primary-btn {
-  padding: 15px 30px;
-  font-size: 1.2rem;
-  background-color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
-}
-
-.primary-btn:hover {
-  transform: scale(1.05);
-}
-
-.folder {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  z-index: 100;
+  max-width: 1100px;
+  margin: auto;
   padding: 20px;
 }
 
-.folder.hidden {
-  display: none;
-}
-
-.folder-header {
+/* ✅ 헤더 수정 */
+header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
+  padding: 20px 0;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+/* ✅ 오른쪽 메뉴 */
+.auth {
+  display: flex;
+  gap: 15px;
+}
+
+.auth a {
+  text-decoration: none;
+  color: white;
+  font-size: 14px;
+}
+
+.auth .signup {
+  padding: 8px 14px;
+  background-color: #38bdf8;
+  color: black;
+  border-radius: 8px;
   font-weight: bold;
 }
 
-#closeFolderBtn {
-  background: none;
+.hero {
+  text-align: center;
+  padding: 120px 20px 100px;
+}
+
+.hero h1 {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 25px;
+}
+
+.hero p {
+  font-size: 20px;
+  color: #cbd5f5;
+  margin-bottom: 50px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 16px 28px;
+  border-radius: 12px;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
+  font-size: 16px;
 }
 
-.service-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.btn-primary {
+  background-color: #38bdf8;
+  color: black;
+  font-weight: bold;
 }
 
-.service-list li {
-  padding: 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
+.btn-secondary {
+  background-color: #1e293b;
+  color: white;
+  border: 1px solid #38bdf8;
 }
 
-.service-list li:hover {
-  background-color: #fff3e0;
+.section {
+  padding: 70px 20px;
+  text-align: center;
 }
 
-.service-list a {
-  text-decoration: none;
-  color: #333;
-  display: block;
-  font-weight: 500;
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.card {
+  background-color: #1e293b;
+  padding: 25px;
+  border-radius: 14px;
+  font-size: 16px;
+}
+
+footer {
+  text-align: center;
+  padding: 30px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 34px;
+  }
 }
