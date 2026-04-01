@@ -7,9 +7,25 @@
   <link href='style.css' rel='stylesheet'>
 </head>
 <body>
-  <input type="text" id="myInput">
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
+  <div class="container">
+    <h1>3D Works</h1>
+    <button id="hireTeamBtn" class="primary-btn">팀으로 맡기기</button>
+    
+    <div id="serviceFolder" class="folder hidden">
+      <div class="folder-header">
+        <span>주요 서비스</span>
+        <button id="closeFolderBtn">&times;</button>
+      </div>
+      <ul class="service-list">
+        <li><a href="#">3D 모델링</a></li>
+        <li><a href="#">제품 렌더링</a></li>
+        <li><a href="#">3D 애니메이션</a></li>
+        <li><a href="#">건축 시각화</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <input type="text" id="myInput" style="display:none;">
   <script defer type="text/javascript" src="main.js"></script>
 </body>
 </html>

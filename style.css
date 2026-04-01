@@ -1,3 +1,91 @@
 body {
   background-color: orange;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  text-align: center;
+}
+
+h1 {
+  color: white;
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  background-color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.primary-btn:hover {
+  transform: scale(1.05);
+}
+
+.folder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  z-index: 100;
+  padding: 20px;
+}
+
+.folder.hidden {
+  display: none;
+}
+
+.folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+#closeFolderBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.service-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.service-list li {
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.service-list li:hover {
+  background-color: #fff3e0;
+}
+
+.service-list a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+  font-weight: 500;
 }
