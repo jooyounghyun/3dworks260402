@@ -1,22 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const hireTeamBtn = document.getElementById('hireTeamBtn');
-  const serviceFolder = document.getElementById('serviceFolder');
-  const closeFolderBtn = document.getElementById('closeFolderBtn');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginModal = document.getElementById('loginModal');
+  const closeLoginBtn = document.getElementById('closeLoginBtn');
 
-  // 팀으로 맡기기 버튼 클릭 시 폴더 열기
-  hireTeamBtn.addEventListener('click', () => {
-    serviceFolder.classList.remove('hidden');
-  });
+  // 로그인 클릭 시 모달 열기
+  if (loginBtn && loginModal) {
+    loginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginModal.classList.remove('hidden');
+    });
+  }
 
-  // 닫기 버튼 클릭 시 폴더 닫기
-  closeFolderBtn.addEventListener('click', () => {
-    serviceFolder.classList.add('hidden');
-  });
+  // 닫기 버튼 클릭 시 모달 닫기
+  if (closeLoginBtn && loginModal) {
+    closeLoginBtn.addEventListener('click', () => {
+      loginModal.classList.add('hidden');
+    });
+  }
 
-  // 폴더 외부 클릭 시 닫기
-  window.addEventListener('click', (event) => {
-    if (event.target === serviceFolder) {
-      serviceFolder.classList.add('hidden');
+  // 모달 바깥쪽 클릭 시 닫기
+  window.addEventListener('click', (e) => {
+    if (e.target === loginModal) {
+      loginModal.classList.add('hidden');
     }
   });
 });

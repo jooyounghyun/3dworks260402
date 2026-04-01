@@ -13,10 +13,31 @@
   <header>
     <div class="logo">3D해결사</div>
     <div class="auth">
-      <a href="#">로그인</a>
+      <a href="#" id="loginBtn">로그인</a>
       <a href="#" class="signup">회원가입</a>
     </div>
   </header>
+
+  <!-- ✅ 로그인 모달 -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>로그인</h2>
+        <button id="closeLoginBtn">&times;</button>
+      </div>
+      <form class="login-form">
+        <div class="input-group">
+          <label for="email">이메일</label>
+          <input type="email" id="email" placeholder="email@example.com" required>
+        </div>
+        <div class="input-group">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+        </div>
+        <button type="submit" class="btn btn-primary login-submit">로그인하기</button>
+      </form>
+    </div>
+  </div>
 
   <!-- 메인 -->
   <section class="hero">
