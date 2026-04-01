@@ -104,10 +104,30 @@
     </p>
 
     <div class="buttons">
-      <button class="btn btn-primary">팀으로 맡기기</button>
+      <button id="hireTeamBtn" class="btn btn-primary">팀으로 맡기기</button>
       <button class="btn btn-secondary">인력 지원 요청</button>
     </div>
   </section>
+
+  <!-- ✅ 주요 서비스 선택 모달 -->
+  <div id="serviceModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>주요 서비스 선택</h2>
+        <button id="closeServiceBtn" class="close-btn">&times;</button>
+      </div>
+      <p class="step-title">원하시는 서비스를 선택해주세요</p>
+      <div class="service-selection">
+        <button class="service-item-btn">상가 철거</button>
+        <button class="service-item-btn">폐기물 처리</button>
+        <button class="service-item-btn">상가 원상복구</button>
+        <button class="service-item-btn">하수구 배관</button>
+        <button class="service-item-btn">전기 공사</button>
+        <button class="service-item-btn">기타</button>
+      </div>
+      <button id="confirmServiceBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">선택 완료</button>
+    </div>
+  </div>
 
   <!-- 서비스 -->
   <section class="section">

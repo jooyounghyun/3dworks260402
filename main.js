@@ -1,118 +1,111 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // --- 로그인 모달 제어 ---
+  console.log("3D Resolver JS Loaded!");
+
+  // 모달 요소들
   const loginBtn = document.getElementById('loginBtn');
   const loginModal = document.getElementById('loginModal');
-  const closeLoginBtn = document.getElementById('closeLoginBtn');
-
-  if (loginBtn && loginModal) {
-    loginBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      loginModal.classList.remove('hidden');
-    });
-  }
-
-  if (closeLoginBtn && loginModal) {
-    closeLoginBtn.addEventListener('click', () => {
-      loginModal.classList.add('hidden');
-    });
-  }
-
-  // --- 회원가입 모달 및 단계 제어 ---
   const signupBtn = document.getElementById('signupBtn');
   const signupModal = document.getElementById('signupModal');
-  const closeSignupBtn = document.getElementById('closeSignupBtn');
-  
-  const step1 = document.getElementById('signupStep1');
-  const step2 = document.getElementById('signupStep2');
-  const step3 = document.getElementById('signupStep3');
+  const hireTeamBtn = document.getElementById('hireTeamBtn');
+  const serviceModal = document.getElementById('serviceModal');
 
-  // 회원가입 열기
-  if (signupBtn && signupModal) {
-    signupBtn.addEventListener('click', (e) => {
+  // --- 모달 열기 함수 ---
+  if (loginBtn) {
+    loginBtn.onclick = (e) => {
+      e.preventDefault();
+      loginModal.classList.remove('hidden');
+    };
+  }
+
+  if (signupBtn) {
+    signupBtn.onclick = (e) => {
       e.preventDefault();
       signupModal.classList.remove('hidden');
-      resetSignup(); // 열 때마다 초기화
-    });
+      // 회원가입 단계 초기화
+      document.getElementById('signupStep1').classList.remove('hidden');
+      document.getElementById('signupStep2').classList.add('hidden');
+      document.getElementById('signupStep3').classList.add('hidden');
+    };
   }
 
-  // 회원가입 닫기
-  if (closeSignupBtn && signupModal) {
-    closeSignupBtn.addEventListener('click', () => {
+  if (hireTeamBtn) {
+    hireTeamBtn.onclick = () => {
+      console.log("Hire Team button clicked!");
+      serviceModal.classList.remove('hidden');
+    };
+  }
+
+  // --- 닫기 버튼 공통 제어 ---
+  document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.onclick = () => {
+      loginModal.classList.add('hidden');
       signupModal.classList.add('hidden');
-    });
-  }
+      serviceModal.classList.add('hidden');
+    };
+  });
 
-  // 바깥쪽 클릭 시 닫기
-  window.addEventListener('click', (e) => {
+  // 바깥쪽 클릭 시 모든 모달 닫기
+  window.onclick = (e) => {
     if (e.target === loginModal) loginModal.classList.add('hidden');
     if (e.target === signupModal) signupModal.classList.add('hidden');
+    if (e.target === serviceModal) serviceModal.classList.add('hidden');
+  };
+
+  // --- 회원가입 상세 기능 ---
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.getElementById('signupStep1').classList.add('hidden');
+      document.getElementById('signupStep2').classList.remove('hidden');
+    };
   });
 
-  // 회원가입 초기화 함수
-  function resetSignup() {
-    step1.classList.remove('hidden');
-    step2.classList.add('hidden');
-    step3.classList.add('hidden');
-    document.getElementById('verifyCodeGroup').classList.add('hidden');
-    document.getElementById('phoneNum').value = '';
-    document.getElementById('verifyCode').value = '';
-  }
-
-  // 1단계: 유형 선택 시 2단계로 이동
-  const typeBtns = document.querySelectorAll('.type-btn');
-  typeBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      step1.classList.add('hidden');
-      step2.classList.remove('hidden');
-    });
-  });
-
-  // 2단계: 인증번호 전송
   const sendVerifyBtn = document.getElementById('sendVerifyBtn');
-  const verifyCodeGroup = document.getElementById('verifyCodeGroup');
   if (sendVerifyBtn) {
-    sendVerifyBtn.addEventListener('click', () => {
-      const phone = document.getElementById('phoneNum').value;
-      if (phone.length > 9) {
-        alert('인증번호가 전송되었습니다. (시뮬레이션)');
-        verifyCodeGroup.classList.remove('hidden');
-      } else {
-        alert('올바른 휴대폰 번호를 입력해주세요.');
-      }
-    });
+    sendVerifyBtn.onclick = () => {
+      alert('인증번호가 전송되었습니다.');
+      document.getElementById('verifyCodeGroup').classList.remove('hidden');
+    };
   }
 
-  // 2단계: 인증 확인 시 3단계로 이동
   const checkVerifyBtn = document.getElementById('checkVerifyBtn');
   if (checkVerifyBtn) {
-    checkVerifyBtn.addEventListener('click', () => {
-      const code = document.getElementById('verifyCode').value;
-      if (code === '123456' || code.length === 6) { // 6자리 입력 시 통과 시뮬레이션
-        alert('인증되었습니다.');
-        step2.classList.add('hidden');
-        step3.classList.remove('hidden');
-      } else {
-        alert('인증번호 6자리를 입력해주세요.');
-      }
-    });
+    checkVerifyBtn.onclick = () => {
+      alert('인증되었습니다.');
+      document.getElementById('signupStep2').classList.add('hidden');
+      document.getElementById('signupStep3').classList.remove('hidden');
+    };
   }
 
-  // 3단계: 가입 완료 처리
   const signupForm = document.getElementById('signupForm');
   if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
+    signupForm.onsubmit = (e) => {
       e.preventDefault();
-      const email = document.getElementById('signupEmail').value;
-      const pw = document.getElementById('signupPw').value;
-      const pwConfirm = document.getElementById('signupPwConfirm').value;
-
-      if (pw !== pwConfirm) {
-        alert('비밀번호가 일치하지 않습니다.');
-        return;
-      }
-
-      alert(`${email}님, 회원가입이 완료되었습니다!`);
+      alert('회원가입이 완료되었습니다!');
       signupModal.classList.add('hidden');
-    });
+    };
+  }
+
+  // --- 서비스 선택 상세 기능 ---
+  const serviceItemBtns = document.querySelectorAll('.service-item-btn');
+  serviceItemBtns.forEach(btn => {
+    btn.onclick = () => {
+      // 여러 개 선택 가능하도록 토글 형식
+      btn.classList.toggle('selected');
+    };
+  });
+
+  const confirmServiceBtn = document.getElementById('confirmServiceBtn');
+  if (confirmServiceBtn) {
+    confirmServiceBtn.onclick = () => {
+      const selectedServices = Array.from(document.querySelectorAll('.service-item-btn.selected'))
+                                    .map(btn => btn.innerText);
+      
+      if (selectedServices.length > 0) {
+        alert(`선택된 서비스: ${selectedServices.join(', ')}\n전문가 팀 매칭을 시작합니다!`);
+        serviceModal.classList.add('hidden');
+      } else {
+        alert('최소 하나 이상의 서비스를 선택해주세요.');
+      }
+    };
   }
 });

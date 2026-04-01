@@ -181,6 +181,34 @@ header {
   margin-top: 10px;
 }
 
+.service-selection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.service-item-btn {
+  padding: 15px;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.service-item-btn:hover {
+  border-color: #38bdf8;
+  background-color: #1e293b;
+}
+
+.service-item-btn.selected {
+  background-color: #38bdf8;
+  color: black;
+  font-weight: bold;
+}
+
 .hero {
   text-align: center;
   padding: 120px 20px 100px;
