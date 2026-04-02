@@ -54,13 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === wasteModal) wasteModal.classList.add('hidden');
   };
 
-  // --- 회원가입 상세 기능 ---
+  // --- 버튼 클릭 핸들러 (회원가입 유형, 폐기물 종류, 환경 선택 등) ---
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.onclick = () => {
-      // 일반 회원가입 버튼들과 폐기물 종류 버튼 구분
       if (btn.classList.contains('waste-type-btn')) {
+        // 폐기물 종류: 중복 선택 가능
         btn.classList.toggle('selected');
-      } else {
+      } else if (btn.classList.contains('elevator-btn')) {
+        // 엘리베이터: 단일 선택
+        document.querySelectorAll('.elevator-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      } else if (btn.classList.contains('parking-btn')) {
+        // 주차: 단일 선택
+        document.querySelectorAll('.parking-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      } else if (btn.parentElement.classList.contains('type-selection')) {
+        // 회원가입 단계 1
         document.getElementById('signupStep1').classList.add('hidden');
         document.getElementById('signupStep2').classList.remove('hidden');
       }
@@ -124,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 사진 업로드 공통 로직 ---
-  function setupPhotoUpload(dropzoneId, inputId, previewId, minPhotos = 1) {
+  function setupPhotoUpload(dropzoneId, inputId, previewId, minPhotos = 3) {
     const dropzone = document.getElementById(dropzoneId);
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewId);
@@ -188,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const demoPhotos = setupPhotoUpload('photoDropzone', 'photoInput', 'photoPreview', 3);
-  const wastePhotos = setupPhotoUpload('wastePhotoDropzone', 'wastePhotoInput', 'wastePhotoPreview', 1);
+  const wastePhotos = setupPhotoUpload('wastePhotoDropzone', 'wastePhotoInput', 'wastePhotoPreview', 3);
 
   // --- 상가 철거 제출 ---
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
@@ -214,16 +223,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const location = document.getElementById('wasteLocation').value;
       const volume = document.getElementById('wasteVolume').value;
       const selectedTypes = Array.from(document.querySelectorAll('.waste-type-btn.selected')).map(b => b.innerText);
-      const hasElevator = document.getElementById('hasElevator').checked;
-      const parking = document.getElementById('parkingAvailable').checked;
+      const elevator = document.querySelector('.elevator-btn.selected');
+      const parking = document.querySelector('.parking-btn.selected');
       const files = wastePhotos.getFiles();
 
       if (!location) return alert('현장 위치를 입력해주세요.');
       if (selectedTypes.length === 0) return alert('폐기물 종류를 최소 하나 선택해주세요.');
       if (!volume) return alert('예상 분량을 선택해주세요.');
-      if (files.length < 1) return alert('현장 사진을 최소 1장 이상 업로드해주세요.');
+      if (!elevator) return alert('엘리베이터 유무를 선택해주세요.');
+      if (!parking) return alert('주차 가능 여부를 선택해주세요.');
+      if (files.length < 3) return alert('현장 사진을 최소 3장 이상 업로드해주세요.');
 
-      alert(`폐기물 처리 요청 완료!\n위치: ${location}\n종류: ${selectedTypes.join(', ')}\n분량: ${volume}\n엘리베이터: ${hasElevator ? '있음' : '없음'}\n주차: ${parking ? '가능' : '불가능'}\n곧 전문가가 연락드립니다.`);
+      alert(`폐기물 처리 요청 완료!\n위치: ${location}\n종류: ${selectedTypes.join(', ')}\n분량: ${volume}\n엘리베이터: ${elevator.innerText}\n주차: ${parking.innerText}\n곧 전문가가 연락드립니다.`);
       wasteModal.classList.add('hidden');
     };
   }
