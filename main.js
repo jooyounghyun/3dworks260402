@@ -197,7 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
   if (submitDemolitionBtn) {
     submitDemolitionBtn.onclick = () => {
+      const location = document.getElementById('demoLocation').value;
       const area = document.getElementById('demoArea').value;
+      
+      if (!location) {
+        alert('현장 위치를 입력해주세요.');
+        return;
+      }
       if (!area) {
         alert('평수를 입력해주세요.');
         return;
@@ -207,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      alert(`상가 철거 정보가 저장되었습니다.\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 철거 정보가 저장되었습니다.\n위치: ${location}\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
       demolitionModal.classList.add('hidden');
     };
   }
