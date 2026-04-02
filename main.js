@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      alert(`상가 철거 정보가 저장되었습니다.\n위치: ${location}\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 철거 요청이 전문가에게 전달되었습니다.\n위치: ${location}\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
       demolitionModal.classList.add('hidden');
     };
   }
