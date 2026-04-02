@@ -89,8 +89,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const serviceItemBtns = document.querySelectorAll('.service-item-btn');
   serviceItemBtns.forEach(btn => {
     btn.onclick = () => {
-      // 여러 개 선택 가능하도록 토글 형식
-      btn.classList.toggle('selected');
+      // 하나씩만 선택 가능하도록 기존 선택 해제 후 현재 버튼 토글
+      const isAlreadySelected = btn.classList.contains('selected');
+      
+      // 모든 버튼에서 selected 클래스 제거
+      serviceItemBtns.forEach(b => b.classList.remove('selected'));
+      
+      // 이미 선택된 상태였다면 해제된 상태로 두고, 아니었다면 선택
+      if (!isAlreadySelected) {
+        btn.classList.add('selected');
+      }
     };
   });
 
