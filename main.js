@@ -103,17 +103,112 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const confirmServiceBtn = document.getElementById('confirmServiceBtn');
+  const demolitionModal = document.getElementById('demolitionModal');
+  const closeDemolitionBtn = document.getElementById('closeDemolitionBtn');
+
   if (confirmServiceBtn) {
     confirmServiceBtn.onclick = () => {
-      const selectedServices = Array.from(document.querySelectorAll('.service-item-btn.selected'))
-                                    .map(btn => btn.innerText);
+      const selectedBtn = document.querySelector('.service-item-btn.selected');
       
-      if (selectedServices.length > 0) {
-        alert(`선택된 서비스: ${selectedServices.join(', ')}\n전문가 팀 매칭을 시작합니다!`);
+      if (selectedBtn) {
+        const selectedService = selectedBtn.innerText;
         serviceModal.classList.add('hidden');
+
+        if (selectedService === '상가 철거') {
+          demolitionModal.classList.remove('hidden');
+        } else {
+          alert(`선택된 서비스: ${selectedService}\n전문가 팀 매칭을 시작합니다!`);
+        }
       } else {
         alert('최소 하나 이상의 서비스를 선택해주세요.');
       }
+    };
+  }
+
+  if (closeDemolitionBtn) {
+    closeDemolitionBtn.onclick = () => {
+      demolitionModal.classList.add('hidden');
+    };
+  }
+
+  // --- 상가 철거 사진 업로드 기능 ---
+  const photoDropzone = document.getElementById('photoDropzone');
+  const photoInput = document.getElementById('photoInput');
+  const photoPreview = document.getElementById('photoPreview');
+  let selectedFiles = [];
+
+  if (photoDropzone) {
+    photoDropzone.onclick = () => photoInput.click();
+    
+    photoInput.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    };
+
+    // 드래그 앤 드롭 방지 및 처리
+    photoDropzone.ondragover = (e) => {
+      e.preventDefault();
+      photoDropzone.style.borderColor = '#38bdf8';
+    };
+    photoDropzone.ondragleave = () => {
+      photoDropzone.style.borderColor = '#334155';
+    };
+    photoDropzone.ondrop = (e) => {
+      e.preventDefault();
+      photoDropzone.style.borderColor = '#334155';
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+    };
+  }
+
+  function handleFiles(files) {
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (selectedFiles.length + imageFiles.length > 10) {
+      alert('최대 10장까지만 업로드 가능합니다.');
+      return;
+    }
+
+    selectedFiles = [...selectedFiles, ...imageFiles];
+    updatePreview();
+  }
+
+  function updatePreview() {
+    photoPreview.innerHTML = '';
+    selectedFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.style.position = 'relative';
+        div.innerHTML = `
+          <img src="${e.target.result}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
+          <button style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;">&times;</button>
+        `;
+        div.querySelector('button').onclick = () => {
+          selectedFiles.splice(index, 1);
+          updatePreview();
+        };
+        photoPreview.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
+  if (submitDemolitionBtn) {
+    submitDemolitionBtn.onclick = () => {
+      const area = document.getElementById('demoArea').value;
+      if (!area) {
+        alert('평수를 입력해주세요.');
+        return;
+      }
+      if (selectedFiles.length < 3) {
+        alert('사진을 최소 3장 이상 업로드해주세요.');
+        return;
+      }
+      
+      alert(`상가 철거 정보가 저장되었습니다.\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
+      demolitionModal.classList.add('hidden');
     };
   }
 });

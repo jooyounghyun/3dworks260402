@@ -129,6 +129,29 @@
     </div>
   </div>
 
+  <!-- ✅ 상가 철거 상세 정보 입력 모달 -->
+  <div id="demolitionModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>상가 철거 상세 정보</h2>
+        <button id="closeDemolitionBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="input-group">
+        <label for="demoArea">평수 입력 (평)</label>
+        <input type="number" id="demoArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white;">
+      </div>
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="photoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+          <span style="color: #94a3b8; font-size: 14px;">여기를 클릭하거나 사진을 드래그하여 업로드하세요</span>
+          <input type="file" id="photoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="photoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitDemolitionBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">정보 저장하기</button>
+    </div>
+  </div>
+
   <!-- 서비스 -->
   <section class="section">
     <h2>주요 서비스</h2>
