@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupModal = document.getElementById('signupModal');
   const hireTeamBtn = document.getElementById('hireTeamBtn');
   const serviceModal = document.getElementById('serviceModal');
+  const demolitionModal = document.getElementById('demolitionModal');
+  const wasteModal = document.getElementById('wasteModal');
 
   // --- 모달 열기 함수 ---
   if (loginBtn) {
@@ -21,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     signupBtn.onclick = (e) => {
       e.preventDefault();
       signupModal.classList.remove('hidden');
-      // 회원가입 단계 초기화
       document.getElementById('signupStep1').classList.remove('hidden');
       document.getElementById('signupStep2').classList.add('hidden');
       document.getElementById('signupStep3').classList.add('hidden');
@@ -30,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (hireTeamBtn) {
     hireTeamBtn.onclick = () => {
-      console.log("Hire Team button clicked!");
       serviceModal.classList.remove('hidden');
     };
   }
@@ -41,21 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
       loginModal.classList.add('hidden');
       signupModal.classList.add('hidden');
       serviceModal.classList.add('hidden');
+      demolitionModal.classList.add('hidden');
+      if (wasteModal) wasteModal.classList.add('hidden');
     };
   });
 
-  // 바깥쪽 클릭 시 모든 모달 닫기
   window.onclick = (e) => {
     if (e.target === loginModal) loginModal.classList.add('hidden');
     if (e.target === signupModal) signupModal.classList.add('hidden');
     if (e.target === serviceModal) serviceModal.classList.add('hidden');
+    if (e.target === demolitionModal) demolitionModal.classList.add('hidden');
+    if (e.target === wasteModal) wasteModal.classList.add('hidden');
   };
 
   // --- 회원가입 상세 기능 ---
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.onclick = () => {
-      document.getElementById('signupStep1').classList.add('hidden');
-      document.getElementById('signupStep2').classList.remove('hidden');
+      // 일반 회원가입 버튼들과 폐기물 종류 버튼 구분
+      if (btn.classList.contains('waste-type-btn')) {
+        btn.classList.toggle('selected');
+      } else {
+        document.getElementById('signupStep1').classList.add('hidden');
+        document.getElementById('signupStep2').classList.remove('hidden');
+      }
     };
   });
 
@@ -89,33 +97,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const serviceItemBtns = document.querySelectorAll('.service-item-btn');
   serviceItemBtns.forEach(btn => {
     btn.onclick = () => {
-      // 하나씩만 선택 가능하도록 기존 선택 해제 후 현재 버튼 토글
-      const isAlreadySelected = btn.classList.contains('selected');
-      
-      // 모든 버튼에서 selected 클래스 제거
       serviceItemBtns.forEach(b => b.classList.remove('selected'));
-      
-      // 이미 선택된 상태였다면 해제된 상태로 두고, 아니었다면 선택
-      if (!isAlreadySelected) {
-        btn.classList.add('selected');
-      }
+      btn.classList.add('selected');
     };
   });
 
   const confirmServiceBtn = document.getElementById('confirmServiceBtn');
-  const demolitionModal = document.getElementById('demolitionModal');
-  const closeDemolitionBtn = document.getElementById('closeDemolitionBtn');
-
   if (confirmServiceBtn) {
     confirmServiceBtn.onclick = () => {
       const selectedBtn = document.querySelector('.service-item-btn.selected');
-      
       if (selectedBtn) {
         const selectedService = selectedBtn.innerText;
         serviceModal.classList.add('hidden');
 
         if (selectedService === '상가 철거') {
           demolitionModal.classList.remove('hidden');
+        } else if (selectedService === '폐기물 처리') {
+          wasteModal.classList.remove('hidden');
         } else {
           alert(`선택된 서비스: ${selectedService}\n전문가 팀 매칭을 시작합니다!`);
         }
@@ -125,96 +123,108 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  if (closeDemolitionBtn) {
-    closeDemolitionBtn.onclick = () => {
-      demolitionModal.classList.add('hidden');
-    };
-  }
+  // --- 사진 업로드 공통 로직 ---
+  function setupPhotoUpload(dropzoneId, inputId, previewId, minPhotos = 1) {
+    const dropzone = document.getElementById(dropzoneId);
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    let filesArr = [];
 
-  // --- 상가 철거 사진 업로드 기능 ---
-  const photoDropzone = document.getElementById('photoDropzone');
-  const photoInput = document.getElementById('photoInput');
-  const photoPreview = document.getElementById('photoPreview');
-  let selectedFiles = [];
+    if (!dropzone) return { getFiles: () => [] };
 
-  if (photoDropzone) {
-    photoDropzone.onclick = () => photoInput.click();
-    
-    photoInput.onchange = (e) => {
+    dropzone.onclick = () => input.click();
+    input.onchange = (e) => {
       const files = Array.from(e.target.files);
       handleFiles(files);
     };
 
-    // 드래그 앤 드롭 방지 및 처리
-    photoDropzone.ondragover = (e) => {
+    dropzone.ondragover = (e) => {
       e.preventDefault();
-      photoDropzone.style.borderColor = '#38bdf8';
+      dropzone.style.borderColor = '#38bdf8';
     };
-    photoDropzone.ondragleave = () => {
-      photoDropzone.style.borderColor = '#334155';
+    dropzone.ondragleave = () => {
+      dropzone.style.borderColor = '#334155';
     };
-    photoDropzone.ondrop = (e) => {
+    dropzone.ondrop = (e) => {
       e.preventDefault();
-      photoDropzone.style.borderColor = '#334155';
+      dropzone.style.borderColor = '#334155';
       const files = Array.from(e.dataTransfer.files);
       handleFiles(files);
     };
-  }
 
-  function handleFiles(files) {
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
-    if (selectedFiles.length + imageFiles.length > 10) {
-      alert('최대 10장까지만 업로드 가능합니다.');
-      return;
+    function handleFiles(files) {
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      if (filesArr.length + imageFiles.length > 10) {
+        alert('최대 10장까지만 업로드 가능합니다.');
+        return;
+      }
+      filesArr = [...filesArr, ...imageFiles];
+      updatePreview();
     }
 
-    selectedFiles = [...selectedFiles, ...imageFiles];
-    updatePreview();
-  }
-
-  function updatePreview() {
-    photoPreview.innerHTML = '';
-    selectedFiles.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const div = document.createElement('div');
-        div.style.position = 'relative';
-        div.innerHTML = `
-          <img src="${e.target.result}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
-          <button style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;">&times;</button>
-        `;
-        div.querySelector('button').onclick = () => {
-          selectedFiles.splice(index, 1);
-          updatePreview();
+    function updatePreview() {
+      preview.innerHTML = '';
+      filesArr.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement('div');
+          div.style.position = 'relative';
+          div.innerHTML = `
+            <img src="${e.target.result}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px;">
+            <button style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px;">&times;</button>
+          `;
+          div.querySelector('button').onclick = (ev) => {
+            ev.stopPropagation();
+            filesArr.splice(index, 1);
+            updatePreview();
+          };
+          preview.appendChild(div);
         };
-        photoPreview.appendChild(div);
-      };
-      reader.readAsDataURL(file);
-    });
+        reader.readAsDataURL(file);
+      });
+    }
+
+    return { getFiles: () => filesArr };
   }
 
+  const demoPhotos = setupPhotoUpload('photoDropzone', 'photoInput', 'photoPreview', 3);
+  const wastePhotos = setupPhotoUpload('wastePhotoDropzone', 'wastePhotoInput', 'wastePhotoPreview', 1);
+
+  // --- 상가 철거 제출 ---
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
   if (submitDemolitionBtn) {
     submitDemolitionBtn.onclick = () => {
       const location = document.getElementById('demoLocation').value;
       const area = document.getElementById('demoArea').value;
+      const files = demoPhotos.getFiles();
+
+      if (!location) return alert('현장 위치를 입력해주세요.');
+      if (!area) return alert('평수를 입력해주세요.');
+      if (files.length < 3) return alert('사진을 최소 3장 이상 업로드해주세요.');
       
-      if (!location) {
-        alert('현장 위치를 입력해주세요.');
-        return;
-      }
-      if (!area) {
-        alert('평수를 입력해주세요.');
-        return;
-      }
-      if (selectedFiles.length < 3) {
-        alert('사진을 최소 3장 이상 업로드해주세요.');
-        return;
-      }
-      
-      alert(`상가 철거 요청이 전문가에게 전달되었습니다.\n위치: ${location}\n평수: ${area}평\n사진: ${selectedFiles.length}장\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 철거 요청 완료!\n위치: ${location}\n평수: ${area}평\n곧 전문가 팀이 배정됩니다.`);
       demolitionModal.classList.add('hidden');
+    };
+  }
+
+  // --- 폐기물 처리 제출 ---
+  const submitWasteBtn = document.getElementById('submitWasteBtn');
+  if (submitWasteBtn) {
+    submitWasteBtn.onclick = () => {
+      const location = document.getElementById('wasteLocation').value;
+      const volume = document.getElementById('wasteVolume').value;
+      const selectedTypes = Array.from(document.querySelectorAll('.waste-type-btn.selected')).map(b => b.innerText);
+      const hasElevator = document.getElementById('hasElevator').checked;
+      const parking = document.getElementById('parkingAvailable').checked;
+      const files = wastePhotos.getFiles();
+
+      if (!location) return alert('현장 위치를 입력해주세요.');
+      if (selectedTypes.length === 0) return alert('폐기물 종류를 최소 하나 선택해주세요.');
+      if (!volume) return alert('예상 분량을 선택해주세요.');
+      if (files.length < 1) return alert('현장 사진을 최소 1장 이상 업로드해주세요.');
+
+      alert(`폐기물 처리 요청 완료!\n위치: ${location}\n종류: ${selectedTypes.join(', ')}\n분량: ${volume}\n엘리베이터: ${hasElevator ? '있음' : '없음'}\n주차: ${parking ? '가능' : '불가능'}\n곧 전문가가 연락드립니다.`);
+      wasteModal.classList.add('hidden');
     };
   }
 });
