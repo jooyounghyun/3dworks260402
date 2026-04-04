@@ -219,6 +219,47 @@
     </div>
   </div>
 
+  <!-- ✅ 상가 원상복구 상세 정보 입력 모달 -->
+  <div id="restorationModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>상가 원상복구 상세 정보</h2>
+        <button id="closeRestorationBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="restoreLocation">현장 위치</label>
+        <input type="text" id="restoreLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="restoreArea">평수 입력 (평)</label>
+        <input type="number" id="restoreArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>작업 환경 (복수 선택 가능)</label>
+        <div class="env-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="restore-env-btn type-btn" data-value="엘리베이터 가능" style="padding: 10px; font-size: 13px;">엘리베이터 가능</button>
+          <button type="button" class="restore-env-btn type-btn" data-value="사다리차 가능" style="padding: 10px; font-size: 13px;">사다리차 가능</button>
+          <button type="button" class="restore-env-btn type-btn" data-value="야간/주말 작업" style="padding: 10px; font-size: 13px;">야간/주말 작업</button>
+          <button type="button" class="restore-env-btn type-btn" data-value="무료 주차 가능" style="padding: 10px; font-size: 13px;">무료 주차 가능</button>
+        </div>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="restorePhotoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #94a3b8; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="restorePhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="restorePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+
+      <button id="submitRestorationBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
   <!-- 서비스 -->
   <section class="section">
     <h2>주요 서비스</h2>

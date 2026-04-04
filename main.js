@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const serviceModal = document.getElementById('serviceModal');
   const demolitionModal = document.getElementById('demolitionModal');
   const wasteModal = document.getElementById('wasteModal');
+  const restorationModal = document.getElementById('restorationModal');
 
   // --- 모달 열기 함수 ---
   if (loginBtn) {
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       serviceModal.classList.add('hidden');
       demolitionModal.classList.add('hidden');
       if (wasteModal) wasteModal.classList.add('hidden');
+      if (restorationModal) restorationModal.classList.add('hidden');
     };
   });
 
@@ -52,13 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === serviceModal) serviceModal.classList.add('hidden');
     if (e.target === demolitionModal) demolitionModal.classList.add('hidden');
     if (e.target === wasteModal) wasteModal.classList.add('hidden');
+    if (e.target === restorationModal) restorationModal.classList.add('hidden');
   };
 
   // --- 버튼 클릭 핸들러 (회원가입 유형, 폐기물 종류, 환경 선택 등) ---
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.onclick = () => {
-      if (btn.classList.contains('waste-type-btn')) {
-        // 폐기물 종류: 중복 선택 가능
+      if (btn.classList.contains('waste-type-btn') || btn.classList.contains('restore-env-btn')) {
+        // 폐기물 종류 및 원상복구 작업환경: 중복 선택 가능
         btn.classList.toggle('selected');
       } else if (btn.classList.contains('elevator-btn')) {
         // 엘리베이터: 단일 선택
@@ -123,6 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
           demolitionModal.classList.remove('hidden');
         } else if (selectedService === '폐기물 처리') {
           wasteModal.classList.remove('hidden');
+        } else if (selectedService === '상가 원상복구') {
+          restorationModal.classList.remove('hidden');
         } else {
           alert(`선택된 서비스: ${selectedService}\n전문가 팀 매칭을 시작합니다!`);
         }
@@ -198,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const demoPhotos = setupPhotoUpload('photoDropzone', 'photoInput', 'photoPreview', 3);
   const wastePhotos = setupPhotoUpload('wastePhotoDropzone', 'wastePhotoInput', 'wastePhotoPreview', 3);
+  const restorePhotos = setupPhotoUpload('restorePhotoDropzone', 'restorePhotoInput', 'restorePhotoPreview', 3);
 
   // --- 상가 철거 제출 ---
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
@@ -236,6 +242,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       alert(`폐기물 처리 요청 완료!\n위치: ${location}\n종류: ${selectedTypes.join(', ')}\n분량: ${volume}\n엘리베이터: ${elevator.innerText}\n주차: ${parking.innerText}\n곧 전문가가 연락드립니다.`);
       wasteModal.classList.add('hidden');
+    };
+  }
+
+  // --- 상가 원상복구 제출 ---
+  const submitRestorationBtn = document.getElementById('submitRestorationBtn');
+  if (submitRestorationBtn) {
+    submitRestorationBtn.onclick = () => {
+      const location = document.getElementById('restoreLocation').value;
+      const area = document.getElementById('restoreArea').value;
+      const selectedEnvs = Array.from(document.querySelectorAll('.restore-env-btn.selected')).map(b => b.innerText);
+      const files = restorePhotos.getFiles();
+
+      if (!location) return alert('현장 위치를 입력해주세요.');
+      if (!area) return alert('평수를 입력해주세요.');
+      if (files.length < 3) return alert('현장 사진을 최소 3장 이상 업로드해주세요.');
+
+      alert(`상가 원상복구 요청 완료!\n위치: ${location}\n평수: ${area}평\n작업환경: ${selectedEnvs.length > 0 ? selectedEnvs.join(', ') : '특이사항 없음'}\n곧 전문가 팀이 배정됩니다.`);
+      restorationModal.classList.add('hidden');
     };
   }
 });

@@ -127,7 +127,7 @@ header {
   background-color: #1e293b;
 }
 
-.type-btn.active {
+.type-btn.active, .type-btn.selected {
   background-color: #38bdf8;
   color: black;
   font-weight: bold;
