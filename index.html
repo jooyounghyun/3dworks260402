@@ -105,7 +105,7 @@
 
     <div class="buttons">
       <button id="hireTeamBtn" class="btn btn-primary">팀으로 맡기기</button>
-      <button class="btn btn-secondary">인력 지원 요청</button>
+      <button id="manpowerBtn" class="btn btn-secondary">인력 지원 요청</button>
     </div>
   </section>
 
@@ -373,6 +373,84 @@
       <div class="card">✔ 수도권 집중 서비스</div>
     </div>
   </section>
+
+  <!-- ✅ 인력 지원 요청 상세 정보 입력 모달 -->
+  <div id="manpowerModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>인력 지원 요청 상세 정보</h2>
+        <button id="closeManpowerBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 12px;">
+        <label for="manpowerLocation">현장 위치</label>
+        <input type="text" id="manpowerLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerCompanyName">업체명</label>
+          <input type="text" id="manpowerCompanyName" readonly style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; box-sizing: border-box;">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerCompanyContact">연락처</label>
+          <input type="text" id="manpowerCompanyContact" readonly style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerManagerName">현장 담당자 이름</label>
+          <input type="text" id="manpowerManagerName" placeholder="성함 입력" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerManagerContact">현장 담당자 연락처</label>
+          <input type="tel" id="manpowerManagerContact" placeholder="010-0000-0000" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerWorkDate">작업일</label>
+          <input type="date" id="manpowerWorkDate" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerWorkDays">작업일수 (일)</label>
+          <input type="number" id="manpowerWorkDays" placeholder="예: 3" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerStartTime">도착 시간</label>
+          <input type="time" id="manpowerStartTime" value="08:00" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerEndTime">종료 시간</label>
+          <input type="time" id="manpowerEndTime" value="17:00" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div class="input-group" style="flex: 1;">
+          <label>식사 제공</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="env-btn meal-btn type-btn" data-value="있음" style="flex: 1; padding: 8px; font-size: 12px;">있음</button>
+            <button type="button" class="env-btn meal-btn type-btn" data-value="없음" style="flex: 1; padding: 8px; font-size: 12px;">없음</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>휴식 시간</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="env-btn break-btn type-btn" data-value="있음" style="flex: 1; padding: 8px; font-size: 12px;">있음</button>
+            <button type="button" class="env-btn break-btn type-btn" data-value="없음" style="flex: 1; padding: 8px; font-size: 12px;">없음</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="submitManpowerBtn" class="btn btn-primary login-submit" style="margin-top: 15px;">전문가에게 전달하기</button>
+    </div>
+  </div>
 
   <footer>
     3D해결사는 작업 중개 플랫폼입니다.<br>
