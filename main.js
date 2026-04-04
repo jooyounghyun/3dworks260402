@@ -256,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitRestorationBtn.onclick = () => {
       const location = document.getElementById('restoreLocation').value;
       const area = document.getElementById('restoreArea').value;
+      const notes = document.getElementById('restoreNotes').value;
       const files = restorePhotos.getFiles();
 
       // 작업 환경 수집
@@ -277,7 +278,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!allSelected) return alert('작업 환경의 모든 항목(가능/불가능)을 선택해주세요.');
       if (files.length < 3) return alert('현장 사진을 최소 3장 이상 업로드해주세요.');
 
-      alert(`상가 원상복구 요청 완료!\n위치: ${location}\n평수: ${area}평\n\n[작업 환경]\n- 엘리베이터: ${selectedEnvs.elevator}\n- 사다리차: ${selectedEnvs.ladder}\n- 야간/주말: ${selectedEnvs.night}\n- 무료주차: ${selectedEnvs.parking}\n\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 원상복구 요청 완료!\n위치: ${location}\n평수: ${area}평\n\n[작업 환경]\n- 엘리베이터: ${selectedEnvs.elevator}\n- 사다리차: ${selectedEnvs.ladder}\n- 야간/주말: ${selectedEnvs.night}\n- 무료주차: ${selectedEnvs.parking}\n\n[기타 참고사항]\n${notes || '없음'}\n\n곧 전문가 팀이 배정됩니다.`);
+      
+      // 초기화
+      document.getElementById('restoreLocation').value = '';
+      document.getElementById('restoreArea').value = '';
+      document.getElementById('restoreNotes').value = '';
+      document.querySelectorAll('.env-choice-btn').forEach(b => b.classList.remove('selected'));
+      // 사진 초기화 로직은 setupPhotoUpload 내부에 상태가 있어 별도 처리가 필요할 수 있으나 현재는 모달 닫기로 갈음
       restorationModal.classList.add('hidden');
     };
   }
