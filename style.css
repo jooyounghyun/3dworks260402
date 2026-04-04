@@ -86,9 +86,54 @@ header {
 .modal-content input, 
 .modal-content select, 
 .modal-content textarea {
+  width: 100%;
   padding: 10px !important;
   font-size: 12px !important;
   border-radius: 6px !important;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  box-sizing: border-box;
+}
+
+.modal-content input[readonly] {
+  background-color: #1e293b;
+  color: #94a3b8;
+}
+
+.modal-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: flex-end;
+}
+
+.modal-row > .input-group {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0 !important;
+}
+
+/* 인력 선택 전용 그리드 */
+.manpower-grid {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.manpower-grid .manpower-type {
+  flex: 2;
+  min-width: 0;
+}
+
+.manpower-grid .manpower-wage {
+  flex: 1.5;
+  min-width: 0;
+}
+
+.manpower-grid .manpower-count {
+  flex: 0.8;
+  min-width: 0;
 }
 
 .modal-content .input-group {

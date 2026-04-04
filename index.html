@@ -382,85 +382,85 @@
         <button id="closeManpowerBtn" class="close-btn">&times;</button>
       </div>
 
-      <div class="input-group" style="margin-bottom: 12px;">
+      <div class="input-group">
         <label for="manpowerLocation">현장 위치</label>
-        <input type="text" id="manpowerLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        <input type="text" id="manpowerLocation" placeholder="예: 서울특별시 강남구 역삼동">
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
-        <div class="input-group" style="flex: 1;">
+      <div class="modal-row">
+        <div class="input-group">
           <label for="manpowerCompanyName">사용자(업체)</label>
-          <input type="text" id="manpowerCompanyName" readonly style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; box-sizing: border-box;">
+          <input type="text" id="manpowerCompanyName" readonly>
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="manpowerCompanyContact">연락처</label>
-          <input type="text" id="manpowerCompanyContact" readonly style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; box-sizing: border-box;">
+          <input type="text" id="manpowerCompanyContact" readonly>
         </div>
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
-        <div class="input-group" style="flex: 1;">
+      <div class="modal-row">
+        <div class="input-group">
           <label for="manpowerManagerName">현장 담당자 이름</label>
-          <input type="text" id="manpowerManagerName" placeholder="성함 입력" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+          <input type="text" id="manpowerManagerName" placeholder="성함 입력">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="manpowerManagerContact">현장 담당자 연락처</label>
-          <input type="tel" id="manpowerManagerContact" placeholder="010-0000-0000" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+          <input type="tel" id="manpowerManagerContact" placeholder="010-0000-0000">
         </div>
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end;">
-        <div class="input-group" style="flex: 1;">
+      <div class="modal-row">
+        <div class="input-group">
           <label for="manpowerWorkDate">작업일</label>
-          <input type="date" id="manpowerWorkDate" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; font-size: 12px;">
+          <input type="date" id="manpowerWorkDate">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="manpowerWorkDays">작업일수</label>
-          <input type="number" id="manpowerWorkDays" placeholder="예: 3" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; font-size: 12px;">
+          <input type="number" id="manpowerWorkDays" placeholder="예: 3">
         </div>
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end;">
-        <div class="input-group" style="flex: 1;">
+      <div class="modal-row">
+        <div class="input-group">
           <label for="manpowerStartTime">도착 시간</label>
-          <input type="time" id="manpowerStartTime" value="08:00" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; font-size: 12px;">
+          <input type="time" id="manpowerStartTime" value="08:00">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="manpowerEndTime">종료 시간</label>
-          <input type="time" id="manpowerEndTime" value="17:00" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; font-size: 12px;">
+          <input type="time" id="manpowerEndTime" value="17:00">
         </div>
       </div>
 
-      <div class="input-group" style="margin-bottom: 12px;">
+      <div class="input-group">
         <label>인력 선택 및 인원</label>
-        <div id="manpowerSelectionList" style="display: flex; flex-direction: column; gap: 10px;">
-          <div class="manpower-item" style="display: flex; gap: 5px; align-items: center;">
-            <select class="manpower-type" style="flex: 1; min-width: 0; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
+        <div id="manpowerSelectionList">
+          <div class="manpower-item manpower-grid">
+            <select class="manpower-type">
               <option value="일반잡부">일반잡부</option>
               <option value="철거공">철거공</option>
               <option value="조적공">조적공</option>
-              <option value="미장공">조적공</option>
+              <option value="미장공">미장공</option>
               <option value="기타">기타</option>
             </select>
-            <input type="number" class="manpower-wage" placeholder="임금" value="150000" style="width: 80px; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
-            <input type="number" class="manpower-count" placeholder="인원" value="1" style="width: 45px; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
+            <input type="number" class="manpower-wage" placeholder="임금" value="150000">
+            <input type="number" class="manpower-count" placeholder="인원" value="1">
           </div>
         </div>
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
-        <div class="input-group" style="flex: 1;">
+      <div class="modal-row">
+        <div class="input-group">
           <label>식사 제공</label>
           <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="env-btn meal-btn type-btn" data-value="있음" style="flex: 1; padding: 8px; font-size: 12px;">있음</button>
-            <button type="button" class="env-btn meal-btn type-btn" data-value="없음" style="flex: 1; padding: 8px; font-size: 12px;">없음</button>
+            <button type="button" class="env-btn meal-btn type-btn" data-value="있음" style="flex: 1;">있음</button>
+            <button type="button" class="env-btn meal-btn type-btn" data-value="없음" style="flex: 1;">없음</button>
           </div>
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label>휴식 시간</label>
           <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="env-btn break-btn type-btn" data-value="있음" style="flex: 1; padding: 8px; font-size: 12px;">있음</button>
-            <button type="button" class="env-btn break-btn type-btn" data-value="없음" style="flex: 1; padding: 8px; font-size: 12px;">없음</button>
+            <button type="button" class="env-btn break-btn type-btn" data-value="있음" style="flex: 1;">있음</button>
+            <button type="button" class="env-btn break-btn type-btn" data-value="없음" style="flex: 1;">없음</button>
           </div>
         </div>
       </div>
@@ -480,7 +480,7 @@
         </div>
       </div>
 
-      <button id="submitManpowerBtn" class="btn btn-primary login-submit" style="margin-top: 15px;">신청</button>
+      <button id="submitManpowerBtn" class="btn btn-primary login-submit">신청</button>
     </div>
   </div>
 
