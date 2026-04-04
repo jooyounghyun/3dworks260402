@@ -238,12 +238,40 @@
       </div>
 
       <div class="input-group" style="margin-bottom: 15px;">
-        <label>작업 환경 (복수 선택 가능)</label>
-        <div class="env-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
-          <button type="button" class="restore-env-btn type-btn" data-value="엘리베이터 가능" style="padding: 10px; font-size: 13px;">엘리베이터 가능</button>
-          <button type="button" class="restore-env-btn type-btn" data-value="사다리차 가능" style="padding: 10px; font-size: 13px;">사다리차 가능</button>
-          <button type="button" class="restore-env-btn type-btn" data-value="야간/주말 작업" style="padding: 10px; font-size: 13px;">야간/주말 작업</button>
-          <button type="button" class="restore-env-btn type-btn" data-value="무료 주차 가능" style="padding: 10px; font-size: 13px;">무료 주차 가능</button>
+        <label>작업 환경 (각 항목 선택 필수)</label>
+        <div class="env-options" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          <!-- 엘리베이터 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">엘리베이터 사용</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="elevator" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="elevator" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 사다리차 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">사다리차 진입</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="ladder" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="ladder" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 야간/주말 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">야간/주말 작업</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="night" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="night" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 주차 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">무료 주차</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="parking" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="parking" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
         </div>
       </div>
 

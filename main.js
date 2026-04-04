@@ -60,15 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 버튼 클릭 핸들러 (회원가입 유형, 폐기물 종류, 환경 선택 등) ---
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.onclick = () => {
-      if (btn.classList.contains('waste-type-btn') || btn.classList.contains('restore-env-btn')) {
-        // 폐기물 종류 및 원상복구 작업환경: 중복 선택 가능
+      if (btn.classList.contains('waste-type-btn')) {
+        // 폐기물 종류: 중복 선택 가능
         btn.classList.toggle('selected');
+      } else if (btn.classList.contains('env-choice-btn')) {
+        // 원상복구 작업환경: 그룹별 단일 선택
+        const group = btn.getAttribute('data-group');
+        document.querySelectorAll(`.env-choice-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
       } else if (btn.classList.contains('elevator-btn')) {
-        // 엘리베이터: 단일 선택
+        // 엘리베이터: 단일 선택 (폐기물 처리 모달용)
         document.querySelectorAll('.elevator-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
       } else if (btn.classList.contains('parking-btn')) {
-        // 주차: 단일 선택
+        // 주차: 단일 선택 (폐기물 처리 모달용)
         document.querySelectorAll('.parking-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
       } else if (btn.parentElement.classList.contains('type-selection')) {
@@ -251,14 +256,28 @@ document.addEventListener('DOMContentLoaded', () => {
     submitRestorationBtn.onclick = () => {
       const location = document.getElementById('restoreLocation').value;
       const area = document.getElementById('restoreArea').value;
-      const selectedEnvs = Array.from(document.querySelectorAll('.restore-env-btn.selected')).map(b => b.innerText);
       const files = restorePhotos.getFiles();
+
+      // 작업 환경 수집
+      const envGroups = ['elevator', 'ladder', 'night', 'parking'];
+      const selectedEnvs = {};
+      let allSelected = true;
+
+      envGroups.forEach(group => {
+        const selected = document.querySelector(`.env-choice-btn[data-group="${group}"].selected`);
+        if (selected) {
+          selectedEnvs[group] = selected.getAttribute('data-value');
+        } else {
+          allSelected = false;
+        }
+      });
 
       if (!location) return alert('현장 위치를 입력해주세요.');
       if (!area) return alert('평수를 입력해주세요.');
+      if (!allSelected) return alert('작업 환경의 모든 항목(가능/불가능)을 선택해주세요.');
       if (files.length < 3) return alert('현장 사진을 최소 3장 이상 업로드해주세요.');
 
-      alert(`상가 원상복구 요청 완료!\n위치: ${location}\n평수: ${area}평\n작업환경: ${selectedEnvs.length > 0 ? selectedEnvs.join(', ') : '특이사항 없음'}\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 원상복구 요청 완료!\n위치: ${location}\n평수: ${area}평\n\n[작업 환경]\n- 엘리베이터: ${selectedEnvs.elevator}\n- 사다리차: ${selectedEnvs.ladder}\n- 야간/주말: ${selectedEnvs.night}\n- 무료주차: ${selectedEnvs.parking}\n\n곧 전문가 팀이 배정됩니다.`);
       restorationModal.classList.add('hidden');
     };
   }
