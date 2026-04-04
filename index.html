@@ -431,6 +431,23 @@
         </div>
       </div>
 
+      <div class="input-group" style="margin-bottom: 12px;">
+        <label>인력 선택 및 인원</label>
+        <div id="manpowerSelectionList" style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="manpower-item" style="display: flex; gap: 5px; align-items: center;">
+            <select class="manpower-type" style="flex: 1.5; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
+              <option value="일반잡부">일반잡부</option>
+              <option value="철거공">철거공</option>
+              <option value="조적공">조적공</option>
+              <option value="미장공">조적공</option>
+              <option value="기타">기타</option>
+            </select>
+            <input type="number" class="manpower-wage" placeholder="임금(원)" value="150000" style="flex: 1.5; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
+            <input type="number" class="manpower-count" placeholder="인원" value="1" style="flex: 1; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 12px;">
+          </div>
+        </div>
+      </div>
+
       <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
         <div class="input-group" style="flex: 1;">
           <label>식사 제공</label>
@@ -445,6 +462,21 @@
             <button type="button" class="env-btn break-btn type-btn" data-value="있음" style="flex: 1; padding: 8px; font-size: 12px;">있음</button>
             <button type="button" class="env-btn break-btn type-btn" data-value="없음" style="flex: 1; padding: 8px; font-size: 12px;">없음</button>
           </div>
+        </div>
+      </div>
+
+      <div class="summary-section" style="background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #334155;">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
+          <span>임금합계</span>
+          <span id="wageTotalDisplay">0원</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
+          <span>매칭비용 (10%)</span>
+          <span id="matchingFeeDisplay">0원</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #38bdf8; border-top: 1px solid #334155; pt: 8px; margin-top: 8px;">
+          <span>총액</span>
+          <span id="totalAmountDisplay">0원</span>
         </div>
       </div>
 

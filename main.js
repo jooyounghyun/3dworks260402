@@ -52,12 +52,41 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('manpowerCompanyName').value = currentUser.name;
         document.getElementById('manpowerCompanyContact').value = currentUser.phone;
         manpowerModal.classList.remove('hidden');
+        updateManpowerSummary(); // 초기화
       } else {
         alert('로그인이 필요한 서비스입니다.');
         loginModal.classList.remove('hidden');
       }
     };
   }
+
+  // --- 인력 지원 비용 계산 로직 ---
+  function updateManpowerSummary() {
+    const wageInput = document.querySelector('.manpower-wage');
+    const countInput = document.querySelector('.manpower-count');
+    const workDaysInput = document.getElementById('manpowerWorkDays');
+
+    const wage = parseInt(wageInput.value) || 0;
+    const count = parseInt(countInput.value) || 0;
+    const days = parseInt(workDaysInput.value) || 1; // 최소 1일로 가정
+
+    const wageTotal = wage * count * days;
+    const matchingFee = Math.floor(wageTotal * 0.1);
+    const totalAmount = wageTotal + matchingFee;
+
+    document.getElementById('wageTotalDisplay').innerText = wageTotal.toLocaleString() + '원';
+    document.getElementById('matchingFeeDisplay').innerText = matchingFee.toLocaleString() + '원';
+    document.getElementById('totalAmountDisplay').innerText = totalAmount.toLocaleString() + '원';
+  }
+
+  // 입력 변경 시 실시간 반영
+  document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('manpower-wage') || 
+        e.target.classList.contains('manpower-count') || 
+        e.target.id === 'manpowerWorkDays') {
+      updateManpowerSummary();
+    }
+  });
 
   // --- 닫기 버튼 공통 제어 ---
   document.querySelectorAll('.close-btn').forEach(btn => {
