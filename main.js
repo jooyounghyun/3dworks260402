@@ -216,13 +216,38 @@ document.addEventListener('DOMContentLoaded', () => {
     submitDemolitionBtn.onclick = () => {
       const location = document.getElementById('demoLocation').value;
       const area = document.getElementById('demoArea').value;
+      const height = document.getElementById('demoHeight').value;
+      const notes = document.getElementById('demoNotes').value;
       const files = demoPhotos.getFiles();
+
+      // 작업 환경 수집
+      const envGroups = ['demo-elevator', 'demo-ladder', 'demo-night', 'demo-parking'];
+      const selectedEnvs = {};
+      let allSelected = true;
+
+      envGroups.forEach(group => {
+        const selected = document.querySelector(`.env-choice-btn[data-group="${group}"].selected`);
+        if (selected) {
+          selectedEnvs[group] = selected.getAttribute('data-value');
+        } else {
+          allSelected = false;
+        }
+      });
 
       if (!location) return alert('현장 위치를 입력해주세요.');
       if (!area) return alert('평수를 입력해주세요.');
-      if (files.length < 3) return alert('사진을 최소 3장 이상 업로드해주세요.');
+      if (!height) return alert('층고를 입력해주세요.');
+      if (!allSelected) return alert('작업 환경의 모든 항목(가능/불가능)을 선택해주세요.');
+      if (files.length < 3) return alert('현장 사진을 최소 3장 이상 업로드해주세요.');
       
-      alert(`상가 철거 요청 완료!\n위치: ${location}\n평수: ${area}평\n곧 전문가 팀이 배정됩니다.`);
+      alert(`상가 철거 요청 완료!\n위치: ${location}\n규모: ${area}평 / 층고 ${height}m\n\n[작업 환경]\n- 엘리베이터: ${selectedEnvs['demo-elevator']}\n- 사다리차: ${selectedEnvs['demo-ladder']}\n- 야간/주말: ${selectedEnvs['demo-night']}\n- 무료주차: ${selectedEnvs['demo-parking']}\n\n[기타 참고사항]\n${notes || '없음'}\n\n곧 전문가 팀이 배정됩니다.`);
+      
+      // 초기화
+      document.getElementById('demoLocation').value = '';
+      document.getElementById('demoArea').value = '';
+      document.getElementById('demoHeight').value = '';
+      document.getElementById('demoNotes').value = '';
+      document.querySelectorAll(`.env-choice-btn[data-group^="demo-"]`).forEach(b => b.classList.remove('selected'));
       demolitionModal.classList.add('hidden');
     };
   }

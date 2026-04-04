@@ -136,14 +136,66 @@
         <h2>상가 철거 상세 정보</h2>
         <button id="closeDemolitionBtn" class="close-btn">&times;</button>
       </div>
+      
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="demoLocation">현장 위치</label>
         <input type="text" id="demoLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
       </div>
-      <div class="input-group">
-        <label for="demoArea">평수 입력 (평)</label>
-        <input type="number" id="demoArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="demoArea">평수 입력 (평)</label>
+          <input type="number" id="demoArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="demoHeight">층고 입력 (m)</label>
+          <input type="number" id="demoHeight" placeholder="예: 3.5" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+        </div>
       </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>작업 환경 (각 항목 선택 필수)</label>
+        <div class="env-options" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          <!-- 엘리베이터 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">엘리베이터 사용</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-elevator" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-elevator" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 사다리차 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">사다리차 진입</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-ladder" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-ladder" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 야간/주말 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">야간/주말 작업</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-night" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-night" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+          <!-- 주차 -->
+          <div class="env-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; color: #cbd5e1;">무료 주차</span>
+            <div class="env-btn-group" style="display: flex; gap: 5px;">
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-parking" data-value="가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">가능</button>
+              <button type="button" class="env-choice-btn type-btn" data-group="demo-parking" data-value="불가능" style="padding: 8px 15px; font-size: 12px; margin: 0;">불가능</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="demoNotes">기타 참고사항 (선택)</label>
+        <textarea id="demoNotes" placeholder="예: 가벽이 많습니다. 주방 집기 철거가 포함됩니다 등" style="width: 100%; height: 80px; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; resize: none; font-size: 13px;"></textarea>
+      </div>
+
       <div class="photo-upload-section" style="margin-top: 20px;">
         <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
         <div id="photoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
