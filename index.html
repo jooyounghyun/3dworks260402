@@ -435,24 +435,9 @@
         <label>인력 선택 및 인원</label>
         <div id="manpowerSelectionList">
           <div class="manpower-item manpower-grid">
-            <select class="manpower-type">
-              <optgroup label="보통인력">
-                <option value="일반인부 (청소/정리)">현장 청소정리 및 잡일</option>
-                <option value="일반인부 (자재정리)">현장 자재정리 및 잡일</option>
-                <option value="일반인부 (설치/해체 보조)">현장 설치/해체 보조 및 잡일</option>
-                <option value="일반인부 (상하체/운반)">상하체/운반 작업 및 잡일</option>
-                <option value="일반인부 (폐기물 처리)">철거 현장 폐기물 처리 및 잡일</option>
-                <option value="일반인부 (아시바/폼 정리)">아시바,시스템,폼 정리 및 잡일</option>
-                <option value="일반인부 (땅파기/낫질)">땅파기/삽질/톱/낫질 작업 및 잡일</option>
-                <option value="일반인부 (예초작업)">예초작업</option>
-                <option value="일반인부 (예초기장비지침)">예초기장비지침</option>
-                <option value="철거공">철거공</option>
-              </optgroup>
-              <optgroup label="기술인력">
-                <option value="전기공">전기공</option>
-              </optgroup>
-            </select>
-            <input type="number" class="manpower-wage" placeholder="임금" value="150000">
+            <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
+            <input type="hidden" class="manpower-type-val">
+            <input type="number" class="manpower-wage" placeholder="임금" value="0">
             <input type="number" class="manpower-count" placeholder="인원" value="1">
           </div>
         </div>
@@ -492,6 +477,23 @@
       </div>
 
       <button id="submitManpowerBtn" class="btn btn-primary login-submit">신청</button>
+    </div>
+  </div>
+
+  <!-- ✅ 인력 유형 선택 모달 (계층형) -->
+  <div id="manpowerTypeModal" class="modal hidden">
+    <div class="modal-content" style="max-width: 350px;">
+      <div class="modal-header">
+        <h2 id="manpowerTypeTitle">인력 분류 선택</h2>
+        <button id="closeTypeBtn" class="close-btn">&times;</button>
+      </div>
+      <div id="typeBreadcrumb" style="font-size: 11px; color: #38bdf8; margin-bottom: 15px; display: none;">
+        <span id="prevCategory" style="cursor:pointer;">상위 분류</span> &gt; <span id="currentCategory">현재</span>
+      </div>
+      <div id="typeList" class="type-selection" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- 동적으로 버튼 생성됨 -->
+      </div>
+      <button id="backTypeBtn" class="btn btn-secondary" style="margin-top: 15px; width: 100%; font-size: 12px; display: none;">뒤로가기</button>
     </div>
   </div>
 
