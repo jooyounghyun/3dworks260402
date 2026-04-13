@@ -14,6 +14,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const manpowerModal = document.getElementById('manpowerModal');
   const manpowerBtn = document.getElementById('manpowerBtn');
 
+  // --- 인력별 기본 임금 설정 ---
+  const WAGE_MAP = {
+    "일반인부 (청소/정리)": 150000,
+    "일반인부 (자재정리)": 160000,
+    "일반인부 (설치/해체 보조)": 160000,
+    "일반인부 (상하체/운반)": 170000,
+    "일반인부 (폐기물 처리)": 170000,
+    "일반인부 (아시바/폼 정리)": 180000,
+    "일반인부 (땅파기/낫질)": 190000,
+    "일반인부 (예초작업)": 200000,
+    "일반인부 (예초기장비지침)": 250000,
+    "철거공": 180000,
+    "전기공": 250000
+  };
+
   // --- 가상의 현재 사용자 정보 (테스트용) ---
   const currentUser = {
     name: "(주)삼디건설",
@@ -96,7 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
       newItem.innerHTML = `
         <select class="manpower-type">
           <optgroup label="보통인력">
-            <option value="일반인부">일반인부</option>
+            <option value="일반인부 (청소/정리)">현장 청소정리 및 잡일</option>
+            <option value="일반인부 (자재정리)">현장 자재정리 및 잡일</option>
+            <option value="일반인부 (설치/해체 보조)">현장 설치/해체 보조 및 잡일</option>
+            <option value="일반인부 (상하체/운반)">상하체/운반 작업 및 잡일</option>
+            <option value="일반인부 (폐기물 처리)">철거 현장 폐기물 처리 및 잡일</option>
+            <option value="일반인부 (아시바/폼 정리)">아시바,시스템,폼 정리 및 잡일</option>
+            <option value="일반인부 (땅파기/낫질)">땅파기/삽질/톱/낫질 작업 및 잡일</option>
+            <option value="일반인부 (예초작업)">예초작업</option>
+            <option value="일반인부 (예초기장비지침)">예초기장비지침</option>
             <option value="철거공">철거공</option>
           </optgroup>
           <optgroup label="기술인력">
@@ -123,6 +146,18 @@ document.addEventListener('DOMContentLoaded', () => {
           updateManpowerSummary();
         } else {
           alert('최소 한 명의 인력은 선택해야 합니다.');
+        }
+      }
+    });
+
+    // 인력 종류 변경 시 임금 자동 업데이트
+    manpowerSelectionList.addEventListener('change', (e) => {
+      if (e.target.classList.contains('manpower-type')) {
+        const selectedType = e.target.value;
+        const wageInput = e.target.closest('.manpower-item').querySelector('.manpower-wage');
+        if (WAGE_MAP[selectedType]) {
+          wageInput.value = WAGE_MAP[selectedType];
+          updateManpowerSummary();
         }
       }
     });
@@ -475,7 +510,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="manpower-item manpower-grid">
           <select class="manpower-type">
             <optgroup label="보통인력">
-              <option value="일반인부">일반인부</option>
+              <option value="일반인부 (청소/정리)">현장 청소정리 및 잡일</option>
+              <option value="일반인부 (자재정리)">현장 자재정리 및 잡일</option>
+              <option value="일반인부 (설치/해체 보조)">현장 설치/해체 보조 및 잡일</option>
+              <option value="일반인부 (상하체/운반)">상하체/운반 작업 및 잡일</option>
+              <option value="일반인부 (폐기물 처리)">철거 현장 폐기물 처리 및 잡일</option>
+              <option value="일반인부 (아시바/폼 정리)">아시바,시스템,폼 정리 및 잡일</option>
+              <option value="일반인부 (땅파기/낫질)">땅파기/삽질/톱/낫질 작업 및 잡일</option>
+              <option value="일반인부 (예초작업)">예초작업</option>
+              <option value="일반인부 (예초기장비지침)">예초기장비지침</option>
               <option value="철거공">철거공</option>
             </optgroup>
             <optgroup label="기술인력">
