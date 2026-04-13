@@ -132,9 +132,14 @@ header {
 }
 
 .manpower-grid .manpower-count {
-  flex: 0.8;
+  flex: 1;
   min-width: 0;
 }
+
+.remove-manpower-btn:hover {
+  color: #f87171 !important;
+}
+
 
 .modal-content .input-group {
   margin-bottom: 12px !important;

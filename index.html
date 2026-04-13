@@ -436,16 +436,19 @@
         <div id="manpowerSelectionList">
           <div class="manpower-item manpower-grid">
             <select class="manpower-type">
-              <option value="일반잡부">일반잡부</option>
-              <option value="철거공">철거공</option>
-              <option value="조적공">조적공</option>
-              <option value="미장공">미장공</option>
-              <option value="기타">기타</option>
+              <optgroup label="보통인력">
+                <option value="일반인부">일반인부</option>
+                <option value="철거공">철거공</option>
+              </optgroup>
+              <optgroup label="기술인력">
+                <option value="전기공">전기공</option>
+              </optgroup>
             </select>
             <input type="number" class="manpower-wage" placeholder="임금" value="150000">
             <input type="number" class="manpower-count" placeholder="인원" value="1">
           </div>
         </div>
+        <button type="button" id="addManpowerBtn" class="btn btn-secondary" style="margin-top: 10px; width: 100%; font-size: 12px; padding: 5px;">+ 인원 추가</button>
       </div>
 
       <div class="modal-row">

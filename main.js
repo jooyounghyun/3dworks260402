@@ -62,21 +62,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 인력 지원 비용 계산 로직 ---
   function updateManpowerSummary() {
-    const wageInput = document.querySelector('.manpower-wage');
-    const countInput = document.querySelector('.manpower-count');
+    const items = document.querySelectorAll('.manpower-item');
     const workDaysInput = document.getElementById('manpowerWorkDays');
+    const days = parseInt(workDaysInput.value) || 1;
 
-    const wage = parseInt(wageInput.value) || 0;
-    const count = parseInt(countInput.value) || 0;
-    const days = parseInt(workDaysInput.value) || 1; // 최소 1일로 가정
+    let totalWageSum = 0;
 
-    const wageTotal = wage * count * days;
+    items.forEach(item => {
+      const wageInput = item.querySelector('.manpower-wage');
+      const countInput = item.querySelector('.manpower-count');
+      const wage = parseInt(wageInput.value) || 0;
+      const count = parseInt(countInput.value) || 0;
+      totalWageSum += (wage * count);
+    });
+
+    const wageTotal = totalWageSum * days;
     const matchingFee = Math.floor(wageTotal * 0.1);
     const totalAmount = wageTotal + matchingFee;
 
     document.getElementById('wageTotalDisplay').innerText = wageTotal.toLocaleString() + '원';
     document.getElementById('matchingFeeDisplay').innerText = matchingFee.toLocaleString() + '원';
     document.getElementById('totalAmountDisplay').innerText = totalAmount.toLocaleString() + '원';
+  }
+
+  // 인력 추가 버튼 클릭 시
+  const addManpowerBtn = document.getElementById('addManpowerBtn');
+  if (addManpowerBtn) {
+    addManpowerBtn.onclick = () => {
+      const list = document.getElementById('manpowerSelectionList');
+      const newItem = document.createElement('div');
+      newItem.className = 'manpower-item manpower-grid';
+      newItem.style.marginTop = '5px';
+      newItem.innerHTML = `
+        <select class="manpower-type">
+          <optgroup label="보통인력">
+            <option value="일반인부">일반인부</option>
+            <option value="철거공">철거공</option>
+          </optgroup>
+          <optgroup label="기술인력">
+            <option value="전기공">전기공</option>
+          </optgroup>
+        </select>
+        <input type="number" class="manpower-wage" placeholder="임금" value="150000">
+        <input type="number" class="manpower-count" placeholder="인원" value="1">
+        <button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>
+      `;
+      list.appendChild(newItem);
+      updateManpowerSummary();
+    };
+  }
+
+  // 인력 삭제 버튼 클릭 시 (이벤트 위임)
+  const manpowerSelectionList = document.getElementById('manpowerSelectionList');
+  if (manpowerSelectionList) {
+    manpowerSelectionList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-manpower-btn')) {
+        const items = document.querySelectorAll('.manpower-item');
+        if (items.length > 1) {
+          e.target.closest('.manpower-item').remove();
+          updateManpowerSummary();
+        } else {
+          alert('최소 한 명의 인력은 선택해야 합니다.');
+        }
+      }
+    });
   }
 
   // 입력 변경 시 실시간 반영
@@ -393,6 +442,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const meal = document.querySelector('.meal-btn.selected');
       const breakTime = document.querySelector('.break-btn.selected');
 
+      // 인력 선택 정보 수집
+      const items = document.querySelectorAll('.manpower-item');
+      let manpowerDetails = '';
+      items.forEach(item => {
+        const type = item.querySelector('.manpower-type').value;
+        const count = item.querySelector('.manpower-count').value;
+        manpowerDetails += `\n- ${type}: ${count}명`;
+      });
+
       if (!location) return alert('현장 위치를 입력해주세요.');
       if (!managerName) return alert('현장 담당자 이름을 입력해주세요.');
       if (!managerContact) return alert('현장 담당자 연락처를 입력해주세요.');
@@ -401,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!meal) return alert('식사 제공 여부를 선택해주세요.');
       if (!breakTime) return alert('휴식 시간 여부를 선택해주세요.');
 
-      alert(`인력 지원 요청 완료!\n위치: ${location}\n담당자: ${managerName} (${managerContact})\n일정: ${workDate} (${workDays}일간)\n시간: ${startTime} ~ ${endTime}\n식사: ${meal.innerText} / 휴식: ${breakTime.innerText}\n곧 전문가가 연결됩니다.`);
+      alert(`인력 지원 요청 완료!\n위치: ${location}\n담당자: ${managerName} (${managerContact})\n일정: ${workDate} (${workDays}일간)\n시간: ${startTime} ~ ${endTime}\n인력 내역: ${manpowerDetails}\n식사: ${meal.innerText} / 휴식: ${breakTime.innerText}\n곧 전문가가 연결됩니다.`);
       
       // 초기화
       document.getElementById('manpowerLocation').value = '';
@@ -410,6 +468,25 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('manpowerWorkDate').value = '';
       document.getElementById('manpowerWorkDays').value = '';
       document.querySelectorAll('.meal-btn, .break-btn').forEach(b => b.classList.remove('selected'));
+      
+      // 인력 리스트 초기화 (첫 번째 아이템만 남기고 삭제)
+      const list = document.getElementById('manpowerSelectionList');
+      list.innerHTML = `
+        <div class="manpower-item manpower-grid">
+          <select class="manpower-type">
+            <optgroup label="보통인력">
+              <option value="일반인부">일반인부</option>
+              <option value="철거공">철거공</option>
+            </optgroup>
+            <optgroup label="기술인력">
+              <option value="전기공">전기공</option>
+            </optgroup>
+          </select>
+          <input type="number" class="manpower-wage" placeholder="임금" value="150000">
+          <input type="number" class="manpower-count" placeholder="인원" value="1">
+        </div>
+      `;
+      
       manpowerModal.classList.add('hidden');
     };
   }
