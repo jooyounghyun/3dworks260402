@@ -259,29 +259,42 @@ document.addEventListener('DOMContentLoaded', () => {
       updateManpowerSummary();
     }
   });
+// --- 닫기 버튼 공통 제어 ---
+document.querySelectorAll('.close-btn').forEach(btn => {
+  btn.onclick = () => {
+    // 만약 인력 유형 선택창의 닫기 버튼이라면 해당 창만 닫음
+    if (btn.id === 'closeTypeBtn') {
+      manpowerTypeModal.classList.add('hidden');
+      return;
+    }
 
-  // --- 닫기 버튼 공통 제어 ---
-  document.querySelectorAll('.close-btn').forEach(btn => {
-    btn.onclick = () => {
-      const modals = [
-        loginModal, signupModal, serviceModal, demolitionModal, 
-        wasteModal, restorationModal, manpowerModal, manpowerTypeModal
-      ];
-      modals.forEach(modal => {
-        if (modal) modal.classList.add('hidden');
-      });
-    };
-  });
-
-  window.onclick = (e) => {
+    // 그 외의 경우 모든 모달을 숨김 처리
     const modals = [
       loginModal, signupModal, serviceModal, demolitionModal, 
       wasteModal, restorationModal, manpowerModal, manpowerTypeModal
     ];
     modals.forEach(modal => {
-      if (e.target === modal) modal.classList.add('hidden');
+      if (modal) modal.classList.add('hidden');
     });
   };
+});
+
+window.onclick = (e) => {
+  // 바깥 영역 클릭 시 처리
+  if (e.target === manpowerTypeModal) {
+    manpowerTypeModal.classList.add('hidden');
+    return;
+  }
+
+  const modals = [
+    loginModal, signupModal, serviceModal, demolitionModal, 
+    wasteModal, restorationModal, manpowerModal
+  ];
+  modals.forEach(modal => {
+    if (e.target === modal) modal.classList.add('hidden');
+  });
+};
+
 
   // --- 버튼 클릭 핸들러 ---
   document.querySelectorAll('.type-btn').forEach(btn => {
