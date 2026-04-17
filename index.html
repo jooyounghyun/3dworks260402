@@ -128,15 +128,38 @@
           <input type="text" id="manpowerCompanyName" readonly>
         </div>
         <div class="input-group">
-          <label for="manpowerCompanyContact">연락처</label>
+          <label for="manpowerCompanyContact">업체 연락처</label>
           <input type="text" id="manpowerCompanyContact" readonly>
+        </div>
+      </div>
+
+      <!-- ✅ 추가된 현장 담당자 정보 -->
+      <div class="modal-row">
+        <div class="input-group">
+          <label for="manpowerManagerName">현장 담당자</label>
+          <input type="text" id="manpowerManagerName" placeholder="성함 입력">
+        </div>
+        <div class="input-group">
+          <label for="manpowerManagerContact">담당자 연락처</label>
+          <input type="tel" id="manpowerManagerContact" placeholder="010-0000-0000">
+        </div>
+      </div>
+
+      <!-- ✅ 추가된 작업 날짜 및 일수 -->
+      <div class="modal-row">
+        <div class="input-group">
+          <label for="manpowerStartDate">작업 시작일</label>
+          <input type="date" id="manpowerStartDate">
+        </div>
+        <div class="input-group">
+          <label for="manpowerWorkDays">작업 일수 (일)</label>
+          <input type="number" id="manpowerWorkDays" value="1" min="1">
         </div>
       </div>
 
       <div class="input-group" style="margin-top: 15px;">
         <label>요청 인력 상세</label>
         <div id="manpowerSelectionList" style="display: flex; flex-direction: column; gap: 10px;">
-          <!-- 인력 행이 동적으로 추가됨 -->
           <div class="manpower-item manpower-grid">
             <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
             <input type="hidden" class="manpower-type-val">
@@ -170,9 +193,22 @@
         <button id="addManpowerBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 13px;">+ 다른 인력 추가</button>
       </div>
 
-      <div class="input-group" style="margin-top: 15px;">
-        <label for="manpowerWorkDays">작업 일수 (일)</label>
-        <input type="number" id="manpowerWorkDays" value="1" min="1">
+      <!-- ✅ 추가된 식사 및 휴게시간 -->
+      <div class="modal-row" style="margin-top: 15px;">
+        <div class="input-group">
+          <label>식사 제공</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn meal-btn" data-value="제공" style="flex: 1; padding: 8px; font-size: 12px;">제공</button>
+            <button type="button" class="type-btn meal-btn" data-value="미제공" style="flex: 1; padding: 8px; font-size: 12px;">미제공</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>휴게 시간</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn break-btn" data-value="유" style="flex: 1; padding: 8px; font-size: 12px;">유</button>
+            <button type="button" class="type-btn break-btn" data-value="무" style="flex: 1; padding: 8px; font-size: 12px;">무</button>
+          </div>
+        </div>
       </div>
 
       <!-- 예상 견적 요약 -->
