@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 닫기 버튼 공통 제어 ---
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.onclick = () => {
-      if (btn.id === 'closeTypeBtn') return; // 별도 처리
+      // 모든 모달을 찾아서 숨김 처리
       loginModal.classList.add('hidden');
       signupModal.classList.add('hidden');
       serviceModal.classList.add('hidden');
@@ -271,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (wasteModal) wasteModal.classList.add('hidden');
       if (restorationModal) restorationModal.classList.add('hidden');
       if (manpowerModal) manpowerModal.classList.add('hidden');
+      if (manpowerTypeModal) manpowerTypeModal.classList.add('hidden');
     };
   });
 
