@@ -263,27 +263,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 닫기 버튼 공통 제어 ---
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.onclick = () => {
-      // 모든 모달을 찾아서 숨김 처리
-      loginModal.classList.add('hidden');
-      signupModal.classList.add('hidden');
-      serviceModal.classList.add('hidden');
-      demolitionModal.classList.add('hidden');
-      if (wasteModal) wasteModal.classList.add('hidden');
-      if (restorationModal) restorationModal.classList.add('hidden');
-      if (manpowerModal) manpowerModal.classList.add('hidden');
-      if (manpowerTypeModal) manpowerTypeModal.classList.add('hidden');
+      const modals = [
+        loginModal, signupModal, serviceModal, demolitionModal, 
+        wasteModal, restorationModal, manpowerModal, manpowerTypeModal
+      ];
+      modals.forEach(modal => {
+        if (modal) modal.classList.add('hidden');
+      });
     };
   });
 
   window.onclick = (e) => {
-    if (e.target === loginModal) loginModal.classList.add('hidden');
-    if (e.target === signupModal) signupModal.classList.add('hidden');
-    if (e.target === serviceModal) serviceModal.classList.add('hidden');
-    if (e.target === demolitionModal) demolitionModal.classList.add('hidden');
-    if (e.target === wasteModal) wasteModal.classList.add('hidden');
-    if (e.target === restorationModal) restorationModal.classList.add('hidden');
-    if (e.target === manpowerModal) manpowerModal.classList.add('hidden');
-    if (e.target === manpowerTypeModal) manpowerTypeModal.classList.add('hidden');
+    const modals = [
+      loginModal, signupModal, serviceModal, demolitionModal, 
+      wasteModal, restorationModal, manpowerModal, manpowerTypeModal
+    ];
+    modals.forEach(modal => {
+      if (e.target === modal) modal.classList.add('hidden');
+    });
   };
 
   // --- 버튼 클릭 핸들러 ---
