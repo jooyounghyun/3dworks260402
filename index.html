@@ -317,6 +317,18 @@
         <label for="demoArea">평수 입력 (평)</label>
         <input type="number" id="demoArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
       </div>
+
+      <!-- 추가된 세부 선택 항목 -->
+      <div class="input-group" style="margin-top: 15px;">
+        <label>철거 범위 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">천장 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">바닥 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">가벽 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">전체 철거</button>
+        </div>
+      </div>
+
       <div class="photo-upload-section" style="margin-top: 20px;">
         <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
         <div id="photoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
@@ -326,6 +338,44 @@
         <div id="photoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
       <button id="submitDemolitionBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 상가 원상복구 상세 정보 입력 모달 (복구됨) -->
+  <div id="restorationModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>상가 원상복구 상세 정보</h2>
+        <button id="closeRestorationBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="restoreLocation">현장 위치</label>
+        <input type="text" id="restoreLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+      <div class="input-group">
+        <label for="restoreArea">평수 입력 (평)</label>
+        <input type="number" id="restoreArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+      
+      <div class="input-group" style="margin-top: 15px;">
+        <label>복구 필요 항목 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">텍스 천장</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">데코타일 바닥</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">벽면 도장/도배</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">전기 복구</button>
+        </div>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="restorePhotoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #94a3b8; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="restorePhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="restorePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitRestorationBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
     </div>
   </div>
 

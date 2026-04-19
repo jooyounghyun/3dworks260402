@@ -402,11 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.type-btn');
     if (!btn) return;
-    
+
     // 인력 분류 모달 버튼은 별도 처리
     if (btn.parentElement.id === 'typeList') return;
-    
-    if (btn.classList.contains('waste-type-btn')) {
+
+    if (btn.classList.contains('waste-type-btn') || 
+        btn.classList.contains('demo-type-btn') || 
+        btn.classList.contains('restore-type-btn')) {
       btn.classList.toggle('selected');
     } else if (btn.classList.contains('env-choice-btn')) {
       const group = btn.getAttribute('data-group');
@@ -559,6 +561,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       alert(`인력 지원 요청 완료!\n위치: ${location}\n내역: ${manpowerDetails || '없음'}`);
       if (manpowerModal) manpowerModal.classList.add('hidden');
+    };
+  }
+
+  const submitRestorationBtn = document.getElementById('submitRestorationBtn');
+  if (submitRestorationBtn) {
+    submitRestorationBtn.onclick = () => {
+      const restoreLocation = document.getElementById('restoreLocation');
+      const location = restoreLocation ? restoreLocation.value : '';
+      if (!location) return alert('현장 위치를 입력해주세요.');
+      alert('상가 원상복구 요청 완료!');
+      if (restorationModal) restorationModal.classList.add('hidden');
     };
   }
 });
