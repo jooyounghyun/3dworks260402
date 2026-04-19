@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="hidden" class="manpower-type-val">
         <input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;">
         <select class="manpower-count" style="flex: 1; height: 38px;">
-          <option value="" selected disabled>인원선택</option>
+          <option value="" selected disabled>인원</option>
           <option value="1">1명</option>
           <option value="2">2명</option>
           <option value="3">3명</option>
