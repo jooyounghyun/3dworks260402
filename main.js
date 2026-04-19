@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('manpowerManagerName')) document.getElementById('manpowerManagerName').value = '';
     if (document.getElementById('manpowerManagerContact')) document.getElementById('manpowerManagerContact').value = '';
     if (document.getElementById('manpowerStartDate')) document.getElementById('manpowerStartDate').value = '';
-    if (document.getElementById('manpowerWorkDays')) document.getElementById('manpowerWorkDays').value = 1;
+    if (document.getElementById('manpowerWorkDays')) document.getElementById('manpowerWorkDays').value = "1";
 
     // 인력 리스트 초기화 (첫 번째 행만 남기고 초기화)
     const list = document.getElementById('manpowerSelectionList');
