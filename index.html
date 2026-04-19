@@ -313,9 +313,38 @@
         <label for="demoLocation">현장 위치</label>
         <input type="text" id="demoLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
       </div>
-      <div class="input-group">
-        <label for="demoArea">평수 입력 (평)</label>
-        <input type="number" id="demoArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="demoArea">평수 입력 (평)</label>
+          <input type="number" id="demoArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="demoHeight">층고 입력 (m)</label>
+          <input type="number" id="demoHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <label for="demoFloor">현장 층수</label>
+        <input type="number" id="demoFloor" placeholder="예: 2 (지하인 경우 -1)">
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn demo-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn demo-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn demo-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn demo-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
       </div>
 
       <!-- 추가된 세부 선택 항목 -->
@@ -352,9 +381,38 @@
         <label for="restoreLocation">현장 위치</label>
         <input type="text" id="restoreLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
       </div>
-      <div class="input-group">
-        <label for="restoreArea">평수 입력 (평)</label>
-        <input type="number" id="restoreArea" placeholder="예: 20" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreArea">평수 입력 (평)</label>
+          <input type="number" id="restoreArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreHeight">층고 입력 (m)</label>
+          <input type="number" id="restoreHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <label for="restoreFloor">현장 층수</label>
+        <input type="number" id="restoreFloor" placeholder="예: 2 (지하인 경우 -1)">
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
       </div>
       
       <div class="input-group" style="margin-top: 15px;">

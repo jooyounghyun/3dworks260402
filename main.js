@@ -410,6 +410,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.contains('demo-type-btn') || 
         btn.classList.contains('restore-type-btn')) {
       btn.classList.toggle('selected');
+    } else if (btn.classList.contains('demo-env-btn')) {
+      const group = btn.getAttribute('data-group');
+      document.querySelectorAll(`.demo-env-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    } else if (btn.classList.contains('restore-env-btn')) {
+      const group = btn.getAttribute('data-group');
+      document.querySelectorAll(`.restore-env-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
     } else if (btn.classList.contains('env-choice-btn')) {
       const group = btn.getAttribute('data-group');
       document.querySelectorAll(`.env-choice-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
