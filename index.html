@@ -521,6 +521,91 @@
     </div>
   </div>
 
+  <!-- ✅ 전기 공사 상세 정보 입력 모달 (신규 추가) -->
+  <div id="electricModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>전기 공사 상세 정보</h2>
+        <button id="closeElectricBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="electricLocation">현장 위치</label>
+        <input type="text" id="electricLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="electricArea">평수 입력 (평)</label>
+          <input type="number" id="electricArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="electricHeight">층고 입력 (m)</label>
+          <input type="number" id="electricHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="electricFloor">현장 층수</label>
+          <input type="number" id="electricFloor" placeholder="예: 2">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="electricDate">작업 희망 날짜</label>
+          <input type="date" id="electricDate">
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>공사 유형 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">신규 인테리어</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">노후 설비 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">조명/스위치 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">증설/승압 공사</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">누전/긴급 수리</button>
+          <button type="button" class="electric-type-btn type-btn" id="electricOtherBtn" style="padding: 10px; font-size: 13px;">기타</button>
+        </div>
+        <input type="text" id="electricOtherInput" placeholder="기타 공사 내용을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>현장 상태</label>
+        <div class="env-selection" style="display: flex; gap: 5px; margin-top: 5px;">
+          <button type="button" class="type-btn electric-env-btn" data-group="state" data-value="공실" style="flex: 1; padding: 10px; font-size: 13px;">공실 (작업 용이)</button>
+          <button type="button" class="type-btn electric-env-btn" data-group="state" data-value="영업중" style="flex: 1; padding: 10px; font-size: 13px;">운영 중 (집기 있음)</button>
+        </div>
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn electric-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn electric-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn electric-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn electric-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (분전반/작업부위 필수)</p>
+        <div id="electricPhotoDropzone" class="dropzone" style="border: 2px dashed #334155; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #94a3b8; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="electricPhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="electricPhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitElectricBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
   <!-- 서비스 -->
   <section class="section">
     <h2>주요 서비스</h2>
