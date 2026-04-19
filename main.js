@@ -410,6 +410,20 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.contains('demo-type-btn') || 
         btn.classList.contains('restore-type-btn')) {
       btn.classList.toggle('selected');
+
+      // 기타 버튼 클릭 시 입력창 제어 (상가 원상복구 전용)
+      if (btn.id === 'restoreOtherBtn') {
+        const otherInput = document.getElementById('restoreOtherInput');
+        if (otherInput) {
+          if (btn.classList.contains('selected')) {
+            otherInput.classList.remove('hidden');
+            otherInput.focus();
+          } else {
+            otherInput.classList.add('hidden');
+            otherInput.value = '';
+          }
+        }
+      }
     } else if (btn.classList.contains('demo-env-btn')) {
       const group = btn.getAttribute('data-group');
       document.querySelectorAll(`.demo-env-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
