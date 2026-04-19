@@ -519,8 +519,9 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmServiceBtn.onclick = () => {
       const selectedBtn = document.querySelector('.service-item-btn.selected');
       if (selectedBtn) {
-        const selectedService = selectedBtn.innerText;
+        const selectedService = selectedBtn.innerText.trim(); // 공백 제거 추가
         if (serviceModal) serviceModal.classList.add('hidden');
+        
         if (selectedService === '상가 철거') demolitionModal.classList.remove('hidden');
         else if (selectedService === '폐기물 처리') wasteModal.classList.remove('hidden');
         else if (selectedService === '상가 원상복구') restorationModal.classList.remove('hidden');
