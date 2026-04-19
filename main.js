@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const demolitionModal = document.getElementById('demolitionModal');
   const wasteModal = document.getElementById('wasteModal');
   const restorationModal = document.getElementById('restorationModal');
-  const electricModal = document.getElementById('electricModal'); // 추가
+  const electricModal = document.getElementById('electricModal');
+  const pipeModal = document.getElementById('pipeModal');
   const manpowerModal = document.getElementById('manpowerModal');
   const manpowerBtn = document.getElementById('manpowerBtn');
   const manpowerTypeModal = document.getElementById('manpowerTypeModal');
@@ -375,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 그 외의 경우 모든 모달을 숨김 처리
       const modals = [
         loginModal, signupModal, serviceModal, demolitionModal, 
-        wasteModal, restorationModal, electricModal, manpowerModal, manpowerTypeModal
+        wasteModal, restorationModal, electricModal, pipeModal, manpowerModal, manpowerTypeModal
       ];
       modals.forEach(modal => {
         if (modal) modal.classList.add('hidden');
@@ -392,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modals = [
       loginModal, signupModal, serviceModal, demolitionModal, 
-      wasteModal, restorationModal, electricModal, manpowerModal
+      wasteModal, restorationModal, electricModal, pipeModal, manpowerModal
     ];
     modals.forEach(modal => {
       if (modal && e.target === modal) modal.classList.add('hidden');
@@ -410,11 +411,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn.classList.contains('waste-type-btn') || 
         btn.classList.contains('demo-type-btn') || 
         btn.classList.contains('restore-type-btn') ||
-        btn.classList.contains('electric-type-btn')) {
+        btn.classList.contains('electric-type-btn') ||
+        btn.classList.contains('pipe-type-btn') ||
+        btn.classList.contains('pipe-spot-btn') ||
+        btn.classList.contains('pipe-symptom-btn')) {
       btn.classList.toggle('selected');
 
-      // 기타 버튼 클릭 시 입력창 제어 (상가 원상복구 / 전기 공사 공통)
-      const otherInputId = btn.id === 'restoreOtherBtn' ? 'restoreOtherInput' : (btn.id === 'electricOtherBtn' ? 'electricOtherInput' : null);
+      // 기타 버튼 클릭 시 입력창 제어 (원상복구 / 전기 / 하수구 공통)
+      const otherInputMap = {
+        'restoreOtherBtn': 'restoreOtherInput',
+        'electricOtherBtn': 'electricOtherInput',
+        'pipeOtherBtn': 'pipeOtherInput'
+      };
+      const otherInputId = otherInputMap[btn.id];
       if (otherInputId) {
         const otherInput = document.getElementById(otherInputId);
         if (otherInput) {
@@ -438,6 +447,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (btn.classList.contains('electric-env-btn')) {
       const group = btn.getAttribute('data-group');
       document.querySelectorAll(`.electric-env-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    } else if (btn.classList.contains('pipe-env-btn')) {
+      const group = btn.getAttribute('data-group');
+      document.querySelectorAll(`.pipe-env-btn[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     } else if (btn.classList.contains('env-choice-btn')) {
       const group = btn.getAttribute('data-group');
@@ -512,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (selectedService === '폐기물 처리') wasteModal.classList.remove('hidden');
         else if (selectedService === '상가 원상복구') restorationModal.classList.remove('hidden');
         else if (selectedService === '전기 공사') electricModal.classList.remove('hidden');
+        else if (selectedService === '하수구 배관') pipeModal.classList.remove('hidden');
         else alert(`선택된 서비스: ${selectedService}\n전문가 팀 매칭을 시작합니다!`);
       } else {
         alert('최소 하나 이상의 서비스를 선택해주세요.');
@@ -560,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const wastePhotos = setupPhotoUpload('wastePhotoDropzone', 'wastePhotoInput', 'wastePhotoPreview', 3);
   const restorePhotos = setupPhotoUpload('restorePhotoDropzone', 'restorePhotoInput', 'restorePhotoPreview', 3);
   const electricPhotos = setupPhotoUpload('electricPhotoDropzone', 'electricPhotoInput', 'electricPhotoPreview', 2);
+  const pipePhotos = setupPhotoUpload('pipePhotoDropzone', 'pipePhotoInput', 'pipePhotoPreview', 2);
 
   // --- 제출 핸들러 ---
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
@@ -614,6 +629,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!location) return alert('현장 위치를 입력해주세요.');
       alert('전기 공사 요청 완료! 전문가가 검토 후 연락드립니다.');
       if (electricModal) electricModal.classList.add('hidden');
+    };
+  }
+
+  const submitPipeBtn = document.getElementById('submitPipeBtn');
+  if (submitPipeBtn) {
+    submitPipeBtn.onclick = () => {
+      const pipeLocation = document.getElementById('pipeLocation');
+      const location = pipeLocation ? pipeLocation.value : '';
+      if (!location) return alert('현장 위치를 입력해주세요.');
+      alert('하수구 배관 공사 요청 완료! 전문가가 검토 후 연락드립니다.');
+      if (pipeModal) pipeModal.classList.add('hidden');
     };
   }
 });
