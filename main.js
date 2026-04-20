@@ -78,22 +78,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupStepCompany = document.getElementById('signupStepCompany');
   const signupStep3 = document.getElementById('signupStep3');
 
-  // 1단계: 유형 선택
-  document.querySelectorAll('#signupStep1 .type-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      signupState.type = btn.getAttribute('data-type');
-      if (signupStep1) signupStep1.classList.add('hidden');
-      if (signupStep2) signupStep2.classList.remove('hidden');
+  // 1단계: 유형 선택 (이벤트 위임 대신 직접 등록으로 명확히 처리)
+  if (signupStep1) {
+    signupStep1.querySelectorAll('.type-btn').forEach(btn => {
+      btn.onclick = () => {
+        signupState.type = btn.getAttribute('data-type');
+        signupStep1.classList.add('hidden');
+        if (signupStep2) signupStep2.classList.remove('hidden');
+      };
     });
-  });
+  }
 
   // 2단계: 통신사 선택
   document.querySelectorAll('.carrier-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       signupState.carrier = btn.getAttribute('data-value');
-    });
+    };
   });
 
   // 인증번호 전송
@@ -226,16 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
       loginModal.classList.remove('hidden');
     };
   }
-
-  if (signupBtn) {
-    signupBtn.onclick = (e) => {
-      e.preventDefault();
-      signupModal.classList.remove('hidden');
-      document.getElementById('signupStep1').classList.remove('hidden');
-      document.getElementById('signupStep2').classList.add('hidden');
-      document.getElementById('signupStep3').classList.add('hidden');
-    };
-  }
+if (signupBtn) {
+  signupBtn.onclick = (e) => {
+    e.preventDefault();
+    if (signupModal) signupModal.classList.remove('hidden');
+    if (signupStep1) signupStep1.classList.remove('hidden');
+    if (signupStep2) signupStep2.classList.add('hidden');
+    if (signupStepCompany) signupStepCompany.classList.add('hidden');
+    if (signupStep3) signupStep3.classList.add('hidden');
+  };
+}
 
   if (hireTeamBtn) {
     hireTeamBtn.onclick = () => {
@@ -508,7 +510,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!btn) return;
 
     // 인력 분류 모달 버튼은 별도 처리
-    if (btn.parentElement.id === 'typeList') return;
+    if (btn.parentElement && btn.parentElement.id === 'typeList') return;
+    
+    // 회원가입 유형 선택 버튼은 별도 처리 (signupStep1 내부 버튼 제외)
+    if (btn.closest('#signupStep1')) return;
 
     if (btn.classList.contains('waste-type-btn') || 
         btn.classList.contains('demo-type-btn') || 
@@ -569,11 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (btn.classList.contains('break-btn')) {
       document.querySelectorAll('.break-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-    } else if (btn.parentElement.classList.contains('type-selection')) {
-      const signupStep1 = document.getElementById('signupStep1');
-      const signupStep2 = document.getElementById('signupStep2');
-      if (signupStep1) signupStep1.classList.add('hidden');
-      if (signupStep2) signupStep2.classList.remove('hidden');
     }
   });
 
