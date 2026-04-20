@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (selectedService === '폐기물 처리') wasteModal.classList.remove('hidden');
         else if (selectedService === '상가 원상복구') restorationModal.classList.remove('hidden');
         else if (selectedService === '전기 공사') electricModal.classList.remove('hidden');
-        else if (selectedService === '하수구 배관') pipeModal.classList.remove('hidden');
+        else if (selectedService === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
         else alert(`선택된 서비스: ${selectedService}\n전문가 팀 매칭을 시작합니다!`);
       } else {
         alert('최소 하나 이상의 서비스를 선택해주세요.');
@@ -639,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const pipeLocation = document.getElementById('pipeLocation');
       const location = pipeLocation ? pipeLocation.value : '';
       if (!location) return alert('현장 위치를 입력해주세요.');
-      alert('하수구 배관 공사 요청 완료! 전문가가 검토 후 연락드립니다.');
+      alert('배관막힘 누수공사 요청 완료! 전문가가 검토 후 연락드립니다.');
       if (pipeModal) pipeModal.classList.add('hidden');
     };
   }
