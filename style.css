@@ -236,13 +236,12 @@ header {
   font-weight: bold;
 }
 
-/* ✅ 인증창 레이아웃 */
-#signupStep2 .input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+.carrier-btn {
+  padding: 10px;
+  font-size: 12px;
 }
 
+/* ✅ 인증창 레이아웃 */
 #signupStep2 input {
   flex: 1;
 }

@@ -61,8 +61,110 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentUser = {
     name: "(주)삼디건설",
     phone: "010-1234-5678",
-    isLoggedIn: true
+    isLoggedIn: false
   };
+
+  let signupState = {
+    type: '',
+    name: '',
+    carrier: '',
+    phone: '',
+    isVerified: false,
+    businessVerified: false
+  };
+
+  const signupStep1 = document.getElementById('signupStep1');
+  const signupStep2 = document.getElementById('signupStep2');
+  const signupStepCompany = document.getElementById('signupStepCompany');
+  const signupStep3 = document.getElementById('signupStep3');
+
+  // 1단계: 유형 선택
+  document.querySelectorAll('#signupStep1 .type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      signupState.type = btn.getAttribute('data-type');
+      if (signupStep1) signupStep1.classList.add('hidden');
+      if (signupStep2) signupStep2.classList.remove('hidden');
+    });
+  });
+
+  // 2단계: 통신사 선택
+  document.querySelectorAll('.carrier-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      signupState.carrier = btn.getAttribute('data-value');
+    });
+  });
+
+  // 인증번호 전송
+  const sendVerifyBtn = document.getElementById('sendVerifyBtn');
+  if (sendVerifyBtn) {
+    sendVerifyBtn.onclick = () => {
+      const nameInput = document.getElementById('verifyName');
+      const phoneInput = document.getElementById('phoneNum');
+      if (!nameInput || !nameInput.value) return alert('이름을 입력해주세요.');
+      if (!signupState.carrier) return alert('통신사를 선택해주세요.');
+      if (!phoneInput || !phoneInput.value) return alert('휴대폰 번호를 입력해주세요.');
+      
+      alert(`${nameInput.value}님(${signupState.carrier}), 인증번호가 전송되었습니다.`);
+      signupState.name = nameInput.value;
+      signupState.phone = phoneInput.value;
+      const verifyCodeGroup = document.getElementById('verifyCodeGroup');
+      if (verifyCodeGroup) verifyCodeGroup.classList.remove('hidden');
+    };
+  }
+
+  // 인증번호 확인
+  const checkVerifyBtn = document.getElementById('checkVerifyBtn');
+  if (checkVerifyBtn) {
+    checkVerifyBtn.onclick = () => {
+      const codeInput = document.getElementById('verifyCode');
+      if (codeInput && (codeInput.value === '123456' || codeInput.value.length === 6)) {
+        alert('휴대폰 인증이 완료되었습니다.');
+        signupState.isVerified = true;
+        
+        if (signupState.type === 'company') {
+          if (signupStep2) signupStep2.classList.add('hidden');
+          if (signupStepCompany) signupStepCompany.classList.remove('hidden');
+        } else {
+          goToFinalStep();
+        }
+      } else {
+        alert('인증번호가 올바르지 않습니다.');
+      }
+    };
+  }
+
+  // 업체 정보 단계: 사업자번호 확인
+  const checkBusinessBtn = document.getElementById('checkBusinessBtn');
+  if (checkBusinessBtn) {
+    checkBusinessBtn.onclick = () => {
+      const bNumInput = document.getElementById('businessNumInput');
+      const cNameInput = document.getElementById('companyNameInput');
+      if (!cNameInput || !cNameInput.value) return alert('업체명을 입력해주세요.');
+      if (!bNumInput || !bNumInput.value) return alert('사업자등록번호를 입력해주세요.');
+      
+      alert('사업자 정보가 확인되었습니다.');
+      signupState.businessVerified = true;
+      const nextBtn = document.getElementById('nextToFinalStepBtn');
+      if (nextBtn) nextBtn.disabled = false;
+    };
+  }
+
+  const nextToFinalStepBtn = document.getElementById('nextToFinalStepBtn');
+  if (nextToFinalStepBtn) {
+    nextToFinalStepBtn.onclick = () => {
+      goToFinalStep();
+    };
+  }
+
+  function goToFinalStep() {
+    if (signupStep2) signupStep2.classList.add('hidden');
+    if (signupStepCompany) signupStepCompany.classList.add('hidden');
+    if (signupStep3) signupStep3.classList.remove('hidden');
+    const signupPhoneInput = document.getElementById('signupPhone');
+    if (signupPhoneInput) signupPhoneInput.value = signupState.phone;
+  }
 
   // --- 모달 초기화 함수 ---
   function resetManpowerModal() {
@@ -500,8 +602,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (signupForm) {
     signupForm.onsubmit = (e) => {
       e.preventDefault();
-      alert('회원가입이 완료되었습니다!');
+      const pwInput = document.getElementById('signupPw');
+      const pwConfirmInput = document.getElementById('signupPwConfirm');
+      
+      if (pwInput && pwConfirmInput && pwInput.value !== pwConfirmInput.value) {
+        return alert('비밀번호가 일치하지 않습니다.');
+      }
+      
+      alert('회원가입이 완료되었습니다! 로그인 후 이용해주세요.');
       if (signupModal) signupModal.classList.add('hidden');
+      location.reload(); 
     };
   }
 
