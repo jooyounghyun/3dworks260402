@@ -413,8 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.contains('restore-type-btn') ||
         btn.classList.contains('electric-type-btn') ||
         btn.classList.contains('pipe-type-btn') ||
-        btn.classList.contains('pipe-spot-btn') ||
-        btn.classList.contains('pipe-symptom-btn')) {
+        btn.classList.contains('pipe-spot-btn')) {
       btn.classList.toggle('selected');
 
       // 기타 버튼 클릭 시 입력창 제어 (원상복구 / 전기 / 하수구 공통)
