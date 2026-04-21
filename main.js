@@ -233,159 +233,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- 7. 인력 지원 요청 상세 로직 ---
-  const manpowerSelectionList = document.getElementById('manpowerSelectionList');
-  const addManpowerBtn = document.getElementById('addManpowerBtn');
-  const typeList = document.getElementById('typeList');
-  const manpowerTypeTitle = document.getElementById('manpowerTypeTitle');
-  const typeBreadcrumb = document.getElementById('typeBreadcrumb');
-  const currentCategorySpan = document.getElementById('currentCategory');
-  const backTypeBtn = document.getElementById('backTypeBtn');
-
-  let currentManpowerTarget = null; // 현재 선택 중인 행의 버튼
-
-  const manpowerData = {
-    "기능공 (기술인력)": ["전기공", "설비공", "내선목수", "외선목수", "타일공", "미장공", "조적공", "도장공", "방수공", "용접공"],
-    "철거/폐기물": ["철거공", "폐기물 상차공", "커팅공", "뿌레카공"],
-    "일반/기타": ["일반 잡부", "곰방/양중", "신호수", "청소/뒷정리"]
-  };
-
-  // 인력 행 추가
-  if (addManpowerBtn) {
-    addManpowerBtn.onclick = () => {
-      const newItem = document.createElement('div');
-      newItem.className = 'manpower-item manpower-grid';
-      newItem.innerHTML = `
-        <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
-        <input type="hidden" class="manpower-type-val">
-        <input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;">
-        <select class="manpower-count" style="flex: 1; height: 38px;">
-          <option value="" selected disabled>인원</option>
-          ${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}
-        </select>
-        <button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>
-      `;
-      manpowerSelectionList.appendChild(newItem);
-    };
-  }
-
-  // 인력 행 삭제 및 유형 선택 모달 열기 (위임)
-  if (manpowerSelectionList) {
-    manpowerSelectionList.addEventListener('click', (e) => {
-      if (e.target.classList.contains('remove-manpower-btn')) {
-        const items = manpowerSelectionList.querySelectorAll('.manpower-item');
-        if (items.length > 1) {
-          e.target.closest('.manpower-item').remove();
-          updateWageTotal();
-        } else {
-          alert('최소 한 명의 인력은 필요합니다.');
-        }
-      }
-
-      if (e.target.classList.contains('manpower-type-btn')) {
-        currentManpowerTarget = e.target;
-        renderCategoryList();
-        manpowerTypeModal.classList.remove('hidden');
-      }
-    });
-
-    manpowerSelectionList.addEventListener('input', (e) => {
-      if (e.target.classList.contains('manpower-wage') || e.target.classList.contains('manpower-count')) {
-        updateWageTotal();
-      }
-    });
-    manpowerSelectionList.addEventListener('change', (e) => {
-      if (e.target.classList.contains('manpower-count')) {
-        updateWageTotal();
-      }
-    });
-  }
-
-  // 인력 유형 렌더링 (카테고리)
-  function renderCategoryList() {
-    manpowerTypeTitle.innerText = "인력 유형 선택";
-    typeBreadcrumb.style.display = "none";
-    backTypeBtn.style.display = "none";
-    typeList.innerHTML = "";
-    
-    Object.keys(manpowerData).forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'type-btn category-select-btn';
-      btn.innerText = cat;
-      btn.style.width = "100%";
-      btn.style.marginBottom = "8px";
-      btn.onclick = () => renderSubTypes(cat);
-      typeList.appendChild(btn);
-    });
-  }
-
-  // 인력 유형 렌더링 (하위 항목)
-  function renderSubTypes(category) {
-    manpowerTypeTitle.innerText = category;
-    typeBreadcrumb.style.display = "block";
-    currentCategorySpan.innerText = category;
-    backTypeBtn.style.display = "block";
-    typeList.innerHTML = "";
-
-    manpowerData[category].forEach(type => {
-      const btn = document.createElement('button');
-      btn.className = 'type-btn detail-type-btn';
-      btn.innerText = type;
-      btn.style.width = "100%";
-      btn.style.marginBottom = "8px";
-      btn.onclick = () => selectManpowerType(type);
-      typeList.appendChild(btn);
-    });
-  }
-
-  function selectManpowerType(type) {
-    if (currentManpowerTarget) {
-      currentManpowerTarget.innerText = type;
-      currentManpowerTarget.style.color = "white";
-      const hiddenInput = currentManpowerTarget.parentElement.querySelector('.manpower-type-val');
-      if (hiddenInput) hiddenInput.value = type;
-      
-      manpowerTypeModal.classList.add('hidden');
-    }
-  }
-
-  if (backTypeBtn) {
-    backTypeBtn.onclick = () => renderCategoryList();
-  }
-
-  // 총액 계산
-  function updateWageTotal() {
-    let totalWage = 0;
-    const workDays = parseInt(document.getElementById('manpowerWorkDays').value) || 1;
-    
-    document.querySelectorAll('.manpower-item').forEach(item => {
-      const wage = parseInt(item.querySelector('.manpower-wage').value) || 0;
-      const count = parseInt(item.querySelector('.manpower-count').value) || 0;
-      totalWage += (wage * count);
-    });
-
-    const totalIncurred = totalWage * workDays;
-    const fee = Math.floor(totalIncurred * 0.1);
-    const finalTotal = totalIncurred + fee;
-
-    document.getElementById('wageTotalDisplay').innerText = totalIncurred.toLocaleString() + "원";
-    document.getElementById('matchingFeeDisplay').innerText = fee.toLocaleString() + "원";
-    document.getElementById('totalAmountDisplay').innerText = finalTotal.toLocaleString() + "원";
-  }
-
-  // 날짜 변경 시에도 총액 업데이트
-  const manpowerWorkDaysSelect = document.getElementById('manpowerWorkDays');
-  if (manpowerWorkDaysSelect) {
-    manpowerWorkDaysSelect.onchange = () => updateWageTotal();
-  }
-
-  // 인력 요청 제출
-  const submitManpowerBtn = document.getElementById('submitManpowerBtn');
-  if (submitManpowerBtn) {
-    submitManpowerBtn.onclick = () => {
-      alert('인력 지원 요청이 완료되었습니다!');
+  // 각 모달 제출 핸들러 (간소화)
+  const submitPipeBtn = document.getElementById('submitPipeBtn');
+  if (submitPipeBtn) {
+    submitPipeBtn.onclick = () => {
+      alert('배관막힘 누수공사 요청 완료!');
       closeAllModals();
     };
   }
-});
 
+  // --- 7. 인력 지원 요청 상세 추가 (최소 기능) ---
+  const addManpowerBtn = document.getElementById('addManpowerBtn');
+  const manpowerSelectionList = document.getElementById('manpowerSelectionList');
+
+  if (addManpowerBtn && manpowerSelectionList) {
+    addManpowerBtn.onclick = () => {
+      // 기존 디자인 그대로 복제
+      const firstItem = manpowerSelectionList.querySelector('.manpower-item');
+      if (firstItem) {
+        const newItem = firstItem.cloneNode(true);
+        // 값 초기화
+        newItem.querySelector('.manpower-wage').value = "0";
+        newItem.querySelector('.manpower-type-btn').innerText = "인력 유형 선택";
+        newItem.querySelector('.manpower-type-btn').style.color = "#94a3b8";
+        manpowerSelectionList.appendChild(newItem);
+      }
+    };
+  }
+
+  // 인력 유형 선택 버튼 클릭 시 모달 열기 (위임)
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('manpower-type-btn')) {
+      if (manpowerTypeModal) {
+        manpowerTypeModal.classList.remove('hidden');
+      }
+    }
+    // 삭제 버튼
+    if (e.target.classList.contains('remove-manpower-btn')) {
+      const items = document.querySelectorAll('.manpower-item');
+      if (items.length > 1) {
+        e.target.closest('.manpower-item').remove();
+      }
+    }
+  });
+});
