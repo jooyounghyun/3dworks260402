@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupStepCompany = document.getElementById('signupStepCompany');
   const signupStep3 = document.getElementById('signupStep3');
 
-  // --- 2. 상태 관리 (인력 계층 데이터 복구) ---
+  // --- 2. 상태 관리 (복구된 데이터 및 상태) ---
   const MANPOWER_HIERARCHY = {
     "보통인력": {
       "일반인부": {
@@ -72,53 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentUser = {
     name: "(주)삼디건설",
     phone: "010-1234-5678",
-    isLoggedIn: true // 상세 페이지 테스트를 위해 기본 true로 설정
+    isLoggedIn: true
   };
 
   let activeManpowerItem = null;
   let selectionPath = [];
 
-  // --- 3. 모달 열기 함수 ---
-  
-  // 로그인
-  if (loginBtn) {
-    loginBtn.onclick = (e) => {
-      e.preventDefault();
-      closeAllModals();
-      loginModal.classList.remove('hidden');
-    };
-  }
-
-  // 회원가입
-  if (signupBtn) {
-    signupBtn.onclick = (e) => {
-      e.preventDefault();
-      closeAllModals();
-      signupModal.classList.remove('hidden');
-      signupStep1.classList.remove('hidden');
-      signupStep2.classList.add('hidden');
-      signupStepCompany.classList.add('hidden');
-      signupStep3.classList.add('hidden');
-    };
-  }
-
-  // 팀으로 맡기기
-  if (hireTeamBtn) {
-    hireTeamBtn.onclick = () => {
-      closeAllModals();
-      serviceModal.classList.remove('hidden');
-    };
-  }
-
-  // 인력 지원 요청
-  if (manpowerBtn) {
-    manpowerBtn.onclick = () => {
-      closeAllModals();
-      manpowerModal.classList.remove('hidden');
-    };
-  }
-
-  // --- 4. 공통 닫기 기능 ---
+  // --- 3. 공통 모달 제어 ---
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
@@ -134,160 +94,179 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.onclick = (e) => {
-    if (e.target.classList.contains('modal')) {
-      closeAllModals();
-    }
+    if (e.target.classList.contains('modal')) closeAllModals();
   };
 
-  // --- 5. 인력 유형 선택 로직 복구 ---
+  if (loginBtn) loginBtn.onclick = (e) => { e.preventDefault(); closeAllModals(); loginModal.classList.remove('hidden'); };
+  if (hireTeamBtn) hireTeamBtn.onclick = () => { closeAllModals(); serviceModal.classList.remove('hidden'); };
+  if (manpowerBtn) manpowerBtn.onclick = () => { closeAllModals(); manpowerModal.classList.remove('hidden'); };
+
+  // --- 4. 회원가입 로직 (복구 완료) ---
+  if (signupBtn) {
+    signupBtn.onclick = (e) => {
+      e.preventDefault();
+      closeAllModals();
+      signupModal.classList.remove('hidden');
+      if (signupStep1) signupStep1.classList.remove('hidden');
+      if (signupStep2) signupStep2.classList.add('hidden');
+      if (signupStepCompany) signupStepCompany.classList.add('hidden');
+      if (signupStep3) signupStep3.classList.add('hidden');
+    };
+  }
+
+  // 1단계: 개인/업체 선택
+  document.querySelectorAll('#signupStep1 .type-btn').forEach(btn => {
+    btn.onclick = () => {
+      signupState.type = btn.getAttribute('data-type');
+      signupStep1.classList.add('hidden');
+      signupStep2.classList.remove('hidden');
+    };
+  });
+
+  // 2단계: 통신사 선택
+  document.querySelectorAll('.carrier-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.carrier-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      signupState.carrier = btn.getAttribute('data-value');
+    };
+  });
+
+  // 인증번호 전송
+  const sendVerifyBtn = document.getElementById('sendVerifyBtn');
+  if (sendVerifyBtn) {
+    sendVerifyBtn.onclick = () => {
+      const nameVal = document.getElementById('verifyName').value;
+      const phoneVal = document.getElementById('phoneNum').value;
+      if (!nameVal) return alert('이름을 입력해주세요.');
+      if (!signupState.carrier) return alert('통신사를 선택해주세요.');
+      if (!phoneVal) return alert('휴대폰 번호를 입력해주세요.');
+      alert(`${nameVal}님, 인증번호가 전송되었습니다.`);
+      document.getElementById('verifyCodeGroup').classList.remove('hidden');
+      signupState.phone = phoneVal;
+    };
+  }
+
+  // 인증번호 확인 -> 업체면 정보 입력 단계로, 개인은 바로 가입 정보 단계로
+  const checkVerifyBtn = document.getElementById('checkVerifyBtn');
+  if (checkVerifyBtn) {
+    checkVerifyBtn.onclick = () => {
+      alert('휴대폰 인증이 완료되었습니다.');
+      if (signupState.type === 'company') {
+        signupStep2.classList.add('hidden');
+        signupStepCompany.classList.remove('hidden');
+      } else {
+        goToSignupStep3();
+      }
+    };
+  }
+
+  // 업체 정보 단계: 사업자번호 확인
+  const checkBusinessBtn = document.getElementById('checkBusinessBtn');
+  if (checkBusinessBtn) {
+    checkBusinessBtn.onclick = () => {
+      const bNum = document.getElementById('businessNumInput').value;
+      const cName = document.getElementById('companyNameInput').value;
+      if (!cName || !bNum) return alert('정보를 모두 입력해주세요.');
+      alert('사업자 정보가 확인되었습니다.');
+      document.getElementById('nextToFinalStepBtn').disabled = false;
+    };
+  }
+
+  if (document.getElementById('nextToFinalStepBtn')) {
+    document.getElementById('nextToFinalStepBtn').onclick = () => goToSignupStep3();
+  }
+
+  function goToSignupStep3() {
+    signupStep2.classList.add('hidden');
+    signupStepCompany.classList.add('hidden');
+    signupStep3.classList.remove('hidden');
+    document.getElementById('signupPhone').value = signupState.phone;
+  }
+
+  // --- 5. 인력 지원 요청 로직 복구 ---
   function renderTypeList() {
     const typeList = document.getElementById('typeList');
     const title = document.getElementById('manpowerTypeTitle');
     const backBtn = document.getElementById('backTypeBtn');
-    const breadcrumb = document.getElementById('typeBreadcrumb');
-    const currentCategorySpan = document.getElementById('currentCategory');
-    
     if (!typeList) return;
     typeList.innerHTML = '';
-    
     let currentData = MANPOWER_HIERARCHY;
-    selectionPath.forEach(path => {
-      currentData = currentData[path];
-    });
+    selectionPath.forEach(path => { currentData = currentData[path]; });
 
     if (selectionPath.length === 0) {
       if (title) title.innerText = "인력 대분류 선택";
       if (backBtn) backBtn.style.display = 'none';
-      if (breadcrumb) breadcrumb.style.display = 'none';
+      if (document.getElementById('typeBreadcrumb')) document.getElementById('typeBreadcrumb').style.display = 'none';
     } else {
       if (title) title.innerText = selectionPath[selectionPath.length - 1];
       if (backBtn) backBtn.style.display = 'block';
-      if (breadcrumb) breadcrumb.style.display = 'block';
-      if (currentCategorySpan) currentCategorySpan.innerText = selectionPath[selectionPath.length - 1];
+      if (document.getElementById('typeBreadcrumb')) {
+        document.getElementById('typeBreadcrumb').style.display = 'block';
+        document.getElementById('currentCategory').innerText = selectionPath[selectionPath.length - 1];
+      }
     }
 
-    if (typeof currentData === 'object') {
-      Object.keys(currentData).forEach(key => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'type-btn';
-        btn.style.width = '100%';
-        btn.style.textAlign = 'left';
-        btn.style.marginBottom = '8px';
-        
-        const isLeaf = typeof currentData[key] === 'number';
-        btn.innerHTML = `<span>${key}</span> ${isLeaf ? `<span style="float:right; color:#38bdf8;">${currentData[key].toLocaleString()}원</span>` : '<span style="float:right; color:#94a3b8;">&gt;</span>'}`;
-        
-        btn.onclick = () => {
-          if (isLeaf) {
-            selectManpowerType(key, currentData[key]);
-          } else {
-            selectionPath.push(key);
-            renderTypeList();
-          }
-        };
-        typeList.appendChild(btn);
-      });
-    }
+    Object.keys(currentData).forEach(key => {
+      const btn = document.createElement('button');
+      btn.className = 'type-btn';
+      btn.style.width = '100%'; btn.style.textAlign = 'left'; btn.style.marginBottom = '8px';
+      const isLeaf = typeof currentData[key] === 'number';
+      btn.innerHTML = `<span>${key}</span> ${isLeaf ? `<span style="float:right; color:#38bdf8;">${currentData[key].toLocaleString()}원</span>` : '<span style="float:right; color:#94a3b8;">&gt;</span>'}`;
+      btn.onclick = () => { if (isLeaf) selectManpowerType(key, currentData[key]); else { selectionPath.push(key); renderTypeList(); } };
+      typeList.appendChild(btn);
+    });
   }
 
   function selectManpowerType(name, wage) {
     if (activeManpowerItem) {
-      const typeBtn = activeManpowerItem.querySelector('.manpower-type-btn');
-      const typeVal = activeManpowerItem.querySelector('.manpower-type-val');
-      const wageInput = activeManpowerItem.querySelector('.manpower-wage');
-      
-      if (typeBtn) {
-        typeBtn.innerText = name;
-        typeBtn.style.color = 'white';
-      }
-      if (typeVal) typeVal.value = name;
-      if (wageInput) wageInput.value = wage;
-      
+      activeManpowerItem.querySelector('.manpower-type-btn').innerText = name;
+      activeManpowerItem.querySelector('.manpower-type-btn').style.color = 'white';
+      activeManpowerItem.querySelector('.manpower-type-val').value = name;
+      activeManpowerItem.querySelector('.manpower-wage').value = wage;
       updateManpowerSummary();
-      if (manpowerTypeModal) manpowerTypeModal.classList.add('hidden');
+      manpowerTypeModal.classList.add('hidden');
     }
   }
 
-  const backTypeBtn = document.getElementById('backTypeBtn');
-  if (backTypeBtn) {
-    backTypeBtn.onclick = () => {
-      selectionPath.pop();
-      renderTypeList();
+  if (document.getElementById('backTypeBtn')) {
+    document.getElementById('backTypeBtn').onclick = () => { selectionPath.pop(); renderTypeList(); };
+  }
+
+  if (manpowerSelectionList) {
+    manpowerSelectionList.onclick = (e) => {
+      if (e.target.classList.contains('manpower-type-btn')) { activeManpowerItem = e.target.closest('.manpower-item'); selectionPath = []; renderTypeList(); manpowerTypeModal.classList.remove('hidden'); }
+      if (e.target.classList.contains('remove-manpower-btn')) { if (manpowerSelectionList.querySelectorAll('.manpower-item').length > 1) { e.target.closest('.manpower-item').remove(); updateManpowerSummary(); } }
     };
   }
 
-  const manpowerSelectionList = document.getElementById('manpowerSelectionList');
-  if (manpowerSelectionList) {
-    manpowerSelectionList.addEventListener('click', (e) => {
-      if (e.target.classList.contains('manpower-type-btn')) {
-        activeManpowerItem = e.target.closest('.manpower-item');
-        selectionPath = [];
-        renderTypeList();
-        manpowerTypeModal.classList.remove('hidden');
-      }
-      
-      if (e.target.classList.contains('remove-manpower-btn')) {
-        const items = manpowerSelectionList.querySelectorAll('.manpower-item');
-        if (items.length > 1) {
-          e.target.closest('.manpower-item').remove();
-          updateManpowerSummary();
-        }
-      }
-    });
-  }
-
-  const addManpowerBtn = document.getElementById('addManpowerBtn');
-  if (addManpowerBtn) {
-    addManpowerBtn.onclick = () => {
+  if (document.getElementById('addManpowerBtn')) {
+    document.getElementById('addManpowerBtn').onclick = () => {
       const newItem = document.createElement('div');
-      newItem.className = 'manpower-item manpower-grid';
-      newItem.style.marginTop = '10px';
-      newItem.innerHTML = `
-        <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
-        <input type="hidden" class="manpower-type-val">
-        <input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;">
-        <select class="manpower-count" style="flex: 1; height: 38px;">
-          <option value="" selected disabled>인원</option>
-          ${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}
-        </select>
-        <button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>
-      `;
+      newItem.className = 'manpower-item manpower-grid'; newItem.style.marginTop = '10px';
+      newItem.innerHTML = `<button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button><input type="hidden" class="manpower-type-val"><input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;"><select class="manpower-count" style="flex: 1; height: 38px;"><option value="" selected disabled>인원</option>${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}</select><button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>`;
       manpowerSelectionList.appendChild(newItem);
     };
   }
 
   function updateManpowerSummary() {
     const items = document.querySelectorAll('.manpower-item');
-    const workDays = parseInt(document.getElementById('manpowerWorkDays').value) || 1;
-    let totalWageSum = 0;
-    items.forEach(item => {
-      const wage = parseInt(item.querySelector('.manpower-wage').value) || 0;
-      const count = parseInt(item.querySelector('.manpower-count').value) || 0;
-      totalWageSum += (wage * count);
-    });
-    const wageTotal = totalWageSum * workDays;
-    const matchingFee = Math.floor(wageTotal * 0.1);
-    const totalAmount = wageTotal + matchingFee;
-    if (document.getElementById('wageTotalDisplay')) document.getElementById('wageTotalDisplay').innerText = wageTotal.toLocaleString() + '원';
-    if (document.getElementById('matchingFeeDisplay')) document.getElementById('matchingFeeDisplay').innerText = matchingFee.toLocaleString() + '원';
-    if (document.getElementById('totalAmountDisplay')) document.getElementById('totalAmountDisplay').innerText = totalAmount.toLocaleString() + '원';
+    const days = parseInt(document.getElementById('manpowerWorkDays').value) || 1;
+    let sum = 0; items.forEach(item => { sum += (parseInt(item.querySelector('.manpower-wage').value) || 0) * (parseInt(item.querySelector('.manpower-count').value) || 0); });
+    const total = sum * days; const fee = Math.floor(total * 0.1);
+    document.getElementById('wageTotalDisplay').innerText = total.toLocaleString() + '원';
+    document.getElementById('matchingFeeDisplay').innerText = fee.toLocaleString() + '원';
+    document.getElementById('totalAmountDisplay').innerText = (total + fee).toLocaleString() + '원';
   }
 
-  document.addEventListener('input', (e) => {
-    if (e.target.classList.contains('manpower-wage') || e.target.classList.contains('manpower-count') || e.target.id === 'manpowerWorkDays') {
-      updateManpowerSummary();
-    }
-  });
+  document.addEventListener('input', (e) => { if (e.target.classList.contains('manpower-wage') || e.target.classList.contains('manpower-count') || e.target.id === 'manpowerWorkDays') updateManpowerSummary(); });
 
-  // --- 6. 기타 서비스 버튼들 (상세 페이지 열기) ---
-  const confirmServiceBtn = document.getElementById('confirmServiceBtn');
+  // --- 6. 기타 서비스 및 모달 ---
   if (confirmServiceBtn) {
     confirmServiceBtn.onclick = () => {
       const selected = document.querySelector('.service-item-btn.selected');
       if (!selected) return alert('서비스를 선택해주세요.');
-      const txt = selected.innerText.trim();
-      closeAllModals();
+      const txt = selected.innerText.trim(); closeAllModals();
       if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
       else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
       else if (txt === '상가 원상복구') restorationModal.classList.remove('hidden');
@@ -296,22 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  const serviceItemBtns = document.querySelectorAll('.service-item-btn');
-  serviceItemBtns.forEach(btn => {
-    btn.onclick = () => {
-      serviceItemBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    };
-  });
-
-  // 모달 내부 유형 버튼 토글
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.type-btn');
-    if (!btn || btn.classList.contains('manpower-type-btn') || btn.closest('#manpowerTypeModal')) return;
-    if (btn.classList.contains('waste-type-btn') || btn.classList.contains('demo-type-btn') || 
-        btn.classList.contains('restore-type-btn') || btn.classList.contains('electric-type-btn') || 
-        btn.classList.contains('pipe-type-btn')) {
-      btn.classList.toggle('selected');
-    }
-  });
+  document.querySelectorAll('.service-item-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.service-item-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }; });
+  document.addEventListener('click', (e) => { const btn = e.target.closest('.type-btn'); if (!btn || btn.classList.contains('manpower-type-btn') || btn.closest('#manpowerTypeModal') || btn.closest('#signupModal')) return; btn.classList.toggle('selected'); });
 });
