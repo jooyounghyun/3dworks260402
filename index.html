@@ -105,7 +105,16 @@
             <button id="checkBusinessBtn" class="btn btn-secondary" style="width: auto; padding: 0 10px; font-size: 12px;">진위 확인</button>
           </div>
         </div>
-        <button id="nextToFinalStepBtn" class="btn btn-primary login-submit" style="margin-top: 20px;" disabled>다음 단계</button>
+        <button id="nextToFinalStepFromCompanyBtn" class="btn btn-primary login-submit" style="margin-top: 20px;" disabled>다음 단계</button>
+      </div>
+
+      <!-- 2-2단계: 일용구직자 공종 선택 (유형이 'worker'일 때만 노출) -->
+      <div id="signupStepWorker" class="signup-step hidden">
+        <p class="step-title">작업 가능한 유형을 모두 선택해주세요</p>
+        <div id="workerTypeSelection" class="type-selection" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
+          <!-- JS에서 동적으로 생성됨 -->
+        </div>
+        <button id="nextToFinalStepFromWorkerBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">다음 단계</button>
       </div>
 
       <!-- 3단계: 계정 설정 -->

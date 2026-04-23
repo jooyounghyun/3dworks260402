@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupStep1 = document.getElementById('signupStep1');
   const signupStep2 = document.getElementById('signupStep2');
   const signupStepCompany = document.getElementById('signupStepCompany');
+  const signupStepWorker = document.getElementById('signupStepWorker');
   const signupStep3 = document.getElementById('signupStep3');
+  const workerTypeSelection = document.getElementById('workerTypeSelection');
 
   // --- 2. 상태 관리 (복구된 데이터 및 상태) ---
   const MANPOWER_HIERARCHY = {
@@ -66,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
     carrier: '',
     phone: '',
     isVerified: false,
-    businessVerified: false
+    businessVerified: false,
+    selectedWorkerTypes: []
   };
 
   const currentUser = {
@@ -110,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (signupStep1) signupStep1.classList.remove('hidden');
       if (signupStep2) signupStep2.classList.add('hidden');
       if (signupStepCompany) signupStepCompany.classList.add('hidden');
+      if (signupStepWorker) signupStepWorker.classList.add('hidden');
       if (signupStep3) signupStep3.classList.add('hidden');
     };
   }
@@ -147,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 인증번호 확인 -> 업체면 정보 입력 단계로, 개인은 바로 가입 정보 단계로
+  // 인증번호 확인 -> 유형에 따라 다음 단계로
   const checkVerifyBtn = document.getElementById('checkVerifyBtn');
   if (checkVerifyBtn) {
     checkVerifyBtn.onclick = () => {
@@ -155,9 +159,65 @@ document.addEventListener('DOMContentLoaded', () => {
       if (signupState.type === 'company') {
         signupStep2.classList.add('hidden');
         signupStepCompany.classList.remove('hidden');
+      } else if (signupState.type === 'worker') {
+        signupStep2.classList.add('hidden');
+        signupStepWorker.classList.remove('hidden');
+        renderWorkerTypeSelection();
       } else {
         goToSignupStep3();
       }
+    };
+  }
+
+  // 일용구직자 공종 선택 리스트 렌더링
+  function renderWorkerTypeSelection() {
+    if (!workerTypeSelection) return;
+    workerTypeSelection.innerHTML = '';
+    
+    // 계층형 데이터를 평면화하여 뿌려줌 (대분류 > 중분류 > 소분류)
+    Object.keys(MANPOWER_HIERARCHY).forEach(bigCat => {
+      const bigHeader = document.createElement('div');
+      bigHeader.style.cssText = "color: #38bdf8; font-weight: bold; margin-top: 15px; font-size: 14px; border-bottom: 1px solid #334155; padding-bottom: 5px;";
+      bigHeader.innerText = bigCat;
+      workerTypeSelection.appendChild(bigHeader);
+
+      Object.keys(MANPOWER_HIERARCHY[bigCat]).forEach(midCat => {
+        const midGroup = document.createElement('div');
+        midGroup.style.cssText = "padding-left: 10px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;";
+        
+        const midHeader = document.createElement('div');
+        midHeader.style.cssText = "color: #94a3b8; font-size: 13px; font-weight: 500;";
+        midHeader.innerText = midCat;
+        midGroup.appendChild(midHeader);
+
+        const itemContainer = document.createElement('div');
+        itemContainer.style.cssText = "display: grid; grid-template-columns: 1fr 1fr; gap: 8px;";
+
+        Object.keys(MANPOWER_HIERARCHY[bigCat][midCat]).forEach(smallCat => {
+          const btn = document.createElement('button');
+          btn.type = "button";
+          btn.className = "type-btn";
+          btn.style.cssText = "padding: 10px; font-size: 11px; text-align: left; height: auto; min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center;";
+          btn.innerText = smallCat;
+          btn.onclick = () => {
+            btn.classList.toggle('selected');
+          };
+          itemContainer.appendChild(btn);
+        });
+        midGroup.appendChild(itemContainer);
+        workerTypeSelection.appendChild(midGroup);
+      });
+    });
+  }
+
+  // 일용구직자 단계에서 계정 설정 단계로
+  const nextToFinalStepFromWorkerBtn = document.getElementById('nextToFinalStepFromWorkerBtn');
+  if (nextToFinalStepFromWorkerBtn) {
+    nextToFinalStepFromWorkerBtn.onclick = () => {
+      const selected = Array.from(workerTypeSelection.querySelectorAll('.type-btn.selected')).map(btn => btn.innerText);
+      if (selected.length === 0) return alert('최소 하나 이상의 작업 유형을 선택해주세요.');
+      signupState.selectedWorkerTypes = selected;
+      goToSignupStep3();
     };
   }
 
@@ -169,17 +229,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const cName = document.getElementById('companyNameInput').value;
       if (!cName || !bNum) return alert('정보를 모두 입력해주세요.');
       alert('사업자 정보가 확인되었습니다.');
-      document.getElementById('nextToFinalStepBtn').disabled = false;
+      document.getElementById('nextToFinalStepFromCompanyBtn').disabled = false;
     };
   }
 
-  if (document.getElementById('nextToFinalStepBtn')) {
-    document.getElementById('nextToFinalStepBtn').onclick = () => goToSignupStep3();
+  if (document.getElementById('nextToFinalStepFromCompanyBtn')) {
+    document.getElementById('nextToFinalStepFromCompanyBtn').onclick = () => goToSignupStep3();
   }
 
   function goToSignupStep3() {
     signupStep2.classList.add('hidden');
     signupStepCompany.classList.add('hidden');
+    signupStepWorker.classList.add('hidden');
     signupStep3.classList.remove('hidden');
     document.getElementById('signupPhone').value = signupState.phone;
   }
