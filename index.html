@@ -5,6 +5,11 @@
   <title>3D해결사</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  
+  <!-- ✅ SNS SDK 연동 (실제 연동 시 키 입력 필요) -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -64,6 +69,17 @@
           <button class="type-btn" data-type="company">업체</button>
           <button class="type-btn" data-type="worker">일용구직자</button>
         </div>
+        
+        <div class="social-login-choice hidden" id="socialChoice" style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 20px;">
+          <p class="step-title" id="selectedTypeDisplay" style="font-size: 14px; color: #38bdf8;"></p>
+          <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">가입 방식을 선택해주세요</p>
+          <button id="phoneSignupBtn" class="btn btn-secondary" style="margin-bottom: 10px;">휴대폰 번호로 가입</button>
+          <div class="social-buttons" style="margin-top: 10px;">
+            <button id="kakaoStep1Btn" class="social-btn kakao">카카오로 시작하기</button>
+            <button id="naverStep1Btn" class="social-btn naver">네이버로 시작하기</button>
+            <button id="googleStep1Btn" class="social-btn google">Google로 시작하기</button>
+          </div>
+        </div>
       </div>
 
       <!-- 2단계: 휴대폰 인증 (통신사 선택 추가) -->
@@ -96,6 +112,15 @@
           <div style="display: flex; gap: 5px;">
             <input type="text" id="verifyCode" placeholder="6자리 입력" style="flex: 1;">
             <button id="checkVerifyBtn" class="btn btn-primary" style="width: auto; padding: 0 15px;">확인</button>
+          </div>
+        </div>
+
+        <div class="social-login" style="margin-top: 30px;">
+          <p>또는 SNS 계정으로 간편 가입</p>
+          <div class="social-buttons">
+            <button id="kakaoSignupBtn" class="social-btn kakao">카카오로 시작하기</button>
+            <button id="naverSignupBtn" class="social-btn naver">네이버로 시작하기</button>
+            <button id="googleSignupBtn" class="social-btn google">Google로 시작하기</button>
           </div>
         </div>
       </div>

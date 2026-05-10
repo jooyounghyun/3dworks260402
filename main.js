@@ -130,6 +130,47 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // --- 소셜 회원가입 연동 ---
+  const googleSignupBtn = document.getElementById('googleSignupBtn');
+  const kakaoSignupBtn = document.getElementById('kakaoSignupBtn');
+  const naverSignupBtn = document.getElementById('naverSignupBtn');
+
+  function handleSocialSignup(provider) {
+    if (!signupState.type) {
+      alert('사용자 유형을 먼저 선택해주세요.');
+      return;
+    }
+
+    console.log(`${provider} 회원가입 시도: 유형=${signupState.type}`);
+    
+    // 소셜 로그인 시뮬레이션 (실제로는 API 호출 및 리다이렉트 발생)
+    alert(`${provider} 인증에 성공했습니다.`);
+    
+    // 소셜 로그인 시에는 휴대폰 번호를 가져왔다고 가정 (가상의 데이터)
+    signupState.phone = "010-9999-8888"; 
+    signupState.isVerified = true;
+
+    // 유형에 따라 다음 단계로 이동
+    if (signupState.type === 'company') {
+      signupStep1.classList.add('hidden');
+      signupStep2.classList.add('hidden');
+      signupStepCompany.classList.remove('hidden');
+    } else if (signupState.type === 'worker') {
+      signupStep1.classList.add('hidden');
+      signupStep2.classList.add('hidden');
+      signupStepWorker.classList.remove('hidden');
+      renderWorkerTypeSelection();
+    } else {
+      signupStep1.classList.add('hidden');
+      signupStep2.classList.add('hidden');
+      goToSignupStep3();
+    }
+  }
+
+  if (googleSignupBtn) googleSignupBtn.onclick = () => handleSocialSignup('Google');
+  if (kakaoSignupBtn) kakaoSignupBtn.onclick = () => handleSocialSignup('카카오');
+  if (naverSignupBtn) naverSignupBtn.onclick = () => handleSocialSignup('네이버');
+
   // --- 4. 회원가입 로직 (복구 완료) ---
   if (signupBtn) {
     signupBtn.onclick = (e) => {
@@ -141,17 +182,52 @@ document.addEventListener('DOMContentLoaded', () => {
       if (signupStepCompany) signupStepCompany.classList.add('hidden');
       if (signupStepWorker) signupStepWorker.classList.add('hidden');
       if (signupStep3) signupStep3.classList.add('hidden');
+      
+      // 초기화
+      const socialChoice = document.getElementById('socialChoice');
+      if (socialChoice) socialChoice.classList.add('hidden');
+      document.querySelectorAll('#signupStep1 .type-btn').forEach(b => b.classList.remove('selected'));
     };
   }
 
   // 1단계: 개인/업체 선택
   document.querySelectorAll('#signupStep1 .type-btn').forEach(btn => {
     btn.onclick = () => {
-      signupState.type = btn.getAttribute('data-type');
+      const type = btn.getAttribute('data-type');
+      signupState.type = type;
+      
+      let typeKo = '';
+      if (type === 'user') typeKo = '사용자';
+      else if (type === 'company') typeKo = '업체';
+      else if (type === 'worker') typeKo = '일용구직자';
+
+      const socialChoice = document.getElementById('socialChoice');
+      const selectedTypeDisplay = document.getElementById('selectedTypeDisplay');
+      if (socialChoice && selectedTypeDisplay) {
+        selectedTypeDisplay.innerText = `[${typeKo}] 유형을 선택하셨습니다.`;
+        socialChoice.classList.remove('hidden');
+        document.querySelectorAll('#signupStep1 .type-selection .type-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      }
+    };
+  });
+
+  // Step 1에서 방식 선택
+  const phoneSignupBtn = document.getElementById('phoneSignupBtn');
+  if (phoneSignupBtn) {
+    phoneSignupBtn.onclick = () => {
       signupStep1.classList.add('hidden');
       signupStep2.classList.remove('hidden');
     };
-  });
+  }
+
+  const googleStep1Btn = document.getElementById('googleStep1Btn');
+  const kakaoStep1Btn = document.getElementById('kakaoStep1Btn');
+  const naverStep1Btn = document.getElementById('naverStep1Btn');
+
+  if (googleStep1Btn) googleStep1Btn.onclick = () => handleSocialSignup('Google');
+  if (kakaoStep1Btn) kakaoStep1Btn.onclick = () => handleSocialSignup('카카오');
+  if (naverStep1Btn) naverStep1Btn.onclick = () => handleSocialSignup('네이버');
 
   // 2단계: 통신사 선택
   document.querySelectorAll('.carrier-btn').forEach(btn => {
@@ -349,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('input', (e) => { if (e.target.classList.contains('manpower-wage') || e.target.classList.contains('manpower-count') || e.target.id === 'manpowerWorkDays') updateManpowerSummary(); });
 
   // --- 6. 기타 서비스 및 모달 ---
-  if (confirmServiceBtn) {
+  if (typeof confirmServiceBtn !== 'undefined' && confirmServiceBtn) {
     confirmServiceBtn.onclick = () => {
       const selected = document.querySelector('.service-item-btn.selected');
       if (!selected) return alert('서비스를 선택해주세요.');
@@ -360,6 +436,21 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (txt === '전기 공사') electricModal.classList.remove('hidden');
       else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
     };
+  } else {
+    // confirmServiceBtn이 정의되지 않았을 경우를 대비
+    const confirmBtn = document.getElementById('confirmServiceBtn');
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        const selected = document.querySelector('.service-item-btn.selected');
+        if (!selected) return alert('서비스를 선택해주세요.');
+        const txt = selected.innerText.trim(); closeAllModals();
+        if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
+        else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
+        else if (txt === '상가 원상복구') restorationModal.classList.remove('hidden');
+        else if (txt === '전기 공사') electricModal.classList.remove('hidden');
+        else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
+      };
+    }
   }
 
   document.querySelectorAll('.service-item-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.service-item-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }; });
