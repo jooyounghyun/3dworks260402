@@ -104,6 +104,32 @@ document.addEventListener('DOMContentLoaded', () => {
   if (hireTeamBtn) hireTeamBtn.onclick = () => { closeAllModals(); serviceModal.classList.remove('hidden'); };
   if (manpowerBtn) manpowerBtn.onclick = () => { closeAllModals(); manpowerModal.classList.remove('hidden'); };
 
+  // --- SNS 로그인 연동 ---
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  const kakaoLoginBtn = document.getElementById('kakaoLoginBtn');
+  const naverLoginBtn = document.getElementById('naverLoginBtn');
+
+  // 1. Google 로그인
+  if (googleLoginBtn) {
+    googleLoginBtn.onclick = () => {
+      alert('구글 로그인 API를 호출합니다. (Google Console 설정 필요)');
+    };
+  }
+
+  // 2. 카카오 로그인
+  if (kakaoLoginBtn) {
+    kakaoLoginBtn.onclick = () => {
+      alert('카카오 로그인 창을 띄웁니다. (Kakao Developers 키 필요)');
+    };
+  }
+
+  // 3. 네이버 로그인
+  if (naverLoginBtn) {
+    naverLoginBtn.onclick = () => {
+      alert('네이버 로그인 창을 띄웁니다. (Naver Developers 설정 필요)');
+    };
+  }
+
   // --- 4. 회원가입 로직 (복구 완료) ---
   if (signupBtn) {
     signupBtn.onclick = (e) => {
