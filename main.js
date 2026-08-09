@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupStepWorker = document.getElementById('signupStepWorker');
   const signupStep3 = document.getElementById('signupStep3');
   const workerTypeSelection = document.getElementById('workerTypeSelection');
+  const manpowerSelectionList = document.getElementById('manpowerSelectionList');
 
   // --- 2. 상태 관리 (복구된 데이터 및 상태) ---
   const MANPOWER_HIERARCHY = {
@@ -72,14 +73,227 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedWorkerTypes: []
   };
 
-  const currentUser = {
-    name: "(주)삼디건설",
-    phone: "010-1234-5678",
-    isLoggedIn: true
-  };
-
   let activeManpowerItem = null;
   let selectionPath = [];
+
+  // --- Supabase 연동 헬퍼 ---
+  function emailFromPhone(phone) {
+    const digits = (phone || '').replace(/[^0-9]/g, '');
+    return `p${digits}@3dsolver.app`;
+  }
+
+  function translateAuthError(message) {
+    const map = {
+      'Invalid login credentials': '전화번호 또는 비밀번호가 올바르지 않습니다.',
+      'User already registered': '이미 가입된 전화번호입니다. 로그인을 이용해주세요.',
+      'Email not confirmed': '계정 인증이 완료되지 않았습니다. 관리자에게 문의해주세요.',
+      'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다.'
+    };
+    return map[message] || message;
+  }
+
+  async function refreshAuthUI() {
+    const authArea = document.querySelector('.auth');
+    if (!authArea || !window.supabaseClient) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session && session.user) {
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('phone, user_type, company_name')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      const label = (profile && profile.company_name) || (profile && profile.phone) || '회원';
+      authArea.innerHTML = `
+        <span style="font-size:14px; color:#23262b;">${label}님</span>
+        <a href="#" id="logoutBtn">로그아웃</a>
+      `;
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.onclick = async (e) => {
+          e.preventDefault();
+          await supabaseClient.auth.signOut();
+          refreshAuthUI();
+        };
+      }
+    } else {
+      authArea.innerHTML = `
+        <a href="#" id="loginBtn">로그인</a>
+        <a href="#" id="signupBtn" class="signup">회원가입</a>
+      `;
+      bindAuthOpenButtons();
+    }
+  }
+
+  function bindAuthOpenButtons() {
+    const loginBtnEl = document.getElementById('loginBtn');
+    const signupBtnEl = document.getElementById('signupBtn');
+    if (loginBtnEl) loginBtnEl.onclick = (e) => { e.preventDefault(); closeAllModals(); loginModal.classList.remove('hidden'); };
+    if (signupBtnEl) {
+      signupBtnEl.onclick = (e) => {
+        e.preventDefault();
+        closeAllModals();
+        signupModal.classList.remove('hidden');
+        if (signupStep1) signupStep1.classList.remove('hidden');
+        if (signupStep2) signupStep2.classList.add('hidden');
+        if (signupStepCompany) signupStepCompany.classList.add('hidden');
+        if (signupStepWorker) signupStepWorker.classList.add('hidden');
+        if (signupStep3) signupStep3.classList.add('hidden');
+        const socialChoice = document.getElementById('socialChoice');
+        if (socialChoice) socialChoice.classList.add('hidden');
+        document.querySelectorAll('#signupStep1 .type-btn').forEach(b => b.classList.remove('selected'));
+      };
+    }
+  }
+
+  async function requireLogin() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.user) {
+      alert('로그인이 필요한 기능입니다. 먼저 로그인해주세요.');
+      closeAllModals();
+      loginModal.classList.remove('hidden');
+      return null;
+    }
+    return session.user;
+  }
+
+  // 모달 내부의 모든 입력값 + 선택된 버튼들을 자동으로 수집
+  function collectModalData(modal) {
+    const fields = {};
+    modal.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
+      if (el.type === 'file') return;
+      fields[el.id] = el.value;
+    });
+    const selections = {};
+    modal.querySelectorAll('.type-btn.selected').forEach(btn => {
+      const group = btn.dataset.group ||
+        Array.from(btn.classList).find(c => c !== 'type-btn' && c !== 'selected') ||
+        'selected';
+      if (!selections[group]) selections[group] = [];
+      selections[group].push(btn.dataset.value || btn.innerText.trim());
+    });
+    return { fields, selections };
+  }
+
+  async function uploadPhotos(fileInputEl, userId, folder) {
+    if (!fileInputEl || !fileInputEl.files || fileInputEl.files.length === 0) return [];
+    const urls = [];
+    for (const file of Array.from(fileInputEl.files)) {
+      const path = `${userId}/${folder}/${Date.now()}-${file.name}`;
+      const { error } = await supabaseClient.storage.from('work-photos').upload(path, file);
+      if (error) { console.error('사진 업로드 실패:', error.message); continue; }
+      const { data } = supabaseClient.storage.from('work-photos').getPublicUrl(path);
+      if (data && data.publicUrl) urls.push(data.publicUrl);
+    }
+    return urls;
+  }
+
+  async function saveWorkRequest(requestType, modal, photoInputEl, submitBtn) {
+    const user = await requireLogin();
+    if (!user) return;
+
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = '전송 중...';
+
+    try {
+      const photoUrls = await uploadPhotos(photoInputEl, user.id, requestType);
+      const { fields, selections } = collectModalData(modal);
+      const { error } = await supabaseClient.from('work_requests').insert({
+        user_id: user.id,
+        request_type: requestType,
+        payload: { fields, selections },
+        photo_urls: photoUrls
+      });
+      if (error) throw error;
+      alert('요청이 정상적으로 접수되었습니다. 담당자가 확인 후 연락드릴게요.');
+      closeAllModals();
+      modal.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+      modal.querySelectorAll('.type-btn.selected').forEach(b => b.classList.remove('selected'));
+    } catch (err) {
+      console.error(err);
+      alert('요청 접수 중 문제가 발생했습니다: ' + (err.message || err));
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalText;
+    }
+  }
+
+  // --- 로그인 폼 실제 동작 ---
+  const loginFormEl = document.querySelector('.login-form');
+  if (loginFormEl) {
+    loginFormEl.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phoneVal = document.getElementById('phone').value;
+      const pwVal = document.getElementById('password').value;
+      if (!phoneVal || !pwVal) { alert('전화번호와 비밀번호를 입력해주세요.'); return; }
+      const submitBtn = loginFormEl.querySelector('.login-submit');
+      const originalText = submitBtn.innerText;
+      submitBtn.disabled = true; submitBtn.innerText = '로그인 중...';
+      try {
+        const { error } = await supabaseClient.auth.signInWithPassword({
+          email: emailFromPhone(phoneVal),
+          password: pwVal
+        });
+        if (error) { alert('로그인에 실패했습니다: ' + translateAuthError(error.message)); return; }
+        closeAllModals();
+        loginFormEl.reset();
+        refreshAuthUI();
+      } catch (err) {
+        console.error(err);
+        alert('로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+      }
+    });
+  }
+
+  // --- 최종 회원가입 폼 실제 동작 (계정 생성 + 프로필 저장) ---
+  const signupFormEl = document.getElementById('signupForm');
+  if (signupFormEl) {
+    signupFormEl.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('signupPw').value;
+      const pwConfirm = document.getElementById('signupPwConfirm').value;
+      if (!signupState.phone) { alert('휴대폰 인증을 먼저 진행해주세요.'); return; }
+      if (pw.length < 6) { alert('비밀번호는 6자 이상이어야 합니다.'); return; }
+      if (pw !== pwConfirm) { alert('비밀번호가 일치하지 않습니다.'); return; }
+
+      const submitBtn = signupFormEl.querySelector('.login-submit');
+      const originalText = submitBtn.innerText;
+      submitBtn.disabled = true; submitBtn.innerText = '가입 처리 중...';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: emailFromPhone(signupState.phone),
+          password: pw
+        });
+        if (error) throw error;
+
+        const userId = data.user && data.user.id;
+        if (userId) {
+          const { error: profileError } = await supabaseClient.from('profiles').insert({
+            id: userId,
+            phone: signupState.phone,
+            user_type: signupState.type || 'user',
+            company_name: document.getElementById('companyNameInput') ? document.getElementById('companyNameInput').value : null,
+            business_reg_no: document.getElementById('businessNumInput') ? document.getElementById('businessNumInput').value : null,
+            worker_types: signupState.selectedWorkerTypes && signupState.selectedWorkerTypes.length ? signupState.selectedWorkerTypes : null
+          });
+          if (profileError) throw profileError;
+        }
+
+        alert('회원가입이 완료되었습니다.');
+        closeAllModals();
+        signupFormEl.reset();
+        refreshAuthUI();
+      } catch (err) {
+        console.error(err);
+        alert('회원가입 중 문제가 발생했습니다: ' + translateAuthError(err.message || err));
+      } finally {
+        submitBtn.disabled = false; submitBtn.innerText = originalText;
+      }
+    });
+  }
 
   // --- 3. 공통 모달 제어 ---
   function closeAllModals() {
@@ -100,9 +314,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.classList.contains('modal')) closeAllModals();
   };
 
-  if (loginBtn) loginBtn.onclick = (e) => { e.preventDefault(); closeAllModals(); loginModal.classList.remove('hidden'); };
   if (hireTeamBtn) hireTeamBtn.onclick = () => { closeAllModals(); serviceModal.classList.remove('hidden'); };
-  if (manpowerBtn) manpowerBtn.onclick = () => { closeAllModals(); manpowerModal.classList.remove('hidden'); };
+  if (manpowerBtn) {
+    manpowerBtn.onclick = async () => {
+      closeAllModals();
+      manpowerModal.classList.remove('hidden');
+      if (window.supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('phone, company_name')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          const nameField = document.getElementById('manpowerCompanyName');
+          const contactField = document.getElementById('manpowerCompanyContact');
+          if (nameField) nameField.value = (profile && profile.company_name) || '';
+          if (contactField) contactField.value = (profile && profile.phone) || '';
+        }
+      }
+    };
+  }
 
   // --- SNS 로그인 연동 ---
   const googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -171,24 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (kakaoSignupBtn) kakaoSignupBtn.onclick = () => handleSocialSignup('카카오');
   if (naverSignupBtn) naverSignupBtn.onclick = () => handleSocialSignup('네이버');
 
-  // --- 4. 회원가입 로직 (복구 완료) ---
-  if (signupBtn) {
-    signupBtn.onclick = (e) => {
-      e.preventDefault();
-      closeAllModals();
-      signupModal.classList.remove('hidden');
-      if (signupStep1) signupStep1.classList.remove('hidden');
-      if (signupStep2) signupStep2.classList.add('hidden');
-      if (signupStepCompany) signupStepCompany.classList.add('hidden');
-      if (signupStepWorker) signupStepWorker.classList.add('hidden');
-      if (signupStep3) signupStep3.classList.add('hidden');
-      
-      // 초기화
-      const socialChoice = document.getElementById('socialChoice');
-      if (socialChoice) socialChoice.classList.add('hidden');
-      document.querySelectorAll('#signupStep1 .type-btn').forEach(b => b.classList.remove('selected'));
-    };
-  }
+  // 회원가입/로그인 모달 열기는 bindAuthOpenButtons()에서 처리 (로그인 상태에 따라 버튼이 동적으로 바뀌므로)
 
   // 1단계: 개인/업체 선택
   document.querySelectorAll('#signupStep1 .type-btn').forEach(btn => {
@@ -279,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 계층형 데이터를 평면화하여 뿌려줌 (대분류 > 중분류 > 소분류)
     Object.keys(MANPOWER_HIERARCHY).forEach(bigCat => {
       const bigHeader = document.createElement('div');
-      bigHeader.style.cssText = "color: #38bdf8; font-weight: bold; margin-top: 15px; font-size: 14px; border-bottom: 1px solid #334155; padding-bottom: 5px;";
+      bigHeader.style.cssText = "color: #1d3557; font-weight: bold; margin-top: 15px; font-size: 14px; border-bottom: 1px solid #ddd6c5; padding-bottom: 5px;";
       bigHeader.innerText = bigCat;
       workerTypeSelection.appendChild(bigHeader);
 
@@ -288,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         midGroup.style.cssText = "padding-left: 10px; display: flex; flex-direction: column; gap: 5px; margin-top: 10px;";
         
         const midHeader = document.createElement('div');
-        midHeader.style.cssText = "color: #94a3b8; font-size: 13px; font-weight: 500;";
+        midHeader.style.cssText = "color: #6c6f76; font-size: 13px; font-weight: 500;";
         midHeader.innerText = midCat;
         midGroup.appendChild(midHeader);
 
@@ -375,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.className = 'type-btn';
       btn.style.width = '100%'; btn.style.textAlign = 'left'; btn.style.marginBottom = '8px';
       const isLeaf = typeof currentData[key] === 'number';
-      btn.innerHTML = `<span>${key}</span> ${isLeaf ? `<span style="float:right; color:#38bdf8;">${currentData[key].toLocaleString()}원</span>` : '<span style="float:right; color:#94a3b8;">&gt;</span>'}`;
+      btn.innerHTML = `<span>${key}</span> ${isLeaf ? `<span style="float:right; color:#1d3557; font-weight:700;">${currentData[key].toLocaleString()}원</span>` : '<span style="float:right; color:#6c6f76;">&gt;</span>'}`;
       btn.onclick = () => { if (isLeaf) selectManpowerType(key, currentData[key]); else { selectionPath.push(key); renderTypeList(); } };
       typeList.appendChild(btn);
     });
@@ -384,7 +599,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function selectManpowerType(name, wage) {
     if (activeManpowerItem) {
       activeManpowerItem.querySelector('.manpower-type-btn').innerText = name;
-      activeManpowerItem.querySelector('.manpower-type-btn').style.color = 'white';
+      activeManpowerItem.querySelector('.manpower-type-btn').style.color = '#23262b';
+      activeManpowerItem.querySelector('.manpower-type-btn').style.fontWeight = '700';
+      activeManpowerItem.querySelector('.manpower-type-btn').style.borderColor = '#ff6a3d';
       activeManpowerItem.querySelector('.manpower-type-val').value = name;
       activeManpowerItem.querySelector('.manpower-wage').value = wage;
       updateManpowerSummary();
@@ -407,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addManpowerBtn').onclick = () => {
       const newItem = document.createElement('div');
       newItem.className = 'manpower-item manpower-grid'; newItem.style.marginTop = '10px';
-      newItem.innerHTML = `<button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #0f172a; border: 1px solid #334155; color: #94a3b8; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button><input type="hidden" class="manpower-type-val"><input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;"><select class="manpower-count" style="flex: 1; height: 38px;"><option value="" selected disabled>인원</option>${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}</select><button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>`;
+      newItem.innerHTML = `<button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #ffffff; border: 1px solid #ddd6c5; color: #6c6f76; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button><input type="hidden" class="manpower-type-val"><input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;"><select class="manpower-count" style="flex: 1; height: 38px;"><option value="" selected disabled>인원</option>${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}</select><button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>`;
       manpowerSelectionList.appendChild(newItem);
     };
   }
@@ -454,5 +671,78 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.querySelectorAll('.service-item-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.service-item-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }; });
-  document.addEventListener('click', (e) => { const btn = e.target.closest('.type-btn'); if (!btn || btn.classList.contains('manpower-type-btn') || btn.closest('#manpowerTypeModal') || btn.closest('#signupModal')) return; btn.classList.toggle('selected'); });
+
+  // .env-selection 안의 버튼들은 라디오처럼 하나만 선택되도록 처리
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.type-btn');
+    if (!btn || btn.classList.contains('manpower-type-btn') || btn.closest('#manpowerTypeModal') || btn.closest('#signupModal')) return;
+    const radioContainer = btn.closest('.env-selection');
+    if (radioContainer) {
+      radioContainer.querySelectorAll('.type-btn').forEach(b => { if (b !== btn) b.classList.remove('selected'); });
+    }
+    btn.classList.toggle('selected');
+  });
+
+  // --- 7. 작업 요청 폼 제출 (실제 저장) ---
+  const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
+  if (submitDemolitionBtn) {
+    submitDemolitionBtn.onclick = () => saveWorkRequest('demolition', demolitionModal, document.getElementById('photoInput'), submitDemolitionBtn);
+  }
+
+  const submitWasteBtn = document.getElementById('submitWasteBtn');
+  if (submitWasteBtn) {
+    submitWasteBtn.onclick = () => saveWorkRequest('waste', wasteModal, document.getElementById('wastePhotoInput'), submitWasteBtn);
+  }
+
+  const submitRestorationBtn = document.getElementById('submitRestorationBtn');
+  if (submitRestorationBtn) {
+    submitRestorationBtn.onclick = () => saveWorkRequest('restoration', restorationModal, document.getElementById('restorePhotoInput'), submitRestorationBtn);
+  }
+
+  const submitElectricBtn = document.getElementById('submitElectricBtn');
+  if (submitElectricBtn) {
+    submitElectricBtn.onclick = () => saveWorkRequest('electric', electricModal, document.getElementById('electricPhotoInput'), submitElectricBtn);
+  }
+
+  const submitPipeBtn = document.getElementById('submitPipeBtn');
+  if (submitPipeBtn) {
+    submitPipeBtn.onclick = () => saveWorkRequest('pipe', pipeModal, document.getElementById('pipePhotoInput'), submitPipeBtn);
+  }
+
+  const submitManpowerBtn = document.getElementById('submitManpowerBtn');
+  if (submitManpowerBtn) {
+    submitManpowerBtn.onclick = () => saveWorkRequest('manpower', manpowerModal, null, submitManpowerBtn);
+  }
+
+  // --- 9. '기타' 선택 시 상세 입력창 열기 (restoreOtherBtn, electricOtherBtn, pipeOtherBtn 공통 처리) ---
+  document.querySelectorAll('[id$="OtherBtn"]').forEach(btn => {
+    const input = document.getElementById(btn.id.replace('OtherBtn', 'OtherInput'));
+    if (!input) return;
+    btn.addEventListener('click', () => {
+      input.classList.toggle('hidden');
+      if (!input.classList.contains('hidden')) input.focus();
+      else input.value = '';
+    });
+  });
+
+  // --- 11. 인력지원: 작업 시간 프리셋 버튼 ---
+  const manpowerStartTime = document.getElementById('manpowerStartTime');
+  const manpowerEndTime = document.getElementById('manpowerEndTime');
+  document.querySelectorAll('.time-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (manpowerStartTime) manpowerStartTime.value = btn.dataset.start;
+      if (manpowerEndTime) manpowerEndTime.value = btn.dataset.end;
+      document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  if (manpowerStartTime) manpowerStartTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
+  if (manpowerEndTime) manpowerEndTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
+
+  // --- 8. 초기 로그인 상태 반영 ---
+  bindAuthOpenButtons();
+  if (window.supabaseClient) {
+    refreshAuthUI();
+    supabaseClient.auth.onAuthStateChange(() => refreshAuthUI());
+  }
 });

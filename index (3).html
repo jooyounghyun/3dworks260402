@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>3D해결사</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f4ee">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- ✅ SNS SDK 연동 (실제 연동 시 키 입력 필요) -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<div class="container">
+  <!-- ✅ 헤더 -->
+  <header>
+    <div class="logo">
+      <span class="logo-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17a8 8 0 0 1 16 0"/>
+          <rect x="2" y="17" width="20" height="3" rx="1.5"/>
+          <line x1="12" y1="6" x2="12" y2="9"/>
+        </svg>
+      </span>
+      3D해결사
+    </div>
+    <div class="auth">
+      <a href="#" id="loginBtn">로그인</a>
+      <a href="#" id="signupBtn" class="signup">회원가입</a>
+    </div>
+  </header>
+  <div class="bleed hazard-stripe"></div>
+
+  <!-- ✅ 로그인 모달 -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>로그인</h2>
+        <button id="closeLoginBtn" class="close-btn">&times;</button>
+      </div>
+      <form class="login-form">
+        <div class="input-group">
+          <label for="phone">전화번호</label>
+          <input type="tel" id="phone" placeholder="010-0000-0000" required>
+        </div>
+        <div class="input-group">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+        </div>
+        <button type="submit" class="btn btn-primary login-submit">로그인하기</button>
+      </form>
+
+      <div class="social-login">
+        <p>또는 SNS 계정으로 로그인</p>
+        <div class="social-buttons">
+          <button id="kakaoLoginBtn" class="social-btn kakao">카카오 로그인</button>
+          <button id="naverLoginBtn" class="social-btn naver">네이버 로그인</button>
+          <button id="googleLoginBtn" class="social-btn google">Google 로그인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 회원가입 모달 -->
+  <div id="signupModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>회원가입</h2>
+        <button id="closeSignupBtn" class="close-btn">&times;</button>
+      </div>
+
+      <!-- 1단계: 유형 선택 -->
+      <div id="signupStep1" class="signup-step">
+        <p class="step-title">사용자 유형을 선택해주세요</p>
+        <div class="type-selection">
+          <button class="type-btn" data-type="user">사용자</button>
+          <button class="type-btn" data-type="company">업체</button>
+          <button class="type-btn" data-type="worker">일용구직자</button>
+        </div>
+        
+        <div class="social-login-choice hidden" id="socialChoice" style="margin-top: 20px; border-top: 1px solid #ddd6c5; padding-top: 20px;">
+          <p class="step-title" id="selectedTypeDisplay" style="font-size: 14px; color: #1d3557;"></p>
+          <p style="font-size: 12px; color: #6c6f76; margin-bottom: 15px;">가입 방식을 선택해주세요</p>
+          <button id="phoneSignupBtn" class="btn btn-secondary" style="margin-bottom: 10px;">휴대폰 번호로 가입</button>
+          <div class="social-buttons" style="margin-top: 10px;">
+            <button id="kakaoStep1Btn" class="social-btn kakao">카카오로 시작하기</button>
+            <button id="naverStep1Btn" class="social-btn naver">네이버로 시작하기</button>
+            <button id="googleStep1Btn" class="social-btn google">Google로 시작하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2단계: 휴대폰 인증 (통신사 선택 추가) -->
+      <div id="signupStep2" class="signup-step hidden">
+        <p class="step-title">본인 확인을 위해 휴대폰 인증이 필요합니다</p>
+        <div class="input-group">
+          <label>이름</label>
+          <input type="text" id="verifyName" placeholder="성함 입력">
+        </div>
+        <div class="input-group">
+          <label>통신사 선택</label>
+          <div class="carrier-selection" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+            <button class="type-btn carrier-btn" data-value="SKT">SKT</button>
+            <button class="type-btn carrier-btn" data-value="KT">KT</button>
+            <button class="type-btn carrier-btn" data-value="LGU">LG U+</button>
+            <button class="type-btn carrier-btn" data-value="SKTM">SKT 알뜰폰</button>
+            <button class="type-btn carrier-btn" data-value="KTM">KT 알뜰폰</button>
+            <button class="type-btn carrier-btn" data-value="LGUM">LG 알뜰폰</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>휴대폰 번호</label>
+          <div style="display: flex; gap: 5px;">
+            <input type="tel" id="phoneNum" placeholder="010-0000-0000" style="flex: 1;">
+            <button id="sendVerifyBtn" class="btn btn-secondary" style="width: auto; padding: 0 10px; font-size: 12px;">인증번호 전송</button>
+          </div>
+        </div>
+        <div id="verifyCodeGroup" class="input-group hidden">
+          <label>인증번호</label>
+          <div style="display: flex; gap: 5px;">
+            <input type="text" id="verifyCode" placeholder="6자리 입력" style="flex: 1;">
+            <button id="checkVerifyBtn" class="btn btn-primary" style="width: auto; padding: 0 15px;">확인</button>
+          </div>
+        </div>
+
+        <div class="social-login" style="margin-top: 30px;">
+          <p>또는 SNS 계정으로 간편 가입</p>
+          <div class="social-buttons">
+            <button id="kakaoSignupBtn" class="social-btn kakao">카카오로 시작하기</button>
+            <button id="naverSignupBtn" class="social-btn naver">네이버로 시작하기</button>
+            <button id="googleSignupBtn" class="social-btn google">Google로 시작하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-1단계: 업체 정보 입력 (유형이 '업체'일 때만 노출) -->
+      <div id="signupStepCompany" class="signup-step hidden">
+        <p class="step-title">업체 정보를 입력해주세요</p>
+        <div class="input-group">
+          <label for="companyNameInput">업체명</label>
+          <input type="text" id="companyNameInput" placeholder="상호명 입력">
+        </div>
+        <div class="input-group">
+          <label for="businessNumInput">사업자등록번호</label>
+          <div style="display: flex; gap: 5px;">
+            <input type="text" id="businessNumInput" placeholder="000-00-00000" style="flex: 1;">
+            <button id="checkBusinessBtn" class="btn btn-secondary" style="width: auto; padding: 0 10px; font-size: 12px;">진위 확인</button>
+          </div>
+        </div>
+        <button id="nextToFinalStepFromCompanyBtn" class="btn btn-primary login-submit" style="margin-top: 20px;" disabled>다음 단계</button>
+      </div>
+
+      <!-- 2-2단계: 일용구직자 공종 선택 (유형이 'worker'일 때만 노출) -->
+      <div id="signupStepWorker" class="signup-step hidden">
+        <p class="step-title">작업 가능한 유형을 모두 선택해주세요</p>
+        <div id="workerTypeSelection" class="type-selection" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
+          <!-- JS에서 동적으로 생성됨 -->
+        </div>
+        <button id="nextToFinalStepFromWorkerBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">다음 단계</button>
+      </div>
+
+      <!-- 3단계: 계정 설정 -->
+      <div id="signupStep3" class="signup-step hidden">
+        <p class="step-title">사용하실 비밀번호를 설정해주세요</p>
+        <form id="signupForm">
+          <div class="input-group">
+            <label>아이디 (휴대폰 번호)</label>
+            <input type="tel" id="signupPhone" readonly style="background: #f0ece2; color: #6c6f76;">
+          </div>
+          <div class="input-group">
+            <label for="signupPw">비밀번호</label>
+            <input type="password" id="signupPw" placeholder="비밀번호 설정" required>
+          </div>
+          <div class="input-group">
+            <label for="signupPwConfirm">비밀번호 확인</label>
+            <input type="password" id="signupPwConfirm" placeholder="비밀번호 다시 입력" required>
+          </div>
+          <button type="submit" class="btn btn-primary login-submit">가입 완료</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 -->
+  <section class="hero">
+    <span class="eyebrow">🦺 검증된 전문가 팀 매칭</span>
+    <h1>
+      어렵고 위험하고 더러운 일,<br>
+      전문가가 팀으로 해결합니다
+    </h1>
+    <p>
+      철거, 폐기물, 원상복구, 하구수 처리까지<br>
+      믿을 수 있는 전문가 팀을 연결해드립니다
+    </p>
+
+    <div class="buttons">
+      <button id="hireTeamBtn" class="btn btn-primary">팀으로 맡기기</button>
+      <button id="manpowerBtn" class="btn btn-secondary">인력 지원 요청</button>
+    </div>
+  </section>
+
+  <!-- ✅ 인력 지원 요청 모달 -->
+  <div id="manpowerModal" class="modal hidden">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2>인력 지원 요청</h2>
+        <button id="closeManpowerBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="input-group">
+        <label for="manpowerLocation">현장 위치</label>
+        <input type="text" id="manpowerLocation" placeholder="예: 서울특별시 강남구 역삼동">
+      </div>
+
+      <div class="modal-row">
+        <div class="input-group">
+          <label for="manpowerCompanyName">업체명/성함</label>
+          <input type="text" id="manpowerCompanyName" readonly>
+        </div>
+        <div class="input-group">
+          <label for="manpowerCompanyContact">업체 연락처</label>
+          <input type="text" id="manpowerCompanyContact" readonly>
+        </div>
+      </div>
+
+      <!-- ✅ 추가된 현장 담당자 정보 -->
+      <div class="modal-row">
+        <div class="input-group">
+          <label for="manpowerManagerName">현장 담당자</label>
+          <input type="text" id="manpowerManagerName" placeholder="성함 입력">
+        </div>
+        <div class="input-group">
+          <label for="manpowerManagerContact">담당자 연락처</label>
+          <input type="tel" id="manpowerManagerContact" placeholder="010-0000-0000">
+        </div>
+      </div>
+
+      <!-- ✅ 추가된 작업 날짜 및 일수 -->
+      <div class="modal-row">
+        <div class="input-group" style="flex: 1.5;">
+          <label for="manpowerStartDate">작업 시작일</label>
+          <input type="date" id="manpowerStartDate">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="manpowerWorkDays">작업 일수 (일)</label>
+          <select id="manpowerWorkDays">
+            <option value="1" selected>1일</option>
+            <option value="2">2일</option>
+            <option value="3">3일</option>
+            <option value="4">4일</option>
+            <option value="5">5일</option>
+            <option value="6">6일</option>
+            <option value="7">7일</option>
+            <option value="8">8일</option>
+            <option value="9">9일</option>
+            <option value="10">10일</option>
+            <option value="11">11일</option>
+            <option value="12">12일</option>
+            <option value="13">13일</option>
+            <option value="14">14일</option>
+            <option value="15">15일</option>
+            <option value="16">16명</option>
+            <option value="17">17일</option>
+            <option value="18">18일</option>
+            <option value="19">19일</option>
+            <option value="20">20일</option>
+            <option value="21">21일</option>
+            <option value="22">22일</option>
+            <option value="23">23일</option>
+            <option value="24">24일</option>
+            <option value="25">25일</option>
+            <option value="26">26일</option>
+            <option value="27">27일</option>
+            <option value="28">28일</option>
+            <option value="29">29일</option>
+            <option value="30">30일</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <label>작업 시간</label>
+        <div class="modal-row" style="gap: 10px; margin-bottom: 0;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
+            <input type="time" id="manpowerStartTime" value="08:00">
+          </div>
+          <span style="align-self: center; color: var(--ink-muted); font-size: 13px;">~</span>
+          <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
+            <input type="time" id="manpowerEndTime" value="17:00">
+          </div>
+        </div>
+        <div class="env-selection" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+          <button type="button" class="time-preset-btn" data-start="07:00" data-end="16:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">07:00 ~ 16:00</button>
+          <button type="button" class="time-preset-btn" data-start="08:00" data-end="17:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">08:00 ~ 17:00</button>
+          <button type="button" class="time-preset-btn" data-start="09:00" data-end="18:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">09:00 ~ 18:00</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>요청 인력 상세</label>
+        <div id="manpowerSelectionList" style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="manpower-item manpower-grid">
+            <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #ffffff; border: 1px solid #ddd6c5; color: #6c6f76; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
+            <input type="hidden" class="manpower-type-val">
+            <input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;">
+            <select class="manpower-count" style="flex: 1; height: 38px;">
+              <option value="" selected disabled>인원</option>
+              <option value="1">1명</option>
+              <option value="2">2명</option>
+              <option value="3">3명</option>
+              <option value="4">4명</option>
+              <option value="5">5명</option>
+              <option value="6">6명</option>
+              <option value="7">7명</option>
+              <option value="8">8명</option>
+              <option value="9">9명</option>
+              <option value="10">10명</option>
+              <option value="11">11명</option>
+              <option value="12">12명</option>
+              <option value="13">13명</option>
+              <option value="14">14명</option>
+              <option value="15">15명</option>
+              <option value="16">16명</option>
+              <option value="17">17명</option>
+              <option value="18">18명</option>
+              <option value="19">19명</option>
+              <option value="20">20명</option>
+            </select>
+            <button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>
+          </div>
+        </div>
+        <button id="addManpowerBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 13px;">+ 다른 인력 추가</button>
+      </div>
+
+      <!-- ✅ 추가된 식사 및 휴게시간 -->
+      <div class="modal-row" style="margin-top: 15px;">
+        <div class="input-group">
+          <label>식사 제공</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn meal-btn" data-value="제공" style="flex: 1; padding: 8px; font-size: 12px;">제공</button>
+            <button type="button" class="type-btn meal-btn" data-value="미제공" style="flex: 1; padding: 8px; font-size: 12px;">미제공</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>휴게 시간</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn break-btn" data-value="유" style="flex: 1; padding: 8px; font-size: 12px;">유</button>
+            <button type="button" class="type-btn break-btn" data-value="무" style="flex: 1; padding: 8px; font-size: 12px;">무</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 예상 견적 요약 -->
+      <div class="price-summary" style="margin-top: 20px; padding: 15px; background: #f0ece2; border-radius: 8px; border: 1px solid #ddd6c5;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+          <span>총 인건비</span>
+          <span id="wageTotalDisplay">0원</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+          <span>매칭 수수료 (10%)</span>
+          <span id="matchingFeeDisplay">0원</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #ddd6c5; font-weight: bold; color: #1d3557;">
+          <span>예상 합계</span>
+          <span id="totalAmountDisplay">0원</span>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="manpowerDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
+        <textarea id="manpowerDetailNote" rows="3" placeholder="예: 출입증 필요, 특정 경력자 우선 등 요청사항을 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <button id="submitManpowerBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">지원 요청하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 인력 유형 선택 모달 (계층형) -->
+  <div id="manpowerTypeModal" class="modal hidden" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 320px;">
+      <div class="modal-header">
+        <h2 id="manpowerTypeTitle">인력 유형 선택</h2>
+        <button id="closeTypeBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div id="typeBreadcrumb" style="font-size: 12px; color: #6c6f76; margin-bottom: 10px; display: none;">
+        홈 > <span id="currentCategory"></span>
+      </div>
+
+      <div id="typeList" class="type-selection">
+        <!-- 버튼들이 동적으로 생성됨 -->
+      </div>
+
+      <button id="backTypeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 15px; display: none;">뒤로가기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 주요 서비스 선택 모달 -->
+  <div id="serviceModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>주요 서비스 선택</h2>
+        <button id="closeServiceBtn" class="close-btn">&times;</button>
+      </div>
+      <p class="step-title">원하시는 서비스를 선택해주세요</p>
+      <div class="service-selection">
+        <button class="service-item-btn">상가 철거</button>
+        <button class="service-item-btn">폐기물 처리</button>
+        <button class="service-item-btn">상가 원상복구</button>
+        <button class="service-item-btn">배관막힘 누수공사</button>
+        <button class="service-item-btn">전기 공사</button>
+        <button class="service-item-btn">기타</button>
+      </div>
+      <button id="confirmServiceBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">선택 완료</button>
+    </div>
+  </div>
+
+  <!-- ✅ 상가 철거 상세 정보 입력 모달 -->
+  <div id="demolitionModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>상가 철거 상세 정보</h2>
+        <button id="closeDemolitionBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="demoLocation">현장 위치</label>
+        <input type="text" id="demoLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="demoArea">평수 입력 (평)</label>
+          <input type="number" id="demoArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="demoHeight">층고 입력 (m)</label>
+          <input type="number" id="demoHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="demoFloor">현장 층수</label>
+          <input type="number" id="demoFloor" placeholder="예: 2">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="demoDate">작업 희망 날짜</label>
+          <input type="date" id="demoDate">
+        </div>
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn demo-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn demo-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn demo-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn demo-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 추가된 세부 선택 항목 -->
+      <div class="input-group" style="margin-top: 15px;">
+        <label>철거 범위 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">천장 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">바닥 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">가벽 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px;">시설물 철거</button>
+          <button type="button" class="demo-type-btn type-btn" style="padding: 10px; font-size: 13px; grid-column: span 2;">전체 철거</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="demoDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
+        <textarea id="demoDetailNote" rows="3" placeholder="예: 간판도 같이 철거 부탁드립니다, 특정 요일은 피해주세요 등" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="photoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하여 업로드하세요</span>
+          <input type="file" id="photoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="photoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitDemolitionBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 상가 원상복구 상세 정보 입력 모달 -->
+  <div id="restorationModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>상가 원상복구 상세 정보</h2>
+        <button id="closeRestorationBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="restoreLocation">현장 위치</label>
+        <input type="text" id="restoreLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreArea">평수 입력 (평)</label>
+          <input type="number" id="restoreArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreHeight">층고 입력 (m)</label>
+          <input type="number" id="restoreHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreFloor">현장 층수</label>
+          <input type="number" id="restoreFloor" placeholder="예: 2">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="restoreDate">작업 희망 날짜</label>
+          <input type="date" id="restoreDate">
+        </div>
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group" style="margin-top: 15px;">
+        <label>진행 방식</label>
+        <div class="env-selection" style="display: flex; gap: 8px; margin-top: 5px;">
+          <button type="button" class="type-btn restore-mode-btn" id="restoreModeFullBtn" data-group="restoreMode" data-value="전체 철거 후 원상복구" style="flex: 1; padding: 10px; font-size: 13px;">전체 철거 후 원상복구</button>
+          <button type="button" class="type-btn restore-mode-btn" id="restoreModePartialBtn" data-group="restoreMode" data-value="철거 없이 부분 복구" style="flex: 1; padding: 10px; font-size: 13px;">철거 없이 부분 복구</button>
+        </div>
+        <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">기존 시설물을 먼저 철거해야 하면 왼쪽을 선택해주세요. 철거 작업까지 포함해 견적을 안내해드립니다. 어느 쪽이든 아래에서 실제 복구가 필요한 항목을 선택해주세요.</p>
+      </div>
+
+      <div class="input-group" id="restoreScopeGroup" style="margin-top: 15px;">
+        <label>복구 필요 항목 (해당하는 것만 선택, 중복 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">천장 복구</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">바닥 복구</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">벽면 복구</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">가벽 설치</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">전기 복구</button>
+          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">전체 복구</button>
+          <button type="button" class="restore-type-btn type-btn" id="restoreOtherBtn" style="padding: 10px; font-size: 13px; grid-column: span 2;">기타</button>
+        </div>
+        <input type="text" id="restoreOtherInput" placeholder="기타 복구 항목을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="restoreDetailNote">상세 요청사항 (마감재·색상 등 구체적으로 적어주세요)</label>
+        <textarea id="restoreDetailNote" rows="3" placeholder="예: 천장은 우물천장으로, 바닥은 원목마루 원상태로 복구 희망합니다." style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="restorePhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="restorePhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="restorePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitRestorationBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 폐기물 처리 상세 정보 입력 모달 -->
+  <div id="wasteModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>폐기물 처리 상세 정보</h2>
+        <button id="closeWasteBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="wasteLocation">현장 위치</label>
+        <input type="text" id="wasteLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-bottom: 15px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="wasteDate">수거 희망 날짜</label>
+          <input type="date" id="wasteDate">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="wasteVolume">예상 분량</label>
+          <select id="wasteVolume" style="height: 44px;">
+            <option value="">분량 선택</option>
+            <option value="1톤 미만">1톤 미만</option>
+            <option value="1톤 1대">1톤 1대</option>
+            <option value="1톤 2대 이상">1톤 2대 이상</option>
+            <option value="모름">상담 필요</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>폐기물 종류 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">혼합 폐기물</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">목재/가구</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">폐콘크리트</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">기타/가전</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>엘리베이터 유무</label>
+        <div class="env-selection" style="display: flex; gap: 10px; margin-top: 5px;">
+          <button type="button" class="env-btn elevator-btn type-btn" data-value="있음" style="flex: 1; padding: 10px; font-size: 13px;">있음</button>
+          <button type="button" class="env-btn elevator-btn type-btn" data-value="없음" style="flex: 1; padding: 10px; font-size: 13px;">없음</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>주차 가능 여부</label>
+        <div class="env-selection" style="display: flex; gap: 10px; margin-top: 5px;">
+          <button type="button" class="env-btn parking-btn type-btn" data-value="가능" style="flex: 1; padding: 10px; font-size: 13px;">가능</button>
+          <button type="button" class="env-btn parking-btn type-btn" data-value="불가능" style="flex: 1; padding: 10px; font-size: 13px;">불가능</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="wasteDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
+        <textarea id="wasteDetailNote" rows="3" placeholder="예: 냉장고 등 대형가전 포함, 새벽 시간대 수거 희망 등" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
+        <div id="wastePhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="wastePhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="wastePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+
+      <button id="submitWasteBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 전기 공사 상세 정보 입력 모달 (신규 추가) -->
+  <div id="electricModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>전기 공사 상세 정보</h2>
+        <button id="closeElectricBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="electricLocation">현장 위치</label>
+        <input type="text" id="electricLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="electricArea">평수 입력 (평)</label>
+          <input type="number" id="electricArea" placeholder="예: 20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="electricHeight">층고 입력 (m)</label>
+          <input type="number" id="electricHeight" placeholder="예: 3.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="electricFloor">현장 층수</label>
+          <input type="number" id="electricFloor" placeholder="예: 2">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="electricDate">작업 희망 날짜</label>
+          <input type="date" id="electricDate">
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>공사 유형 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">신규 인테리어</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">노후 설비 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">조명/스위치 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">증설/승압 공사</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">누전/긴급 수리</button>
+          <button type="button" class="electric-type-btn type-btn" id="electricOtherBtn" style="padding: 10px; font-size: 13px;">기타</button>
+        </div>
+        <input type="text" id="electricOtherInput" placeholder="기타 공사 내용을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>현장 상태</label>
+        <div class="env-selection" style="display: flex; gap: 5px; margin-top: 5px;">
+          <button type="button" class="type-btn electric-env-btn" data-group="state" data-value="공실" style="flex: 1; padding: 10px; font-size: 13px;">공실 (작업 용이)</button>
+          <button type="button" class="type-btn electric-env-btn" data-group="state" data-value="영업중" style="flex: 1; padding: 10px; font-size: 13px;">운영 중 (집기 있음)</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>작업 환경 (인건비 차이 발생)</label>
+        <div class="env-selection" style="display: flex; gap: 5px; margin-top: 5px;">
+          <button type="button" class="type-btn electric-env-btn" data-group="env" data-value="실내" style="flex: 1; padding: 10px; font-size: 13px;">실내 작업</button>
+          <button type="button" class="type-btn electric-env-btn" data-group="env" data-value="실외" style="flex: 1; padding: 10px; font-size: 13px;">실외 작업 (비용 높음)</button>
+        </div>
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn electric-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn electric-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn electric-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn electric-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="electricDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
+        <textarea id="electricDetailNote" rows="3" placeholder="예: 분전반 위치, 원하는 콘센트 개수/위치 등 구체적으로 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (분전반/작업부위 필수)</p>
+        <div id="electricPhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="electricPhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="electricPhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitElectricBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 배관막힘 누수공사 상세 정보 입력 모달 (신규 추가) -->
+  <div id="pipeModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>배관막힘 누수공사 상세 정보</h2>
+        <button id="closePipeBtn" class="close-btn">&times;</button>
+      </div>
+      
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label for="pipeLocation">현장 위치</label>
+        <input type="text" id="pipeLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="pipeFloor">현장 층수</label>
+          <input type="number" id="pipeFloor" placeholder="예: 1">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="pipeDate">작업 희망 날짜</label>
+          <input type="date" id="pipeDate">
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>작업 유형 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">막힘 해결 (단순)</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">누수 정밀 탐지</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">고압 세척</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">천장 누수 보수</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">역류 발생</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">배수 느림</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">악취 심함</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">누수 흔적 발견</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">배관 신설/교체</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">화장실/베란다 방수</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">수도 배관 수리</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">내시경 촬영 검사</button>
+          <button type="button" class="pipe-type-btn type-btn" style="padding: 10px; font-size: 13px;">그리스트랩 설치</button>
+          <button type="button" class="pipe-type-btn type-btn" id="pipeOtherBtn" style="padding: 10px; font-size: 13px;">기타</button>
+        </div>
+        <input type="text" id="pipeOtherInput" placeholder="기타 작업 내용을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>발생 지점</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="pipe-spot-btn type-btn" style="padding: 10px; font-size: 13px;">주방/싱크대</button>
+          <button type="button" class="pipe-spot-btn type-btn" style="padding: 10px; font-size: 13px;">화장실/변기</button>
+          <button type="button" class="pipe-spot-btn type-btn" style="padding: 10px; font-size: 13px;">메인 하수관(외부)</button>
+          <button type="button" class="pipe-spot-btn type-btn" style="padding: 10px; font-size: 13px;">공용 배관</button>
+        </div>
+      </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+          </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label for="pipeDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
+        <textarea id="pipeDetailNote" rows="3" placeholder="예: 누수 발생 시점, 물이 새는 위치 등 구체적으로 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="photo-upload-section" style="margin-top: 20px;">
+        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (문제 지점 필수)</p>
+        <div id="pipePhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
+          <input type="file" id="pipePhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="pipePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
+      <button id="submitPipeBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+    </div>
+  </div>
+
+  <!-- 서비스 -->
+  <section class="section">
+    <span class="section-label">SERVICE</span>
+    <h2>주요 서비스</h2>
+    <p class="section-sub">현장 상황에 맞는 전문가 팀을 바로 연결해드립니다</p>
+    <div class="cards">
+      <div class="card">
+        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="13" y="1.5" width="6" height="6" rx="1" transform="rotate(45 16 4.5)"/><line x1="14.5" y1="6" x2="4" y2="20"/></svg></span>
+        상가 철거
+      </div>
+      <div class="card">
+        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></span>
+        폐기물 처리
+      </div>
+      <div class="card">
+        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="13" height="6" rx="1"/><line x1="9" y1="10" x2="9" y2="14"/><rect x="6" y="14" width="6" height="6" rx="1"/></svg></span>
+        상가 원상복구
+      </div>
+      <div class="card">
+        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.8 3.2 4.5 5.8 4.5 8.3a4.5 4.5 0 0 1-9 0c0-2.5 1.7-5.1 4.5-8.3z"/></svg></span>
+        배관막힘 누수공사
+      </div>
+      <div class="card">
+        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 11 14 9 22 21 10 13 10 13 2"/></svg></span>
+        전기 공사
+      </div>
+    </div>
+  </section>
+
+  <!-- 특징 -->
+  <div class="bleed band-steel">
+    <div class="container">
+      <section class="section">
+        <span class="section-label">TRUST &amp; SAFETY</span>
+        <h2>왜 3D해결사인가?</h2>
+        <p class="section-sub">고르기 전에 먼저 확인해야 할 4가지 기준입니다</p>
+        <div class="feature-list">
+          <div class="feature-item"><span class="check">✓</span><span class="label">전문가 팀 매칭</span></div>
+          <div class="feature-item"><span class="check">✓</span><span class="label">빠른 견적</span></div>
+          <div class="feature-item"><span class="check">✓</span><span class="label">안전한 작업</span></div>
+          <div class="feature-item"><span class="check">✓</span><span class="label">수도권 집중 서비스</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="bleed">
+    3D해결사는 작업 중개 플랫폼입니다.<br>
+    실제 계약은 고객과 작업팀 간에 이루어집니다.
+    <div style="margin-top: 14px;">
+      <a href="terms.html" style="color: #c7d2e0; text-decoration: underline; margin-right: 16px;">이용약관</a>
+      <a href="privacy.html" style="color: #c7d2e0; text-decoration: underline;">개인정보처리방침</a>
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
