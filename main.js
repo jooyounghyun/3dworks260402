@@ -116,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         profile = created;
       }
 
-      const label = (profile && profile.company_name) || (profile && profile.phone) || '회원';
+      const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+      const label = (profile && profile.company_name) || (profile && profile.phone) || socialName || '회원';
       authArea.innerHTML = `
         <span style="font-size:14px; color:#23262b;">${label}님</span>
         <a href="#" id="logoutBtn">로그아웃</a>
@@ -344,7 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .maybeSingle();
           const nameField = document.getElementById('manpowerCompanyName');
           const contactField = document.getElementById('manpowerCompanyContact');
-          if (nameField) nameField.value = (profile && profile.company_name) || '';
+          const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+          if (nameField) nameField.value = (profile && profile.company_name) || socialName || '';
           if (contactField) contactField.value = (profile && profile.phone) || '';
         }
       }
