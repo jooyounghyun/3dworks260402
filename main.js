@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     phone: '',
     isVerified: false,
     businessVerified: false,
-    selectedWorkerTypes: []
+    selectedWorkerTypes: [],
+    oauthMode: false
   };
 
   let activeManpowerItem = null;
@@ -104,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .maybeSingle();
 
       // 소셜 로그인(카카오 등)으로 첫 로그인한 경우 profiles 행이 없을 수 있음 → 자동 생성
+      let justCreatedType = null;
       if (!profile) {
         let pendingType = 'user';
         try { pendingType = localStorage.getItem('pendingSignupType') || 'user'; } catch (e) {}
@@ -114,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
           .select('phone, user_type, company_name')
           .maybeSingle();
         profile = created;
+        justCreatedType = pendingType;
       }
 
       const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
@@ -129,6 +132,25 @@ document.addEventListener('DOMContentLoaded', () => {
           await supabaseClient.auth.signOut();
           refreshAuthUI();
         };
+      }
+
+      // 소셜 로그인으로 방금 가입된 업체/일용직 회원이면, 유형에 맞는 추가정보 입력창을 이어서 띄움
+      if (justCreatedType === 'company' || justCreatedType === 'worker') {
+        signupState.type = justCreatedType;
+        signupState.phone = (profile && profile.phone) || '';
+        signupState.oauthMode = true;
+        closeAllModals();
+        signupModal.classList.remove('hidden');
+        signupStep1.classList.add('hidden');
+        signupStep2.classList.add('hidden');
+        if (justCreatedType === 'company') {
+          signupStepCompany.classList.remove('hidden');
+          const nextBtn = document.getElementById('nextToFinalStepFromCompanyBtn');
+          if (nextBtn) nextBtn.disabled = true;
+        } else {
+          signupStepWorker.classList.remove('hidden');
+          renderWorkerTypeSelection();
+        }
       }
     } else {
       authArea.innerHTML = `
@@ -146,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signupBtnEl) {
       signupBtnEl.onclick = (e) => {
         e.preventDefault();
+        signupState.oauthMode = false;
         closeAllModals();
         signupModal.classList.remove('hidden');
         if (signupStep1) signupStep1.classList.remove('hidden');
@@ -569,7 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const selected = Array.from(workerTypeSelection.querySelectorAll('.type-btn.selected')).map(btn => btn.innerText);
       if (selected.length === 0) return alert('최소 하나 이상의 작업 유형을 선택해주세요.');
       signupState.selectedWorkerTypes = selected;
-      goToSignupStep3();
+      if (signupState.oauthMode) {
+        finishOAuthProfile({ worker_types: selected });
+      } else {
+        goToSignupStep3();
+      }
     };
   }
 
@@ -586,7 +613,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (document.getElementById('nextToFinalStepFromCompanyBtn')) {
-    document.getElementById('nextToFinalStepFromCompanyBtn').onclick = () => goToSignupStep3();
+    document.getElementById('nextToFinalStepFromCompanyBtn').onclick = () => {
+      if (signupState.oauthMode) {
+        finishOAuthProfile({
+          company_name: document.getElementById('companyNameInput').value,
+          business_reg_no: document.getElementById('businessNumInput').value
+        });
+      } else {
+        goToSignupStep3();
+      }
+    };
+  }
+
+  // 소셜 로그인(OAuth)으로 만들어진 계정에 업체/일용직 추가정보를 마저 저장
+  async function finishOAuthProfile(extraFields) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.user) return;
+    const { error } = await supabaseClient
+      .from('profiles')
+      .update(extraFields)
+      .eq('id', session.user.id);
+    if (error) {
+      alert('추가정보 저장 중 문제가 발생했습니다: ' + error.message);
+      return;
+    }
+    alert('추가정보까지 등록이 완료되었습니다.');
+    signupState.oauthMode = false;
+    closeAllModals();
+    refreshAuthUI();
   }
 
   function goToSignupStep3() {
