@@ -739,6 +739,46 @@ document.addEventListener('DOMContentLoaded', () => {
   if (manpowerStartTime) manpowerStartTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
   if (manpowerEndTime) manpowerEndTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
 
+  // --- 12. 사진 업로드 드롭존 (클릭/드래그로 파일 선택 + 미리보기) ---
+  document.querySelectorAll('.dropzone').forEach(dropzone => {
+    const fileInput = dropzone.querySelector('input[type="file"]');
+    if (!fileInput) return;
+    const previewId = fileInput.id.replace('Input', 'Preview');
+    const preview = document.getElementById(previewId);
+
+    function renderPreview() {
+      if (!preview) return;
+      preview.innerHTML = '';
+      Array.from(fileInput.files || []).forEach(file => {
+        const url = URL.createObjectURL(file);
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'width:100%; height:80px; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5;';
+        preview.appendChild(img);
+      });
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', renderPreview);
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '#ff6a3d';
+    });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.style.borderColor = '#ddd6c5';
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '#ddd6c5';
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        renderPreview();
+      }
+    });
+  });
+
   // --- 8. 초기 로그인 상태 반영 ---
   bindAuthOpenButtons();
   if (window.supabaseClient) {
