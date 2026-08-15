@@ -97,11 +97,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!authArea || !window.supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session && session.user) {
-      const { data: profile } = await supabaseClient
+      let { data: profile } = await supabaseClient
         .from('profiles')
         .select('phone, user_type, company_name')
         .eq('id', session.user.id)
         .maybeSingle();
+
+      // 소셜 로그인(카카오 등)으로 첫 로그인한 경우 profiles 행이 없을 수 있음 → 자동 생성
+      if (!profile) {
+        let pendingType = 'user';
+        try { pendingType = localStorage.getItem('pendingSignupType') || 'user'; } catch (e) {}
+        try { localStorage.removeItem('pendingSignupType'); } catch (e) {}
+        const { data: created } = await supabaseClient
+          .from('profiles')
+          .insert({ id: session.user.id, user_type: pendingType })
+          .select('phone, user_type, company_name')
+          .maybeSingle();
+        profile = created;
+      }
+
       const label = (profile && profile.company_name) || (profile && profile.phone) || '회원';
       authArea.innerHTML = `
         <span style="font-size:14px; color:#23262b;">${label}님</span>
@@ -351,8 +365,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. 카카오 로그인
   if (kakaoLoginBtn) {
-    kakaoLoginBtn.onclick = () => {
-      alert('카카오 로그인 창을 띄웁니다. (Kakao Developers 키 필요)');
+    kakaoLoginBtn.onclick = async () => {
+      if (!window.supabaseClient) { alert('로그인 서비스 연결에 문제가 있습니다.'); return; }
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) alert('카카오 로그인에 실패했습니다: ' + error.message);
     };
   }
 
@@ -371,6 +390,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleSocialSignup(provider) {
     if (!signupState.type) {
       alert('사용자 유형을 먼저 선택해주세요.');
+      return;
+    }
+
+    if (provider === '카카오') {
+      if (!window.supabaseClient) { alert('로그인 서비스 연결에 문제가 있습니다.'); return; }
+      // 카카오 인증 후 다시 돌아왔을 때 이어서 처리할 수 있도록 선택한 유형을 잠깐 저장해둠
+      try { localStorage.setItem('pendingSignupType', signupState.type); } catch (e) {}
+      supabaseClient.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: window.location.origin }
+      }).then(({ error }) => {
+        if (error) alert('카카오 로그인에 실패했습니다: ' + error.message);
+      });
       return;
     }
 
