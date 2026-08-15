@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('요청이 정상적으로 접수되었습니다. 담당자가 확인 후 연락드릴게요.');
       closeAllModals();
       modal.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+      if (photoInputEl && photoInputEl._resetStoredFiles) photoInputEl._resetStoredFiles();
       modal.querySelectorAll('.type-btn.selected').forEach(b => b.classList.remove('selected'));
     } catch (err) {
       console.error(err);
@@ -739,28 +740,71 @@ document.addEventListener('DOMContentLoaded', () => {
   if (manpowerStartTime) manpowerStartTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
   if (manpowerEndTime) manpowerEndTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
 
-  // --- 12. 사진 업로드 드롭존 (클릭/드래그로 파일 선택 + 미리보기) ---
+  // --- 12. 사진 업로드 드롭존 (클릭/드래그로 파일 선택 + 누적 미리보기 + 개별 삭제) ---
+  const MAX_PHOTOS = 10;
   document.querySelectorAll('.dropzone').forEach(dropzone => {
     const fileInput = dropzone.querySelector('input[type="file"]');
     if (!fileInput) return;
     const previewId = fileInput.id.replace('Input', 'Preview');
     const preview = document.getElementById(previewId);
+    let storedFiles = []; // 이 입력칸에서 누적으로 들고 있는 File 목록
+
+    function syncInputFiles() {
+      const dt = new DataTransfer();
+      storedFiles.forEach(f => dt.items.add(f));
+      fileInput.files = dt.files;
+    }
 
     function renderPreview() {
       if (!preview) return;
       preview.innerHTML = '';
-      Array.from(fileInput.files || []).forEach(file => {
+      storedFiles.forEach((file, idx) => {
         const url = URL.createObjectURL(file);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;';
         const img = document.createElement('img');
         img.src = url;
         img.style.cssText = 'width:100%; height:80px; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5;';
-        preview.appendChild(img);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerText = '×';
+        removeBtn.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:#ef4444; color:#fff; font-size:14px; line-height:1; cursor:pointer;';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          storedFiles.splice(idx, 1);
+          syncInputFiles();
+          renderPreview();
+        });
+        wrap.appendChild(img);
+        wrap.appendChild(removeBtn);
+        preview.appendChild(wrap);
       });
     }
 
+    function addFiles(newFiles) {
+      const incoming = Array.from(newFiles || []);
+      storedFiles = storedFiles.concat(incoming).slice(0, MAX_PHOTOS);
+      if (storedFiles.length + incoming.length > MAX_PHOTOS) {
+        alert(`사진은 최대 ${MAX_PHOTOS}장까지 올릴 수 있어요.`);
+      }
+      syncInputFiles();
+      renderPreview();
+    }
+
+    // saveWorkRequest 성공 후 사진 목록을 같이 비우기 위해 노출
+    fileInput._resetStoredFiles = () => {
+      storedFiles = [];
+      syncInputFiles();
+      renderPreview();
+    };
+
     dropzone.addEventListener('click', () => fileInput.click());
 
-    fileInput.addEventListener('change', renderPreview);
+    fileInput.addEventListener('click', (e) => e.stopPropagation());
+
+    fileInput.addEventListener('change', (e) => {
+      addFiles(e.target.files);
+    });
 
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -773,8 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       dropzone.style.borderColor = '#ddd6c5';
       if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
-        renderPreview();
+        addFiles(e.dataTransfer.files);
       }
     });
   });
