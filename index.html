@@ -38,6 +38,87 @@
   </header>
   <div class="bleed hazard-stripe"></div>
 
+  <!-- ✅ 마이페이지 모달 -->
+  <div id="myPageModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>내 정보 관리</h2>
+        <button class="close-btn">&times;</button>
+      </div>
+
+      <div class="input-group">
+        <label>가입 유형</label>
+        <input type="text" id="myPageUserType" readonly style="background:#f0ece2; color:#6c6f76;">
+      </div>
+
+      <div class="input-group">
+        <label for="myPageAddress">주소</label>
+        <input type="text" id="myPageAddress" placeholder="현장/배송 관련 기본 주소를 입력하세요">
+      </div>
+
+      <div id="myPageCompanyFields" class="hidden">
+        <div class="input-group">
+          <label for="myPageCompanyName">업체명</label>
+          <input type="text" id="myPageCompanyName" placeholder="업체명">
+        </div>
+        <div class="input-group">
+          <label for="myPageBusinessNum">사업자등록번호</label>
+          <input type="text" id="myPageBusinessNum" placeholder="000-00-00000">
+        </div>
+      </div>
+
+      <div id="myPageWorkerFields" class="hidden">
+        <div class="input-group">
+          <label>등록된 공종</label>
+          <div id="myPageWorkerTypesDisplay" style="font-size:13px; color:#23262b; padding:10px; background:#f0ece2; border-radius:8px; margin-top:5px;">-</div>
+          <button type="button" id="myPageEditWorkerTypesBtn" class="btn btn-secondary" style="margin-top:8px; padding:10px; font-size:12px;">공종 다시 선택하기</button>
+        </div>
+      </div>
+
+      <div id="myPageBankFields" class="hidden">
+        <div class="input-group">
+          <label for="myPageBankName">정산받을 은행명</label>
+          <input type="text" id="myPageBankName" placeholder="예: 국민은행">
+        </div>
+        <div class="modal-row">
+          <div class="input-group">
+            <label for="myPageAccountNumber">계좌번호</label>
+            <input type="text" id="myPageAccountNumber" placeholder="- 없이 숫자만">
+          </div>
+          <div class="input-group">
+            <label for="myPageAccountHolder">예금주</label>
+            <input type="text" id="myPageAccountHolder" placeholder="예금주명">
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>내 요청 내역</label>
+        <div id="myPageRequestHistory" style="margin-top:5px;"></div>
+      </div>
+
+      <button id="saveMyPageBtn" class="btn btn-primary login-submit" style="margin-top:15px;">저장하기</button>
+    </div>
+  </div>
+
+  <!-- ✅ 채팅 모달 -->
+  <div id="chatModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>문의 채팅</h2>
+        <button class="close-btn">&times;</button>
+      </div>
+      <div id="chatMessages" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding:10px; background:#f0ece2; border-radius:8px;"></div>
+      <div class="modal-row" style="align-items:stretch; margin-bottom:0;">
+        <div class="input-group" style="flex:1; margin-bottom:0 !important;">
+          <input type="text" id="chatInput" placeholder="메시지를 입력하세요">
+        </div>
+        <button id="sendChatBtn" class="btn btn-primary" style="width:auto; padding:0 16px; margin-bottom:0;">전송</button>
+      </div>
+      <p style="font-size:11px; color:#6c6f76; margin-top:10px;">담당자 확인 후 답변이 등록되면 여기에 표시됩니다.</p>
+    </div>
+  </div>
+
   <!-- ✅ 로그인 모달 -->
   <div id="loginModal" class="modal hidden">
     <div class="modal-content">

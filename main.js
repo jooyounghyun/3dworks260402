@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 1. 요소 선택 ---
   const loginBtn = document.getElementById('loginBtn');
+  const myPageModal = document.getElementById('myPageModal');
+  const chatModal = document.getElementById('chatModal');
   const loginModal = document.getElementById('loginModal');
   const signupBtn = document.getElementById('signupBtn');
   const signupModal = document.getElementById('signupModal');
@@ -71,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     isVerified: false,
     businessVerified: false,
     selectedWorkerTypes: [],
-    oauthMode: false
+    oauthMode: false,
+    returnToMyPage: false
   };
 
   let activeManpowerItem = null;
@@ -123,8 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const label = (profile && profile.company_name) || (profile && profile.phone) || socialName || '회원';
       authArea.innerHTML = `
         <span style="font-size:14px; color:#23262b;">${label}님</span>
+        <a href="#" id="myPageBtn">마이페이지</a>
         <a href="#" id="logoutBtn">로그아웃</a>
       `;
+      const myPageBtn = document.getElementById('myPageBtn');
+      if (myPageBtn) {
+        myPageBtn.onclick = (e) => {
+          e.preventDefault();
+          openMyPageModal();
+        };
+      }
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
         logoutBtn.onclick = async (e) => {
@@ -338,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
-      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal
+      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal
     ];
     modals.forEach(modal => {
       if (modal) modal.classList.add('hidden');
@@ -625,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 소셜 로그인(OAuth)으로 만들어진 계정에 업체/일용직 추가정보를 마저 저장
+  // 소셜 로그인(OAuth) 가입 마무리 또는 마이페이지에서의 공종 재선택 저장에 공용으로 사용
   async function finishOAuthProfile(extraFields) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session || !session.user) return;
@@ -634,13 +645,205 @@ document.addEventListener('DOMContentLoaded', () => {
       .update(extraFields)
       .eq('id', session.user.id);
     if (error) {
-      alert('추가정보 저장 중 문제가 발생했습니다: ' + error.message);
+      alert('저장 중 문제가 발생했습니다: ' + error.message);
       return;
     }
-    alert('추가정보까지 등록이 완료되었습니다.');
+    const returnToMyPage = signupState.returnToMyPage;
     signupState.oauthMode = false;
+    signupState.returnToMyPage = false;
     closeAllModals();
-    refreshAuthUI();
+    if (returnToMyPage) {
+      alert('공종 정보가 수정되었습니다.');
+      openMyPageModal();
+    } else {
+      alert('추가정보까지 등록이 완료되었습니다.');
+      refreshAuthUI();
+    }
+  }
+
+  // --- 마이페이지 ---
+  const REQUEST_TYPE_LABELS = {
+    demolition: '상가 철거', waste: '폐기물 처리', restoration: '원상복구',
+    electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
+  };
+  const STATUS_LABELS = { pending: '접수 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
+
+  async function renderMyPageRequestHistory(userId) {
+    const historyBox = document.getElementById('myPageRequestHistory');
+    if (!historyBox) return;
+    const { data: requests } = await supabaseClient
+      .from('work_requests')
+      .select('id, request_type, status, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    historyBox.innerHTML = '';
+    if (!requests || requests.length === 0) {
+      historyBox.innerHTML = '<p style="font-size:13px; color:#6c6f76;">아직 신청한 요청이 없습니다.</p>';
+      return;
+    }
+    requests.forEach(r => {
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #ddd6c5; border-radius:8px; margin-bottom:8px;';
+      const dateStr = new Date(r.created_at).toLocaleDateString('ko-KR');
+      const info = document.createElement('div');
+      info.innerHTML = `
+        <div style="font-size:13px; font-weight:700;">${REQUEST_TYPE_LABELS[r.request_type] || r.request_type}</div>
+        <div style="font-size:12px; color:#6c6f76;">${dateStr} · ${STATUS_LABELS[r.status] || r.status}</div>
+      `;
+      const chatBtn = document.createElement('button');
+      chatBtn.type = 'button';
+      chatBtn.innerText = '채팅하기';
+      chatBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid #1d3557; background:#ffffff; color:#1d3557; cursor:pointer; flex-shrink:0;';
+      chatBtn.onclick = () => openChatModal(r.id);
+      item.appendChild(info);
+      item.appendChild(chatBtn);
+      historyBox.appendChild(item);
+    });
+  }
+
+  let currentChatRequestId = null;
+
+  async function openChatModal(requestId) {
+    currentChatRequestId = requestId;
+    closeAllModals();
+    chatModal.classList.remove('hidden');
+    await loadChatMessages();
+  }
+
+  async function loadChatMessages() {
+    if (!currentChatRequestId) return;
+    const { data: msgs } = await supabaseClient
+      .from('messages')
+      .select('sender_role, content, created_at')
+      .eq('request_id', currentChatRequestId)
+      .order('created_at', { ascending: true });
+    const box = document.getElementById('chatMessages');
+    if (!box) return;
+    box.innerHTML = '';
+    (msgs || []).forEach(m => {
+      const isMe = m.sender_role === 'customer';
+      const bubble = document.createElement('div');
+      bubble.style.cssText = `align-self:${isMe ? 'flex-end' : 'flex-start'}; background:${isMe ? '#ff6a3d' : '#ffffff'}; color:${isMe ? '#ffffff' : '#23262b'}; padding:8px 12px; border-radius:10px; max-width:78%; font-size:13px; border:1px solid #ddd6c5; word-break:break-word;`;
+      bubble.innerText = m.content;
+      box.appendChild(bubble);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text || !currentChatRequestId) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+    const { error } = await supabaseClient.from('messages').insert({
+      request_id: currentChatRequestId,
+      sender_id: session.user.id,
+      sender_role: 'customer',
+      content: text
+    });
+    if (error) { alert('메시지 전송에 실패했습니다: ' + error.message); return; }
+    input.value = '';
+    loadChatMessages();
+  }
+
+  const sendChatBtn = document.getElementById('sendChatBtn');
+  if (sendChatBtn) sendChatBtn.onclick = sendChatMessage;
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); sendChatMessage(); }
+    });
+  }
+
+  async function openMyPageModal() {
+    if (!window.supabaseClient) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.user) return;
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder')
+      .eq('id', session.user.id)
+      .maybeSingle();
+    if (!profile) return;
+
+    const typeLabel = { user: '일반 사용자', company: '업체', worker: '일용구직자' }[profile.user_type] || '일반 사용자';
+    document.getElementById('myPageUserType').value = typeLabel;
+    document.getElementById('myPageAddress').value = profile.address || '';
+
+    const companyFields = document.getElementById('myPageCompanyFields');
+    const workerFields = document.getElementById('myPageWorkerFields');
+    const bankFields = document.getElementById('myPageBankFields');
+
+    companyFields.classList.add('hidden');
+    workerFields.classList.add('hidden');
+    bankFields.classList.add('hidden');
+
+    if (profile.user_type === 'company') {
+      companyFields.classList.remove('hidden');
+      bankFields.classList.remove('hidden');
+      document.getElementById('myPageCompanyName').value = profile.company_name || '';
+      document.getElementById('myPageBusinessNum').value = profile.business_reg_no || '';
+    } else if (profile.user_type === 'worker') {
+      workerFields.classList.remove('hidden');
+      bankFields.classList.remove('hidden');
+      document.getElementById('myPageWorkerTypesDisplay').innerText =
+        (profile.worker_types && profile.worker_types.length) ? profile.worker_types.join(', ') : '등록된 공종이 없습니다';
+    }
+
+    document.getElementById('myPageBankName').value = profile.bank_name || '';
+    document.getElementById('myPageAccountNumber').value = profile.bank_account_number || '';
+    document.getElementById('myPageAccountHolder').value = profile.account_holder || '';
+
+    renderMyPageRequestHistory(session.user.id);
+
+    closeAllModals();
+    myPageModal.classList.remove('hidden');
+  }
+
+  const saveMyPageBtn = document.getElementById('saveMyPageBtn');
+  if (saveMyPageBtn) {
+    saveMyPageBtn.onclick = async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || !session.user) return;
+      const { data: currentProfile } = await supabaseClient
+        .from('profiles').select('user_type').eq('id', session.user.id).maybeSingle();
+
+      const updateFields = {
+        address: document.getElementById('myPageAddress').value,
+        bank_name: document.getElementById('myPageBankName').value,
+        bank_account_number: document.getElementById('myPageAccountNumber').value,
+        account_holder: document.getElementById('myPageAccountHolder').value
+      };
+      if (currentProfile && currentProfile.user_type === 'company') {
+        updateFields.company_name = document.getElementById('myPageCompanyName').value;
+        updateFields.business_reg_no = document.getElementById('myPageBusinessNum').value;
+      }
+
+      const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', session.user.id);
+      if (error) { alert('저장 중 문제가 발생했습니다: ' + error.message); return; }
+      alert('저장되었습니다.');
+      closeAllModals();
+      refreshAuthUI();
+    };
+  }
+
+  const myPageEditWorkerTypesBtn = document.getElementById('myPageEditWorkerTypesBtn');
+  if (myPageEditWorkerTypesBtn) {
+    myPageEditWorkerTypesBtn.onclick = () => {
+      signupState.oauthMode = true;
+      signupState.returnToMyPage = true;
+      closeAllModals();
+      signupModal.classList.remove('hidden');
+      signupStep1.classList.add('hidden');
+      signupStep2.classList.add('hidden');
+      signupStepCompany.classList.add('hidden');
+      signupStep3.classList.add('hidden');
+      signupStepWorker.classList.remove('hidden');
+      renderWorkerTypeSelection();
+    };
   }
 
   function goToSignupStep3() {
