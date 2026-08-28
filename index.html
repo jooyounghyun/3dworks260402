@@ -41,41 +41,96 @@
   <!-- ✅ 마이페이지 모달 -->
   <div id="myPageModal" class="modal hidden">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>내 정보 관리</h2>
-        <button class="close-btn">&times;</button>
-      </div>
 
-      <div class="input-group">
-        <label>가입 유형</label>
-        <input type="text" id="myPageUserType" readonly style="background:#f0ece2; color:#6c6f76;">
-      </div>
-
-      <div class="input-group">
-        <label for="myPageAddress">주소</label>
-        <input type="text" id="myPageAddress" placeholder="현장/배송 관련 기본 주소를 입력하세요">
-      </div>
-
-      <div id="myPageCompanyFields" class="hidden">
-        <div class="input-group">
-          <label for="myPageCompanyName">업체명</label>
-          <input type="text" id="myPageCompanyName" placeholder="업체명">
+      <!-- 홈 화면: 프로필 카드 + 메뉴 리스트 -->
+      <div id="myPageHomeView">
+        <div class="modal-header">
+          <h2>마이페이지</h2>
+          <button class="close-btn">&times;</button>
         </div>
-        <div class="input-group">
-          <label for="myPageBusinessNum">사업자등록번호</label>
-          <input type="text" id="myPageBusinessNum" placeholder="000-00-00000">
-        </div>
-      </div>
 
-      <div id="myPageWorkerFields" class="hidden">
-        <div class="input-group">
-          <label>등록된 공종</label>
-          <div id="myPageWorkerTypesDisplay" style="font-size:13px; color:#23262b; padding:10px; background:#f0ece2; border-radius:8px; margin-top:5px;">-</div>
-          <button type="button" id="myPageEditWorkerTypesBtn" class="btn btn-secondary" style="margin-top:8px; padding:10px; font-size:12px;">공종 다시 선택하기</button>
+        <div style="display:flex; align-items:center; gap:14px; padding:6px 2px 22px;">
+          <div id="myPageAvatarInitial" style="width:52px; height:52px; border-radius:50%; background:var(--steel); color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; flex-shrink:0;">회</div>
+          <div>
+            <div id="myPageDisplayName" style="font-size:16px; font-weight:700; color:var(--ink);">회원님</div>
+            <div id="myPageTypeBadge" style="display:inline-block; margin-top:5px; padding:3px 10px; border-radius:999px; background:var(--surface-muted); color:var(--ink-muted); font-size:12px; font-weight:600;">일반 사용자</div>
+          </div>
+        </div>
+
+        <div class="mypage-menu">
+          <button type="button" class="mypage-menu-item" data-mypage-target="History">
+            <span>📋 내 요청 내역</span><span class="mypage-menu-arrow">›</span>
+          </button>
+          <button type="button" class="mypage-menu-item" data-mypage-target="Info">
+            <span>✏️ 내 정보 수정</span><span class="mypage-menu-arrow">›</span>
+          </button>
+          <button type="button" class="mypage-menu-item" id="myPageBankMenuItem" data-mypage-target="Bank">
+            <span>🏦 정산 계좌 관리</span><span class="mypage-menu-arrow">›</span>
+          </button>
+          <button type="button" class="mypage-menu-item" id="myPageLogoutMenuItem" style="color:var(--danger);">
+            <span>로그아웃</span>
+          </button>
         </div>
       </div>
 
-      <div id="myPageBankFields" class="hidden">
+      <!-- 요청 내역 화면 -->
+      <div id="myPageHistoryView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>내 요청 내역</h2>
+          <span style="width:20px;"></span>
+        </div>
+        <div id="myPageRequestHistory" style="margin-top:5px;"></div>
+      </div>
+
+      <!-- 내 정보 수정 화면 -->
+      <div id="myPageInfoView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>내 정보 수정</h2>
+          <span style="width:20px;"></span>
+        </div>
+
+        <div class="input-group">
+          <label>가입 유형</label>
+          <input type="text" id="myPageUserType" readonly style="background:#f0ece2; color:#6c6f76;">
+        </div>
+
+        <div class="input-group">
+          <label for="myPageAddress">주소</label>
+          <input type="text" id="myPageAddress" placeholder="현장/배송 관련 기본 주소를 입력하세요">
+        </div>
+
+        <div id="myPageCompanyFields" class="hidden">
+          <div class="input-group">
+            <label for="myPageCompanyName">업체명</label>
+            <input type="text" id="myPageCompanyName" placeholder="업체명">
+          </div>
+          <div class="input-group">
+            <label for="myPageBusinessNum">사업자등록번호</label>
+            <input type="text" id="myPageBusinessNum" placeholder="000-00-00000">
+          </div>
+        </div>
+
+        <div id="myPageWorkerFields" class="hidden">
+          <div class="input-group">
+            <label>등록된 공종</label>
+            <div id="myPageWorkerTypesDisplay" style="font-size:13px; color:#23262b; padding:10px; background:#f0ece2; border-radius:8px; margin-top:5px;">-</div>
+            <button type="button" id="myPageEditWorkerTypesBtn" class="btn btn-secondary" style="margin-top:8px; padding:10px; font-size:12px;">공종 다시 선택하기</button>
+          </div>
+        </div>
+
+        <button id="saveMyPageInfoBtn" class="btn btn-primary login-submit" style="margin-top:15px;">저장하기</button>
+      </div>
+
+      <!-- 정산 계좌 화면 -->
+      <div id="myPageBankView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>정산 계좌 관리</h2>
+          <span style="width:20px;"></span>
+        </div>
+
         <div class="input-group">
           <label for="myPageBankName">정산받을 은행명</label>
           <input type="text" id="myPageBankName" placeholder="예: 국민은행">
@@ -90,14 +145,10 @@
             <input type="text" id="myPageAccountHolder" placeholder="예금주명">
           </div>
         </div>
+
+        <button id="saveMyPageBankBtn" class="btn btn-primary login-submit" style="margin-top:15px;">저장하기</button>
       </div>
 
-      <div class="input-group">
-        <label>내 요청 내역</label>
-        <div id="myPageRequestHistory" style="margin-top:5px;"></div>
-      </div>
-
-      <button id="saveMyPageBtn" class="btn btn-primary login-submit" style="margin-top:15px;">저장하기</button>
     </div>
   </div>
 

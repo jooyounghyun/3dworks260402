@@ -654,7 +654,8 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllModals();
     if (returnToMyPage) {
       alert('공종 정보가 수정되었습니다.');
-      openMyPageModal();
+      await openMyPageModal();
+      showMyPageView('Info');
     } else {
       alert('추가정보까지 등록이 완료되었습니다.');
       refreshAuthUI();
@@ -758,37 +759,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function showMyPageView(name) {
+    ['Home', 'History', 'Info', 'Bank'].forEach(v => {
+      const el = document.getElementById('myPage' + v + 'View');
+      if (el) el.classList.toggle('hidden', v !== name);
+    });
+  }
+
+  document.querySelectorAll('[data-mypage-target]').forEach(btn => {
+    btn.addEventListener('click', () => showMyPageView(btn.dataset.mypageTarget));
+  });
+  document.querySelectorAll('[data-mypage-back]').forEach(btn => {
+    btn.addEventListener('click', () => showMyPageView('Home'));
+  });
+
+  const myPageLogoutMenuItem = document.getElementById('myPageLogoutMenuItem');
+  if (myPageLogoutMenuItem) {
+    myPageLogoutMenuItem.onclick = async () => {
+      await supabaseClient.auth.signOut();
+      closeAllModals();
+      refreshAuthUI();
+    };
+  }
+
+  let myPageCurrentUserId = null;
+
   async function openMyPageModal() {
     if (!window.supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session || !session.user) return;
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder')
+      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder, phone')
       .eq('id', session.user.id)
       .maybeSingle();
     if (!profile) return;
 
+    myPageCurrentUserId = session.user.id;
+
     const typeLabel = { user: '일반 사용자', company: '업체', worker: '일용구직자' }[profile.user_type] || '일반 사용자';
+    const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+    const displayName = profile.company_name || socialName || profile.phone || '회원';
+
+    document.getElementById('myPageDisplayName').innerText = displayName + '님';
+    document.getElementById('myPageTypeBadge').innerText = typeLabel;
+    document.getElementById('myPageAvatarInitial').innerText = displayName.charAt(0);
     document.getElementById('myPageUserType').value = typeLabel;
     document.getElementById('myPageAddress').value = profile.address || '';
 
     const companyFields = document.getElementById('myPageCompanyFields');
     const workerFields = document.getElementById('myPageWorkerFields');
-    const bankFields = document.getElementById('myPageBankFields');
+    const bankMenuItem = document.getElementById('myPageBankMenuItem');
 
     companyFields.classList.add('hidden');
     workerFields.classList.add('hidden');
-    bankFields.classList.add('hidden');
+    bankMenuItem.style.display = (profile.user_type === 'company' || profile.user_type === 'worker') ? 'flex' : 'none';
 
     if (profile.user_type === 'company') {
       companyFields.classList.remove('hidden');
-      bankFields.classList.remove('hidden');
       document.getElementById('myPageCompanyName').value = profile.company_name || '';
       document.getElementById('myPageBusinessNum').value = profile.business_reg_no || '';
     } else if (profile.user_type === 'worker') {
       workerFields.classList.remove('hidden');
-      bankFields.classList.remove('hidden');
       document.getElementById('myPageWorkerTypesDisplay').innerText =
         (profile.worker_types && profile.worker_types.length) ? profile.worker_types.join(', ') : '등록된 공종이 없습니다';
     }
@@ -801,32 +833,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeAllModals();
     myPageModal.classList.remove('hidden');
+    showMyPageView('Home');
   }
 
-  const saveMyPageBtn = document.getElementById('saveMyPageBtn');
-  if (saveMyPageBtn) {
-    saveMyPageBtn.onclick = async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session || !session.user) return;
+  const saveMyPageInfoBtn = document.getElementById('saveMyPageInfoBtn');
+  if (saveMyPageInfoBtn) {
+    saveMyPageInfoBtn.onclick = async () => {
+      if (!myPageCurrentUserId) return;
       const { data: currentProfile } = await supabaseClient
-        .from('profiles').select('user_type').eq('id', session.user.id).maybeSingle();
+        .from('profiles').select('user_type').eq('id', myPageCurrentUserId).maybeSingle();
 
-      const updateFields = {
-        address: document.getElementById('myPageAddress').value,
-        bank_name: document.getElementById('myPageBankName').value,
-        bank_account_number: document.getElementById('myPageAccountNumber').value,
-        account_holder: document.getElementById('myPageAccountHolder').value
-      };
+      const updateFields = { address: document.getElementById('myPageAddress').value };
       if (currentProfile && currentProfile.user_type === 'company') {
         updateFields.company_name = document.getElementById('myPageCompanyName').value;
         updateFields.business_reg_no = document.getElementById('myPageBusinessNum').value;
       }
 
-      const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', session.user.id);
+      const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', myPageCurrentUserId);
       if (error) { alert('저장 중 문제가 발생했습니다: ' + error.message); return; }
       alert('저장되었습니다.');
-      closeAllModals();
-      refreshAuthUI();
+      await openMyPageModal();
+      showMyPageView('Info');
+    };
+  }
+
+  const saveMyPageBankBtn = document.getElementById('saveMyPageBankBtn');
+  if (saveMyPageBankBtn) {
+    saveMyPageBankBtn.onclick = async () => {
+      if (!myPageCurrentUserId) return;
+      const updateFields = {
+        bank_name: document.getElementById('myPageBankName').value,
+        bank_account_number: document.getElementById('myPageAccountNumber').value,
+        account_holder: document.getElementById('myPageAccountHolder').value
+      };
+      const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', myPageCurrentUserId);
+      if (error) { alert('저장 중 문제가 발생했습니다: ' + error.message); return; }
+      alert('계좌 정보가 저장되었습니다.');
+      await openMyPageModal();
+      showMyPageView('Bank');
     };
   }
 

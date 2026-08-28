@@ -270,6 +270,46 @@ header {
   cursor: pointer;
 }
 
+.mypage-back-btn {
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mypage-menu {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.mypage-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.mypage-menu-item:hover { background-color: var(--surface-muted); }
+
+.mypage-menu-arrow {
+  color: var(--ink-muted);
+  font-size: 16px;
+}
+
 .signup-step.hidden { display: none; }
 
 .step-title {
