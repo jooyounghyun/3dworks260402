@@ -74,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
     businessVerified: false,
     selectedWorkerTypes: [],
     oauthMode: false,
-    returnToMyPage: false
+    returnToMyPage: false,
+    convertingType: false
   };
 
   let activeManpowerItem = null;
@@ -609,7 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selected.length === 0) return alert('최소 하나 이상의 작업 유형을 선택해주세요.');
       signupState.selectedWorkerTypes = selected;
       if (signupState.oauthMode) {
-        finishOAuthProfile({ worker_types: selected });
+        finishOAuthProfile(Object.assign(
+          { worker_types: selected },
+          signupState.convertingType ? { user_type: 'worker' } : {}
+        ));
       } else {
         goToSignupStep3();
       }
@@ -631,10 +635,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('nextToFinalStepFromCompanyBtn')) {
     document.getElementById('nextToFinalStepFromCompanyBtn').onclick = () => {
       if (signupState.oauthMode) {
-        finishOAuthProfile({
-          company_name: document.getElementById('companyNameInput').value,
-          business_reg_no: document.getElementById('businessNumInput').value
-        });
+        finishOAuthProfile(Object.assign(
+          {
+            company_name: document.getElementById('companyNameInput').value,
+            business_reg_no: document.getElementById('businessNumInput').value
+          },
+          signupState.convertingType ? { user_type: 'company' } : {}
+        ));
       } else {
         goToSignupStep3();
       }
@@ -654,11 +661,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const returnToMyPage = signupState.returnToMyPage;
+    const convertingType = signupState.convertingType;
     signupState.oauthMode = false;
     signupState.returnToMyPage = false;
+    signupState.convertingType = false;
     closeAllModals();
     if (returnToMyPage) {
-      alert('공종 정보가 수정되었습니다.');
+      alert(convertingType ? '회원 유형이 전환되었습니다.' : '공종 정보가 수정되었습니다.');
       await openMyPageModal();
       showMyPageView('Info');
     } else {
@@ -815,10 +824,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyFields = document.getElementById('myPageCompanyFields');
     const workerFields = document.getElementById('myPageWorkerFields');
     const bankMenuItem = document.getElementById('myPageBankMenuItem');
+    const convertSection = document.getElementById('myPageConvertSection');
 
     companyFields.classList.add('hidden');
     workerFields.classList.add('hidden');
     bankMenuItem.style.display = (profile.user_type === 'company' || profile.user_type === 'worker') ? 'flex' : 'none';
+    if (convertSection) convertSection.classList.toggle('hidden', profile.user_type !== 'user');
 
     if (profile.user_type === 'company') {
       companyFields.classList.remove('hidden');
@@ -894,6 +905,34 @@ document.addEventListener('DOMContentLoaded', () => {
       renderWorkerTypeSelection();
     };
   }
+
+  // 일반 사용자 → 업체/일용구직자 회원 유형 전환
+  function startTypeConversion(newType) {
+    signupState.type = newType;
+    signupState.oauthMode = true;
+    signupState.returnToMyPage = true;
+    signupState.convertingType = true;
+    closeAllModals();
+    signupModal.classList.remove('hidden');
+    signupStep1.classList.add('hidden');
+    signupStep2.classList.add('hidden');
+    signupStep3.classList.add('hidden');
+    if (newType === 'company') {
+      signupStepWorker.classList.add('hidden');
+      signupStepCompany.classList.remove('hidden');
+      const nextBtn = document.getElementById('nextToFinalStepFromCompanyBtn');
+      if (nextBtn) nextBtn.disabled = true;
+    } else {
+      signupStepCompany.classList.add('hidden');
+      signupStepWorker.classList.remove('hidden');
+      renderWorkerTypeSelection();
+    }
+  }
+
+  const convertToCompanyBtn = document.getElementById('convertToCompanyBtn');
+  if (convertToCompanyBtn) convertToCompanyBtn.onclick = () => startTypeConversion('company');
+  const convertToWorkerBtn = document.getElementById('convertToWorkerBtn');
+  if (convertToWorkerBtn) convertToWorkerBtn.onclick = () => startTypeConversion('worker');
 
   function goToSignupStep3() {
     signupStep2.classList.add('hidden');
