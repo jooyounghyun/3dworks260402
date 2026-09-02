@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>관리자 | 3D해결사</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f6f4ee">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  .admin-wrap { max-width: 900px; margin: 0 auto; padding: 20px 20px 80px; }
+  .admin-header { display:flex; align-items:center; gap:10px; padding:18px 0; font-family: var(--font-display); font-size:22px; color: var(--steel); text-decoration:none; }
+  .admin-tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--border); }
+  .admin-tab-btn { padding:10px 16px; background:none; border:none; border-bottom:3px solid transparent; font-size:14px; font-weight:700; color: var(--ink-muted); cursor:pointer; font-family: var(--font-body); }
+  .admin-tab-btn.active { color: var(--hazard); border-bottom-color: var(--hazard); }
+  .filter-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .filter-btn { padding:6px 12px; font-size:12px; border-radius:999px; border:1px solid var(--border); background:#fff; color: var(--ink-muted); cursor:pointer; }
+  .filter-btn.active { background: var(--steel); border-color: var(--steel); color:#fff; }
+  .req-card, .inquiry-card { border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; background:#fff; }
+  .req-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .req-type { font-size:14px; font-weight:700; color: var(--ink); }
+  .req-meta { font-size:12px; color: var(--ink-muted); margin-top:3px; }
+  .req-status-select { padding:6px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; background:#fff; }
+  .req-actions { display:flex; gap:8px; margin-top:10px; }
+  .req-actions button { padding:7px 12px; font-size:12px; border-radius:6px; border:1px solid var(--steel); background:#fff; color: var(--steel); cursor:pointer; }
+  .req-detail { margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); font-size:12.5px; color: var(--ink); display:none; }
+  .req-detail.open { display:block; }
+  .req-detail pre { white-space:pre-wrap; word-break:break-word; background: var(--surface-muted); padding:10px; border-radius:8px; font-size:12px; }
+  .req-photos { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .req-photos img { width:70px; height:70px; object-fit:cover; border-radius:6px; border:1px solid var(--border); }
+  .chat-panel { margin-top:12px; border-top:1px dashed var(--border); padding-top:12px; display:none; }
+  .chat-panel.open { display:block; }
+  .chat-box { max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:10px; background: var(--surface-muted); border-radius:8px; margin-bottom:10px; }
+  .chat-bubble { padding:8px 12px; border-radius:10px; max-width:78%; font-size:13px; border:1px solid var(--border); word-break:break-word; }
+  .chat-row { display:flex; gap:8px; }
+  .chat-row input { flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); font-size:13px; }
+  .chat-row button { padding:0 16px; border-radius:8px; border:none; background: var(--hazard); color:#fff; font-weight:700; cursor:pointer; }
+  .reply-box { width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:13px; margin-top:8px; resize:vertical; box-sizing:border-box; }
+  .status-pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+  .status-pending { background:#fff3cd; color:#8a6d00; }
+  .status-answered, .status-matched { background:#d6f5e3; color:#0f7a44; }
+  .status-completed { background:#e2e8f0; color:#334155; }
+  .status-cancelled { background:#fde2e2; color:#b42318; }
+  .empty-msg { font-size:13px; color: var(--ink-muted); padding:20px 0; text-align:center; }
+  .gate-msg { padding:60px 20px; text-align:center; font-size:14px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="admin-header">
+    <span class="logo-badge" style="width:28px;height:28px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 17a8 8 0 0 1 16 0"/>
+        <rect x="2" y="17" width="20" height="3" rx="1.5"/>
+        <line x1="12" y1="6" x2="12" y2="9"/>
+      </svg>
+    </span>
+    3D해결사 관리자
+  </a>
+
+  <div id="gateArea" class="admin-wrap">
+    <p class="gate-msg">확인 중입니다...</p>
+  </div>
+
+  <div id="adminArea" class="admin-wrap" style="display:none;">
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab-btn active" data-admin-tab="requests">요청 관리</button>
+      <button type="button" class="admin-tab-btn" data-admin-tab="inquiries">문의 관리</button>
+    </div>
+
+    <!-- 요청 관리 -->
+    <div id="requestsTab">
+      <div class="filter-row" id="statusFilterRow">
+        <button type="button" class="filter-btn active" data-status="all">전체</button>
+        <button type="button" class="filter-btn" data-status="pending">접수 대기</button>
+        <button type="button" class="filter-btn" data-status="matched">매칭 완료</button>
+        <button type="button" class="filter-btn" data-status="completed">완료</button>
+        <button type="button" class="filter-btn" data-status="cancelled">취소됨</button>
+      </div>
+      <div id="requestsList"></div>
+    </div>
+
+    <!-- 문의 관리 -->
+    <div id="inquiriesTab" style="display:none;">
+      <div id="inquiriesList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const REQUEST_TYPE_LABELS = {
+    demolition: '상가 철거', waste: '폐기물 처리', restoration: '원상복구',
+    electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
+  };
+  const STATUS_LABELS = { pending: '접수 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
+  const INQUIRY_STATUS_LABELS = { pending: '답변 대기', answered: '답변 완료' };
+
+  const gateArea = document.getElementById('gateArea');
+  const adminArea = document.getElementById('adminArea');
+
+  if (!window.supabaseClient) {
+    gateArea.innerHTML = '<p class="gate-msg">서비스 연결에 문제가 있습니다.</p>';
+    return;
+  }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session || !session.user) {
+    gateArea.innerHTML = '<p class="gate-msg">먼저 메인 사이트에서 로그인해주세요.<br><a href="index.html" style="color:var(--steel); text-decoration:underline;">메인으로 이동</a></p>';
+    return;
+  }
+
+  const { data: myProfile } = await supabaseClient
+    .from('profiles').select('is_admin').eq('id', session.user.id).maybeSingle();
+
+  if (!myProfile || !myProfile.is_admin) {
+    gateArea.innerHTML = '<p class="gate-msg">관리자 권한이 없는 계정입니다.</p>';
+    return;
+  }
+
+  gateArea.style.display = 'none';
+  adminArea.style.display = 'block';
+
+  // --- 탭 전환 ---
+  document.querySelectorAll('[data-admin-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-admin-tab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.adminTab;
+      document.getElementById('requestsTab').style.display = target === 'requests' ? 'block' : 'none';
+      document.getElementById('inquiriesTab').style.display = target === 'inquiries' ? 'block' : 'none';
+      if (target === 'inquiries') loadInquiries();
+    });
+  });
+
+  // --- 요청 관리 ---
+  let currentStatusFilter = 'all';
+
+  document.querySelectorAll('#statusFilterRow .filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#statusFilterRow .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentStatusFilter = btn.dataset.status;
+      loadRequests();
+    });
+  });
+
+  async function loadRequests() {
+    const listEl = document.getElementById('requestsList');
+    listEl.innerHTML = '<p class="empty-msg">불러오는 중...</p>';
+
+    let query = supabaseClient.from('work_requests').select('*').order('created_at', { ascending: false });
+    if (currentStatusFilter !== 'all') query = query.eq('status', currentStatusFilter);
+    const { data: requests, error } = await query;
+
+    if (error) { listEl.innerHTML = '<p class="empty-msg">불러오기 실패: ' + error.message + '</p>'; return; }
+    if (!requests || requests.length === 0) { listEl.innerHTML = '<p class="empty-msg">해당하는 요청이 없습니다.</p>'; return; }
+
+    const userIds = [...new Set(requests.map(r => r.user_id))];
+    const { data: profiles } = await supabaseClient.from('profiles').select('id, phone, company_name, user_type').in('id', userIds);
+    const profileMap = {};
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+
+    listEl.innerHTML = '';
+    requests.forEach(r => {
+      const p = profileMap[r.user_id] || {};
+      const requesterLabel = p.company_name || p.phone || '회원';
+      const dateStr = new Date(r.created_at).toLocaleString('ko-KR');
+
+      const card = document.createElement('div');
+      card.className = 'req-card';
+      card.innerHTML = `
+        <div class="req-card-top">
+          <div>
+            <div class="req-type">${REQUEST_TYPE_LABELS[r.request_type] || r.request_type}</div>
+            <div class="req-meta">${requesterLabel} · ${dateStr}</div>
+          </div>
+          <select class="req-status-select" data-req-id="${r.id}">
+            ${Object.entries(STATUS_LABELS).map(([k, v]) => `<option value="${k}" ${k === r.status ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="req-actions">
+          <button type="button" data-toggle-detail="${r.id}">상세보기</button>
+          <button type="button" data-toggle-chat="${r.id}">채팅</button>
+        </div>
+        <div class="req-detail" id="detail-${r.id}">
+          <pre>${JSON.stringify(r.payload, null, 2)}</pre>
+          ${(r.photo_urls && r.photo_urls.length) ? `<div class="req-photos">${r.photo_urls.map(u => `<img src="${u}">`).join('')}</div>` : ''}
+        </div>
+        <div class="chat-panel" id="chat-${r.id}">
+          <div class="chat-box" id="chatbox-${r.id}"></div>
+          <div class="chat-row">
+            <input type="text" id="chatinput-${r.id}" placeholder="답장 보내기">
+            <button type="button" data-send-chat="${r.id}">전송</button>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    // 상태 변경
+    listEl.querySelectorAll('.req-status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const { error } = await supabaseClient.from('work_requests').update({ status: sel.value }).eq('id', sel.dataset.reqId);
+        if (error) alert('상태 변경 실패: ' + error.message);
+      });
+    });
+
+    // 상세보기 토글
+    listEl.querySelectorAll('[data-toggle-detail]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('detail-' + btn.dataset.toggleDetail).classList.toggle('open');
+      });
+    });
+
+    // 채팅 토글 + 로드
+    listEl.querySelectorAll('[data-toggle-chat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.toggleChat;
+        const panel = document.getElementById('chat-' + id);
+        panel.classList.toggle('open');
+        if (panel.classList.contains('open')) loadChat(id);
+      });
+    });
+
+    // 채팅 전송
+    listEl.querySelectorAll('[data-send-chat]').forEach(btn => {
+      btn.addEventListener('click', () => sendChat(btn.dataset.sendChat));
+    });
+    listEl.querySelectorAll('[id^="chatinput-"]').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); sendChat(input.id.replace('chatinput-', '')); }
+      });
+    });
+  }
+
+  async function loadChat(requestId) {
+    const box = document.getElementById('chatbox-' + requestId);
+    box.innerHTML = '불러오는 중...';
+    const { data: msgs } = await supabaseClient
+      .from('messages').select('sender_role, content, created_at')
+      .eq('request_id', requestId).order('created_at', { ascending: true });
+    box.innerHTML = '';
+    (msgs || []).forEach(m => {
+      const isAdmin = m.sender_role === 'admin';
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.style.cssText += `align-self:${isAdmin ? 'flex-end' : 'flex-start'}; background:${isAdmin ? 'var(--hazard)' : '#fff'}; color:${isAdmin ? '#fff' : 'var(--ink)'};`;
+      bubble.innerText = m.content;
+      box.appendChild(bubble);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function sendChat(requestId) {
+    const input = document.getElementById('chatinput-' + requestId);
+    const text = input.value.trim();
+    if (!text) return;
+    const { error } = await supabaseClient.from('messages').insert({
+      request_id: requestId, sender_id: session.user.id, sender_role: 'admin', content: text
+    });
+    if (error) { alert('전송 실패: ' + error.message); return; }
+    input.value = '';
+    loadChat(requestId);
+  }
+
+  // --- 문의 관리 ---
+  async function loadInquiries() {
+    const listEl = document.getElementById('inquiriesList');
+    listEl.innerHTML = '<p class="empty-msg">불러오는 중...</p>';
+
+    const { data: inquiries, error } = await supabaseClient
+      .from('support_inquiries').select('*').order('created_at', { ascending: false });
+
+    if (error) { listEl.innerHTML = '<p class="empty-msg">불러오기 실패: ' + error.message + '</p>'; return; }
+    if (!inquiries || inquiries.length === 0) { listEl.innerHTML = '<p class="empty-msg">등록된 문의가 없습니다.</p>'; return; }
+
+    const userIds = [...new Set(inquiries.map(q => q.user_id))];
+    const { data: profiles } = await supabaseClient.from('profiles').select('id, phone, company_name').in('id', userIds);
+    const profileMap = {};
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+
+    listEl.innerHTML = '';
+    inquiries.forEach(q => {
+      const p = profileMap[q.user_id] || {};
+      const requesterLabel = p.company_name || p.phone || '회원';
+      const dateStr = new Date(q.created_at).toLocaleString('ko-KR');
+      const statusClass = q.status === 'answered' ? 'status-answered' : 'status-pending';
+
+      const card = document.createElement('div');
+      card.className = 'inquiry-card';
+      card.innerHTML = `
+        <div class="req-meta">${requesterLabel} · ${dateStr} <span class="status-pill ${statusClass}">${INQUIRY_STATUS_LABELS[q.status] || q.status}</span></div>
+        <div style="margin-top:8px; font-size:13.5px; white-space:pre-wrap;">${q.content}</div>
+        <textarea class="reply-box" placeholder="답변을 입력하세요" data-inquiry-id="${q.id}">${q.admin_reply || ''}</textarea>
+        <button type="button" class="filter-btn" style="margin-top:6px;" data-submit-reply="${q.id}">답변 등록</button>
+      `;
+      listEl.appendChild(card);
+    });
+
+    listEl.querySelectorAll('[data-submit-reply]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.submitReply;
+        const textarea = listEl.querySelector(`textarea[data-inquiry-id="${id}"]`);
+        const { error } = await supabaseClient
+          .from('support_inquiries')
+          .update({ admin_reply: textarea.value, status: 'answered' })
+          .eq('id', id);
+        if (error) { alert('답변 등록 실패: ' + error.message); return; }
+        alert('답변이 등록되었습니다.');
+        loadInquiries();
+      });
+    });
+  }
+
+  loadRequests();
+});
+</script>
+</body>
+</html>

@@ -67,9 +67,29 @@
           <button type="button" class="mypage-menu-item" id="myPageBankMenuItem" data-mypage-target="Bank">
             <span>🏦 정산 계좌 관리</span><span class="mypage-menu-arrow">›</span>
           </button>
+          <button type="button" class="mypage-menu-item" data-mypage-target="Support">
+            <span>💬 고객센터 문의</span><span class="mypage-menu-arrow">›</span>
+          </button>
           <button type="button" class="mypage-menu-item" id="myPageLogoutMenuItem" style="color:var(--danger);">
             <span>로그아웃</span>
           </button>
+        </div>
+
+        <div id="myPageConvertSection" class="hidden" style="margin-top:20px; padding:14px; background:var(--surface-muted); border-radius:12px;">
+          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px;">회원 유형 전환</div>
+          <p style="font-size:12px; color:var(--ink-muted); margin:0 0 10px;">작업을 의뢰만 하는 게 아니라, 직접 팀으로 일을 맡고 싶으시면 유형을 전환할 수 있어요.</p>
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="convertToCompanyBtn" class="btn btn-secondary" style="flex:1; padding:10px; font-size:12px;">업체로 전환</button>
+            <button type="button" id="convertToWorkerBtn" class="btn btn-secondary" style="flex:1; padding:10px; font-size:12px;">일용구직자로 전환</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:16px; justify-content:center; margin-top:28px; font-size:12px;">
+          <a href="terms.html" style="color:var(--ink-muted);">이용약관</a>
+          <a href="privacy.html" style="color:var(--ink-muted);">개인정보처리방침</a>
+        </div>
+        <div style="text-align:center; margin-top:14px;">
+          <button type="button" id="myPageDeleteAccountBtn" style="background:none; border:none; color:var(--ink-muted); font-size:12px; text-decoration:underline; cursor:pointer;">회원탈퇴</button>
         </div>
       </div>
 
@@ -83,12 +103,35 @@
         <div id="myPageRequestHistory" style="margin-top:5px;"></div>
       </div>
 
+      <!-- 고객센터 문의 화면 -->
+      <div id="myPageSupportView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>고객센터 문의</h2>
+          <span style="width:20px;"></span>
+        </div>
+        <div class="input-group">
+          <label for="myPageSupportContent">문의 내용</label>
+          <textarea id="myPageSupportContent" rows="4" placeholder="문의하실 내용을 자유롭게 적어주세요" style="width:100%; padding:12px; background:#ffffff; border:1px solid #ddd6c5; border-radius:8px; color:#23262b; box-sizing:border-box; font-family:inherit; resize:vertical;"></textarea>
+        </div>
+        <button id="submitSupportBtn" class="btn btn-primary login-submit" style="margin-top:5px;">문의 등록하기</button>
+        <div style="margin-top:24px;">
+          <label style="font-size:12px; color:var(--ink-muted); display:block; margin-bottom:8px;">이전 문의 내역</label>
+          <div id="myPageSupportHistory"></div>
+        </div>
+      </div>
+
       <!-- 내 정보 수정 화면 -->
       <div id="myPageInfoView" class="hidden">
         <div class="modal-header">
           <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
           <h2>내 정보 수정</h2>
           <span style="width:20px;"></span>
+        </div>
+
+        <div class="input-group">
+          <label>아이디</label>
+          <input type="text" id="myPageLoginId" readonly style="background:#f0ece2; color:#6c6f76;">
         </div>
 
         <div class="input-group">
@@ -120,15 +163,15 @@
           </div>
         </div>
 
-        <div id="myPageConvertSection" class="hidden">
+        <div id="myPagePasswordSection" class="hidden" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+          <label style="font-size:12px; margin-bottom:6px; display:block; color:var(--ink-muted);">비밀번호 변경</label>
           <div class="input-group">
-            <label>회원 유형 전환</label>
-            <p style="font-size:12px; color:var(--ink-muted); margin:4px 0 8px;">작업을 의뢰만 하는 게 아니라, 직접 팀으로 일을 맡고 싶으시면 유형을 전환할 수 있어요.</p>
-            <div style="display:flex; gap:8px;">
-              <button type="button" id="convertToCompanyBtn" class="btn btn-secondary" style="flex:1; padding:10px; font-size:12px;">업체로 전환</button>
-              <button type="button" id="convertToWorkerBtn" class="btn btn-secondary" style="flex:1; padding:10px; font-size:12px;">일용구직자로 전환</button>
-            </div>
+            <input type="password" id="myPageNewPassword" placeholder="새 비밀번호 (6자 이상)">
           </div>
+          <div class="input-group">
+            <input type="password" id="myPageNewPasswordConfirm" placeholder="새 비밀번호 확인">
+          </div>
+          <button type="button" id="changeMyPagePasswordBtn" class="btn btn-secondary" style="width:100%; padding:12px; font-size:13px;">비밀번호 변경하기</button>
         </div>
 
         <button id="saveMyPageInfoBtn" class="btn btn-primary login-submit" style="margin-top:15px;">저장하기</button>

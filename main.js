@@ -717,6 +717,74 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const SUPPORT_STATUS_LABELS = { pending: '답변 대기', answered: '답변 완료' };
+
+  async function renderMyPageSupportHistory(userId) {
+    const box = document.getElementById('myPageSupportHistory');
+    if (!box) return;
+    const { data: inquiries } = await supabaseClient
+      .from('support_inquiries')
+      .select('content, status, admin_reply, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    box.innerHTML = '';
+    if (!inquiries || inquiries.length === 0) {
+      box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">등록된 문의가 없습니다.</p>';
+      return;
+    }
+    inquiries.forEach(q => {
+      const item = document.createElement('div');
+      item.style.cssText = 'padding:10px; border:1px solid #ddd6c5; border-radius:8px; margin-bottom:8px;';
+      const dateStr = new Date(q.created_at).toLocaleDateString('ko-KR');
+      const replyHtml = q.admin_reply
+        ? `<div style="margin-top:8px; padding:8px 10px; background:#f0ece2; border-radius:8px; font-size:12.5px; color:#23262b;"><b>답변</b><br>${q.admin_reply}</div>`
+        : '';
+      item.innerHTML = `
+        <div style="font-size:12px; color:#6c6f76; margin-bottom:4px;">${dateStr} · ${SUPPORT_STATUS_LABELS[q.status] || q.status}</div>
+        <div style="font-size:13px; color:#23262b; white-space:pre-wrap;">${q.content}</div>
+        ${replyHtml}
+      `;
+      box.appendChild(item);
+    });
+  }
+
+  const submitSupportBtn = document.getElementById('submitSupportBtn');
+  if (submitSupportBtn) {
+    submitSupportBtn.onclick = async () => {
+      const input = document.getElementById('myPageSupportContent');
+      const text = input.value.trim();
+      if (!text) { alert('문의 내용을 입력해주세요.'); return; }
+      if (!myPageCurrentUserId) return;
+      const { error } = await supabaseClient.from('support_inquiries').insert({
+        user_id: myPageCurrentUserId,
+        content: text
+      });
+      if (error) { alert('문의 등록에 실패했습니다: ' + error.message); return; }
+      input.value = '';
+      alert('문의가 등록되었습니다. 확인 후 답변드릴게요.');
+      renderMyPageSupportHistory(myPageCurrentUserId);
+    };
+  }
+
+  const myPageDeleteAccountBtn = document.getElementById('myPageDeleteAccountBtn');
+  if (myPageDeleteAccountBtn) {
+    myPageDeleteAccountBtn.onclick = async () => {
+      if (!myPageCurrentUserId) return;
+      const confirmed = window.confirm('정말 탈퇴 신청하시겠어요?\n신청 후 관리자 확인을 거쳐 계정과 데이터가 삭제됩니다.');
+      if (!confirmed) return;
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ deletion_requested_at: new Date().toISOString() })
+        .eq('id', myPageCurrentUserId);
+      if (error) { alert('탈퇴 신청 중 문제가 발생했습니다: ' + error.message); return; }
+      alert('탈퇴 신청이 접수되었습니다. 처리 완료까지 로그아웃됩니다.');
+      await supabaseClient.auth.signOut();
+      closeAllModals();
+      refreshAuthUI();
+    };
+  }
+
   let currentChatRequestId = null;
 
   async function openChatModal(requestId) {
@@ -774,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showMyPageView(name) {
-    ['Home', 'History', 'Info', 'Bank'].forEach(v => {
+    ['Home', 'History', 'Info', 'Bank', 'Support'].forEach(v => {
       const el = document.getElementById('myPage' + v + 'View');
       if (el) el.classList.toggle('hidden', v !== name);
     });
@@ -821,6 +889,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('myPageUserType').value = typeLabel;
     document.getElementById('myPageAddress').value = profile.address || '';
 
+    const provider = session.user.app_metadata && session.user.app_metadata.provider;
+    document.getElementById('myPageLoginId').value =
+      profile.phone || (provider === 'kakao' ? '카카오 계정으로 로그인' : (session.user.email || '-'));
+    const passwordSection = document.getElementById('myPagePasswordSection');
+    if (passwordSection) passwordSection.classList.toggle('hidden', provider !== 'email');
+
     const companyFields = document.getElementById('myPageCompanyFields');
     const workerFields = document.getElementById('myPageWorkerFields');
     const bankMenuItem = document.getElementById('myPageBankMenuItem');
@@ -846,6 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('myPageAccountHolder').value = profile.account_holder || '';
 
     renderMyPageRequestHistory(session.user.id);
+    renderMyPageSupportHistory(session.user.id);
 
     closeAllModals();
     myPageModal.classList.remove('hidden');
@@ -933,6 +1008,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (convertToCompanyBtn) convertToCompanyBtn.onclick = () => startTypeConversion('company');
   const convertToWorkerBtn = document.getElementById('convertToWorkerBtn');
   if (convertToWorkerBtn) convertToWorkerBtn.onclick = () => startTypeConversion('worker');
+
+  const changeMyPagePasswordBtn = document.getElementById('changeMyPagePasswordBtn');
+  if (changeMyPagePasswordBtn) {
+    changeMyPagePasswordBtn.onclick = async () => {
+      const pw = document.getElementById('myPageNewPassword').value;
+      const pwConfirm = document.getElementById('myPageNewPasswordConfirm').value;
+      if (pw.length < 6) { alert('비밀번호는 6자 이상이어야 합니다.'); return; }
+      if (pw !== pwConfirm) { alert('비밀번호가 일치하지 않습니다.'); return; }
+      const originalText = changeMyPagePasswordBtn.innerText;
+      changeMyPagePasswordBtn.disabled = true;
+      changeMyPagePasswordBtn.innerText = '변경 중...';
+      const { error } = await supabaseClient.auth.updateUser({ password: pw });
+      changeMyPagePasswordBtn.disabled = false;
+      changeMyPagePasswordBtn.innerText = originalText;
+      if (error) { alert('비밀번호 변경에 실패했습니다: ' + translateAuthError(error.message)); return; }
+      alert('비밀번호가 변경되었습니다.');
+      document.getElementById('myPageNewPassword').value = '';
+      document.getElementById('myPageNewPasswordConfirm').value = '';
+    };
+  }
 
   function goToSignupStep3() {
     signupStep2.classList.add('hidden');
