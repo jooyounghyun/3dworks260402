@@ -126,7 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const label = (profile && profile.company_name) || (profile && profile.phone) || socialName || '회원';
       authArea.innerHTML = `
         <span style="font-size:14px; color:#23262b;">${label}님</span>
-        <a href="#" id="myPageBtn">마이페이지</a>
+        <a href="#" id="myPageBtn" title="마이페이지" aria-label="마이페이지" style="display:inline-flex; align-items:center;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"></path>
+          </svg>
+        </a>
         <a href="#" id="logoutBtn">로그아웃</a>
       `;
       const myPageBtn = document.getElementById('myPageBtn');
