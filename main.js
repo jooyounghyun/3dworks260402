@@ -419,8 +419,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. 네이버 로그인
   if (naverLoginBtn) {
-    naverLoginBtn.onclick = () => {
-      alert('네이버 로그인 창을 띄웁니다. (Naver Developers 설정 필요)');
+    naverLoginBtn.onclick = async () => {
+      if (!window.supabaseClient) { alert('로그인 서비스 연결에 문제가 있습니다.'); return; }
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'custom:naver',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) alert('네이버 로그인에 실패했습니다: ' + error.message);
     };
   }
 
@@ -435,15 +440,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (provider === '카카오') {
+    const SUPABASE_PROVIDER_MAP = { '카카오': 'kakao', '네이버': 'custom:naver' };
+
+    if (SUPABASE_PROVIDER_MAP[provider]) {
       if (!window.supabaseClient) { alert('로그인 서비스 연결에 문제가 있습니다.'); return; }
-      // 카카오 인증 후 다시 돌아왔을 때 이어서 처리할 수 있도록 선택한 유형을 잠깐 저장해둠
+      // 인증 후 다시 돌아왔을 때 이어서 처리할 수 있도록 선택한 유형을 잠깐 저장해둠
       try { localStorage.setItem('pendingSignupType', signupState.type); } catch (e) {}
       supabaseClient.auth.signInWithOAuth({
-        provider: 'kakao',
+        provider: SUPABASE_PROVIDER_MAP[provider],
         options: { redirectTo: window.location.origin }
       }).then(({ error }) => {
-        if (error) alert('카카오 로그인에 실패했습니다: ' + error.message);
+        if (error) alert(`${provider} 로그인에 실패했습니다: ` + error.message);
       });
       return;
     }
