@@ -1082,9 +1082,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMyPageRequestHistory(session.user.id);
     renderMyPageSupportHistory(session.user.id);
 
-    closeAllModals();
-    myPageModal.classList.remove('hidden');
-    showMyPageView('Home');
+    // 이미 마이페이지가 열려있는 상태에서 저장 후 새로고침하는 경우엔
+    // 모달을 껐다 켜지 않는다 (불필요한 깜빡임/전환 끊김 방지)
+    if (myPageModal.classList.contains('hidden')) {
+      closeAllModals();
+      myPageModal.classList.remove('hidden');
+      showMyPageView('Home');
+    }
   }
 
   const saveMyPageInfoBtn = document.getElementById('saveMyPageInfoBtn');

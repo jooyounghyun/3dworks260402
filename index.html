@@ -204,12 +204,12 @@
 
   <!-- ✅ 채팅 모달 -->
   <div id="chatModal" class="modal hidden">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:480px; width:92%; height:80vh; max-height:640px; display:flex; flex-direction:column;">
       <div class="modal-header">
         <h2>문의 채팅</h2>
         <button class="close-btn">&times;</button>
       </div>
-      <div id="chatMessages" style="max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding:10px; background:#f0ece2; border-radius:8px;"></div>
+      <div id="chatMessages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding:10px; background:#f0ece2; border-radius:8px;"></div>
       <div class="modal-row" style="align-items:stretch; margin-bottom:0;">
         <div class="input-group" style="flex:1; margin-bottom:0 !important;">
           <input type="text" id="chatInput" placeholder="메시지를 입력하세요">
