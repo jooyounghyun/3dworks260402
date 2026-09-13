@@ -757,12 +757,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // 업체 정보 단계: 사업자번호 확인
   const checkBusinessBtn = document.getElementById('checkBusinessBtn');
   if (checkBusinessBtn) {
-    checkBusinessBtn.onclick = () => {
+    checkBusinessBtn.onclick = async () => {
       const bNum = document.getElementById('businessNumInput').value;
       const cName = document.getElementById('companyNameInput').value;
       if (!cName || !bNum) return alert('정보를 모두 입력해주세요.');
-      alert('사업자 정보가 확인되었습니다.');
-      document.getElementById('nextToFinalStepFromCompanyBtn').disabled = false;
+
+      const originalText = checkBusinessBtn.innerText;
+      checkBusinessBtn.disabled = true;
+      checkBusinessBtn.innerText = '확인 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('verify-business', {
+          body: { businessNumber: bNum }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+
+        if (!data.valid) {
+          alert(data.message || '유효하지 않은 사업자등록번호입니다.');
+          document.getElementById('nextToFinalStepFromCompanyBtn').disabled = true;
+          return;
+        }
+
+        alert('사업자 정보가 확인되었습니다. (' + data.message + ')');
+        document.getElementById('nextToFinalStepFromCompanyBtn').disabled = false;
+      } catch (err) {
+        alert('사업자 정보 확인에 실패했습니다: ' + err.message);
+      } finally {
+        checkBusinessBtn.disabled = false;
+        checkBusinessBtn.innerText = originalText;
+      }
     };
   }
 
