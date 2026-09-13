@@ -1054,12 +1054,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyFields = document.getElementById('myPageCompanyFields');
     const workerFields = document.getElementById('myPageWorkerFields');
     const bankMenuItem = document.getElementById('myPageBankMenuItem');
-    const convertSection = document.getElementById('myPageConvertSection');
 
     companyFields.classList.add('hidden');
     workerFields.classList.add('hidden');
     bankMenuItem.style.display = (profile.user_type === 'company' || profile.user_type === 'worker') ? 'flex' : 'none';
-    if (convertSection) convertSection.classList.toggle('hidden', profile.user_type !== 'user');
+
+    const convertBtnByType = { user: 'convertToUserBtn', company: 'convertToCompanyBtn', worker: 'convertToWorkerBtn' };
+    Object.entries(convertBtnByType).forEach(([type, btnId]) => {
+      const btn = document.getElementById(btnId);
+      if (btn) btn.style.display = (profile.user_type === type) ? 'none' : 'block';
+    });
 
     if (profile.user_type === 'company') {
       companyFields.classList.remove('hidden');
@@ -1164,6 +1168,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (convertToCompanyBtn) convertToCompanyBtn.onclick = () => startTypeConversion('company');
   const convertToWorkerBtn = document.getElementById('convertToWorkerBtn');
   if (convertToWorkerBtn) convertToWorkerBtn.onclick = () => startTypeConversion('worker');
+
+  const convertToUserBtn = document.getElementById('convertToUserBtn');
+  if (convertToUserBtn) {
+    convertToUserBtn.onclick = async () => {
+      if (!myPageCurrentUserId) return;
+      const confirmed = window.confirm('일반 사용자로 전환하시겠어요?');
+      if (!confirmed) return;
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ user_type: 'user' })
+        .eq('id', myPageCurrentUserId);
+      if (error) { alert('전환 중 문제가 발생했습니다: ' + error.message); return; }
+      alert('일반 사용자로 전환되었습니다.');
+      await openMyPageModal();
+    };
+  }
 
   const changeMyPagePasswordBtn = document.getElementById('changeMyPagePasswordBtn');
   if (changeMyPagePasswordBtn) {
