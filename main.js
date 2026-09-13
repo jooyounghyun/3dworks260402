@@ -1146,7 +1146,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 일반 사용자 → 업체/일용구직자 회원 유형 전환
-  function startTypeConversion(newType) {
+  async function startTypeConversion(newType) {
+    // 예전에 이미 입력해둔 정보(사업자정보/공종)가 남아있으면, 다시 안 물어보고 바로 전환
+    if (myPageCurrentUserId) {
+      const { data: existing } = await supabaseClient
+        .from('profiles')
+        .select('company_name, business_reg_no, worker_types')
+        .eq('id', myPageCurrentUserId)
+        .maybeSingle();
+
+      if (newType === 'company' && existing && existing.company_name && existing.business_reg_no) {
+        const { error } = await supabaseClient
+          .from('profiles')
+          .update({ user_type: 'company' })
+          .eq('id', myPageCurrentUserId);
+        if (error) { alert('전환 중 문제가 발생했습니다: ' + error.message); return; }
+        alert('업체 회원으로 전환되었습니다. (이전에 등록하신 업체 정보를 그대로 사용해요)');
+        await openMyPageModal();
+        showMyPageView('Info');
+        return;
+      }
+
+      if (newType === 'worker' && existing && existing.worker_types && existing.worker_types.length) {
+        const { error } = await supabaseClient
+          .from('profiles')
+          .update({ user_type: 'worker' })
+          .eq('id', myPageCurrentUserId);
+        if (error) { alert('전환 중 문제가 발생했습니다: ' + error.message); return; }
+        alert('일용구직자 회원으로 전환되었습니다. (이전에 등록하신 공종을 그대로 사용해요)');
+        await openMyPageModal();
+        showMyPageView('Info');
+        return;
+      }
+    }
+
+    // 처음 전환하는 경우엔 기존처럼 정보 입력을 받음
     signupState.type = newType;
     signupState.oauthMode = true;
     signupState.returnToMyPage = true;
