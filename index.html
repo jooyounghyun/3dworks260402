@@ -235,6 +235,9 @@
           <label for="password">비밀번호</label>
           <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
         </div>
+        <p style="text-align:right; margin-top:-10px; margin-bottom:15px;">
+          <a href="#" id="forgotPasswordLink" style="font-size:12px; color:var(--ink-muted);">비밀번호를 잊으셨나요?</a>
+        </p>
         <button type="submit" class="btn btn-primary login-submit">로그인하기</button>
       </form>
 
@@ -243,6 +246,39 @@
         <div class="social-buttons">
           <button id="kakaoLoginBtn" class="social-btn kakao">카카오 로그인</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 비밀번호 찾기 모달 -->
+  <div id="forgotPasswordModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>비밀번호 찾기</h2>
+        <button class="close-btn">&times;</button>
+      </div>
+
+      <div class="input-group">
+        <label for="resetPhone">가입한 휴대폰번호</label>
+        <div style="display:flex; gap:8px;">
+          <input type="tel" id="resetPhone" placeholder="010-0000-0000" style="flex:1;">
+          <button type="button" id="sendResetCodeBtn" class="btn btn-secondary" style="width:auto; padding:0 12px; font-size:12px;">인증번호 받기</button>
+        </div>
+      </div>
+
+      <div id="resetCodeGroup" class="input-group hidden">
+        <label for="resetCode">인증번호</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="resetCode" placeholder="6자리 입력" style="flex:1;">
+          <button type="button" id="checkResetCodeBtn" class="btn btn-secondary" style="width:auto; padding:0 12px; font-size:12px;">확인</button>
+        </div>
+      </div>
+
+      <div id="resetPasswordGroup" class="input-group hidden">
+        <label for="resetNewPassword">새 비밀번호</label>
+        <input type="password" id="resetNewPassword" placeholder="6자 이상">
+        <input type="password" id="resetNewPasswordConfirm" placeholder="새 비밀번호 확인" style="margin-top:10px;">
+        <button type="button" id="submitResetPasswordBtn" class="btn btn-primary login-submit" style="margin-top:15px;">비밀번호 변경하기</button>
       </div>
     </div>
   </div>

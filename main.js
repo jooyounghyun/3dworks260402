@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const myPageModal = document.getElementById('myPageModal');
   const chatModal = document.getElementById('chatModal');
   const loginModal = document.getElementById('loginModal');
+  const forgotPasswordModal = document.getElementById('forgotPasswordModal');
   const signupBtn = document.getElementById('signupBtn');
   const signupModal = document.getElementById('signupModal');
   const hireTeamBtn = document.getElementById('hireTeamBtn');
@@ -303,6 +304,99 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- 비밀번호 찾기 ---
+  const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+  if (forgotPasswordLink) {
+    forgotPasswordLink.onclick = (e) => {
+      e.preventDefault();
+      closeAllModals();
+      document.getElementById('resetPhone').value = '';
+      document.getElementById('resetCode').value = '';
+      document.getElementById('resetNewPassword').value = '';
+      document.getElementById('resetNewPasswordConfirm').value = '';
+      document.getElementById('resetCodeGroup').classList.add('hidden');
+      document.getElementById('resetPasswordGroup').classList.add('hidden');
+      forgotPasswordModal.classList.remove('hidden');
+    };
+  }
+
+  const sendResetCodeBtn = document.getElementById('sendResetCodeBtn');
+  if (sendResetCodeBtn) {
+    sendResetCodeBtn.onclick = async () => {
+      const phoneVal = document.getElementById('resetPhone').value;
+      if (!phoneVal) return alert('휴대폰 번호를 입력해주세요.');
+      const originalText = sendResetCodeBtn.innerText;
+      sendResetCodeBtn.disabled = true;
+      sendResetCodeBtn.innerText = '전송 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('send-otp', {
+          body: { phone: phoneVal, purpose: 'reset' }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+        alert('인증번호가 전송되었습니다.');
+        document.getElementById('resetCodeGroup').classList.remove('hidden');
+      } catch (err) {
+        alert('인증번호 전송에 실패했습니다: ' + err.message);
+      } finally {
+        sendResetCodeBtn.disabled = false;
+        sendResetCodeBtn.innerText = originalText;
+      }
+    };
+  }
+
+  const checkResetCodeBtn = document.getElementById('checkResetCodeBtn');
+  if (checkResetCodeBtn) {
+    checkResetCodeBtn.onclick = async () => {
+      const phoneVal = document.getElementById('resetPhone').value;
+      const codeVal = document.getElementById('resetCode').value;
+      if (!codeVal) return alert('인증번호를 입력해주세요.');
+      const originalText = checkResetCodeBtn.innerText;
+      checkResetCodeBtn.disabled = true;
+      checkResetCodeBtn.innerText = '확인 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('verify-otp', {
+          body: { phone: phoneVal, code: codeVal, purpose: 'reset' }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+        alert('인증이 완료되었습니다. 새 비밀번호를 설정해주세요.');
+        document.getElementById('resetPasswordGroup').classList.remove('hidden');
+      } catch (err) {
+        alert('인증에 실패했습니다: ' + err.message);
+      } finally {
+        checkResetCodeBtn.disabled = false;
+        checkResetCodeBtn.innerText = originalText;
+      }
+    };
+  }
+
+  const submitResetPasswordBtn = document.getElementById('submitResetPasswordBtn');
+  if (submitResetPasswordBtn) {
+    submitResetPasswordBtn.onclick = async () => {
+      const phoneVal = document.getElementById('resetPhone').value;
+      const pw = document.getElementById('resetNewPassword').value;
+      const pwConfirm = document.getElementById('resetNewPasswordConfirm').value;
+      if (pw.length < 6) return alert('비밀번호는 6자 이상이어야 합니다.');
+      if (pw !== pwConfirm) return alert('비밀번호가 일치하지 않습니다.');
+      const originalText = submitResetPasswordBtn.innerText;
+      submitResetPasswordBtn.disabled = true;
+      submitResetPasswordBtn.innerText = '변경 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('reset-password', {
+          body: { phone: phoneVal, newPassword: pw }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+        alert('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.');
+        closeAllModals();
+        loginModal.classList.remove('hidden');
+      } catch (err) {
+        alert('비밀번호 변경에 실패했습니다: ' + err.message);
+      } finally {
+        submitResetPasswordBtn.disabled = false;
+        submitResetPasswordBtn.innerText = originalText;
+      }
+    };
+  }
+
   // --- 최종 회원가입 폼 실제 동작 (계정 생성 + 프로필 저장) ---
   const signupFormEl = document.getElementById('signupForm');
   if (signupFormEl) {
@@ -355,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
-      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal
+      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal
     ];
     modals.forEach(modal => {
       if (modal) modal.classList.add('hidden');
@@ -538,32 +632,65 @@ document.addEventListener('DOMContentLoaded', () => {
   // 인증번호 전송
   const sendVerifyBtn = document.getElementById('sendVerifyBtn');
   if (sendVerifyBtn) {
-    sendVerifyBtn.onclick = () => {
+    sendVerifyBtn.onclick = async () => {
       const nameVal = document.getElementById('verifyName').value;
       const phoneVal = document.getElementById('phoneNum').value;
       if (!nameVal) return alert('이름을 입력해주세요.');
       if (!signupState.carrier) return alert('통신사를 선택해주세요.');
       if (!phoneVal) return alert('휴대폰 번호를 입력해주세요.');
-      alert(`${nameVal}님, 인증번호가 전송되었습니다.`);
-      document.getElementById('verifyCodeGroup').classList.remove('hidden');
-      signupState.phone = phoneVal;
+
+      const originalText = sendVerifyBtn.innerText;
+      sendVerifyBtn.disabled = true;
+      sendVerifyBtn.innerText = '전송 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('send-otp', {
+          body: { phone: phoneVal, purpose: 'signup' }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+        alert(`${nameVal}님, 인증번호가 전송되었습니다.`);
+        document.getElementById('verifyCodeGroup').classList.remove('hidden');
+        signupState.phone = phoneVal;
+      } catch (err) {
+        alert('인증번호 전송에 실패했습니다: ' + err.message);
+      } finally {
+        sendVerifyBtn.disabled = false;
+        sendVerifyBtn.innerText = originalText;
+      }
     };
   }
 
   // 인증번호 확인 -> 유형에 따라 다음 단계로
   const checkVerifyBtn = document.getElementById('checkVerifyBtn');
   if (checkVerifyBtn) {
-    checkVerifyBtn.onclick = () => {
-      alert('휴대폰 인증이 완료되었습니다.');
-      if (signupState.type === 'company') {
-        signupStep2.classList.add('hidden');
-        signupStepCompany.classList.remove('hidden');
-      } else if (signupState.type === 'worker') {
-        signupStep2.classList.add('hidden');
-        signupStepWorker.classList.remove('hidden');
-        renderWorkerTypeSelection();
-      } else {
-        goToSignupStep3();
+    checkVerifyBtn.onclick = async () => {
+      const codeVal = document.getElementById('verifyCode').value;
+      if (!codeVal) return alert('인증번호를 입력해주세요.');
+
+      const originalText = checkVerifyBtn.innerText;
+      checkVerifyBtn.disabled = true;
+      checkVerifyBtn.innerText = '확인 중...';
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('verify-otp', {
+          body: { phone: signupState.phone, code: codeVal, purpose: 'signup' }
+        });
+        if (error || (data && data.error)) throw new Error((data && data.error) || error.message);
+
+        alert('휴대폰 인증이 완료되었습니다.');
+        if (signupState.type === 'company') {
+          signupStep2.classList.add('hidden');
+          signupStepCompany.classList.remove('hidden');
+        } else if (signupState.type === 'worker') {
+          signupStep2.classList.add('hidden');
+          signupStepWorker.classList.remove('hidden');
+          renderWorkerTypeSelection();
+        } else {
+          goToSignupStep3();
+        }
+      } catch (err) {
+        alert('인증에 실패했습니다: ' + err.message);
+      } finally {
+        checkVerifyBtn.disabled = false;
+        checkVerifyBtn.innerText = originalText;
       }
     };
   }
