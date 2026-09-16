@@ -151,6 +151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  const requestPhotoPaths = {};
+
   async function loadRequests() {
     const listEl = document.getElementById('requestsList');
     listEl.innerHTML = '<p class="empty-msg">불러오는 중...</p>';
@@ -169,6 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     listEl.innerHTML = '';
     requests.forEach(r => {
+      requestPhotoPaths[r.id] = r.photo_urls || [];
       const p = profileMap[r.user_id] || {};
       const requesterLabel = p.company_name || p.phone || '회원';
       const dateStr = new Date(r.created_at).toLocaleString('ko-KR');
@@ -191,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
         <div class="req-detail" id="detail-${r.id}">
           <pre>${JSON.stringify(r.payload, null, 2)}</pre>
-          ${(r.photo_urls && r.photo_urls.length) ? `<div class="req-photos">${r.photo_urls.map(u => `<img src="${u}">`).join('')}</div>` : ''}
+          <div class="req-photos" id="photos-${r.id}"></div>
         </div>
         <div class="chat-panel" id="chat-${r.id}">
           <div class="chat-box" id="chatbox-${r.id}"></div>
@@ -212,10 +215,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
-    // 상세보기 토글
+    // 상세보기 토글 (열 때 비공개 저장소에서 임시 링크 받아와 사진 표시)
     listEl.querySelectorAll('[data-toggle-detail]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('detail-' + btn.dataset.toggleDetail).classList.toggle('open');
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.toggleDetail;
+        const detailEl = document.getElementById('detail-' + id);
+        detailEl.classList.toggle('open');
+        if (!detailEl.classList.contains('open')) return;
+
+        const photosBox = document.getElementById('photos-' + id);
+        const paths = requestPhotoPaths[id] || [];
+        if (!photosBox || photosBox.dataset.loaded === '1' || paths.length === 0) return;
+        photosBox.dataset.loaded = '1';
+
+        const { data: signed, error } = await supabaseClient.storage
+          .from('work-photos')
+          .createSignedUrls(paths, 3600);
+        if (error || !signed) return;
+        photosBox.innerHTML = signed
+          .filter(s => s.signedUrl)
+          .map(s => `<img src="${s.signedUrl}">`)
+          .join('');
       });
     });
 

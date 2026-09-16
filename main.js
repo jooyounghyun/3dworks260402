@@ -230,14 +230,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return { fields, selections };
   }
 
+  // 현장 사진(work-photos, 비공개 저장소) — 경로만 저장하고, 볼 때 임시 링크를 따로 발급받음
   async function uploadPhotos(fileInputEl, userId, folder) {
     if (!fileInputEl || !fileInputEl.files || fileInputEl.files.length === 0) return [];
-    const urls = [];
+    const paths = [];
     for (const file of Array.from(fileInputEl.files)) {
       const path = `${userId}/${folder}/${Date.now()}-${file.name}`;
       const { error } = await supabaseClient.storage.from('work-photos').upload(path, file);
       if (error) { console.error('사진 업로드 실패:', error.message); continue; }
-      const { data } = supabaseClient.storage.from('work-photos').getPublicUrl(path);
+      paths.push(path);
+    }
+    return paths;
+  }
+
+  // 업체 작업사진(portfolio-photos, 공개 저장소) — 고객에게 보여줘야 하므로 공개 URL 그대로 저장
+  async function uploadPortfolioPhotos(fileInputEl, userId, folder) {
+    if (!fileInputEl || !fileInputEl.files || fileInputEl.files.length === 0) return [];
+    const urls = [];
+    for (const file of Array.from(fileInputEl.files)) {
+      const path = `${userId}/${folder}/${Date.now()}-${file.name}`;
+      const { error } = await supabaseClient.storage.from('portfolio-photos').upload(path, file);
+      if (error) { console.error('사진 업로드 실패:', error.message); continue; }
+      const { data } = supabaseClient.storage.from('portfolio-photos').getPublicUrl(path);
       if (data && data.publicUrl) urls.push(data.publicUrl);
     }
     return urls;
@@ -1152,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ).map(btn => btn.dataset.value);
 
           const portfolioInput = document.getElementById('portfolioPhotoInput');
-          const newPhotoUrls = await uploadPhotos(portfolioInput, myPageCurrentUserId, 'portfolio');
+          const newPhotoUrls = await uploadPortfolioPhotos(portfolioInput, myPageCurrentUserId, 'portfolio');
           updateFields.portfolio_photos = myPageExistingPortfolioPhotos.concat(newPhotoUrls);
           if (portfolioInput && portfolioInput._resetStoredFiles) portfolioInput._resetStoredFiles();
         }
