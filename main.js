@@ -1021,6 +1021,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let myPageCurrentUserId = null;
+  let myPageExistingPortfolioPhotos = [];
+
+  function renderExistingPortfolioPhotos() {
+    const box = document.getElementById('myPageExistingPortfolioPhotos');
+    if (!box) return;
+    box.innerHTML = '';
+    myPageExistingPortfolioPhotos.forEach((url, idx) => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'width:100%; height:70px; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5;';
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.innerText = '×';
+      removeBtn.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:#ef4444; color:#fff; font-size:14px; line-height:1; cursor:pointer;';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        myPageExistingPortfolioPhotos.splice(idx, 1);
+        renderExistingPortfolioPhotos();
+      });
+      wrap.appendChild(img);
+      wrap.appendChild(removeBtn);
+      box.appendChild(wrap);
+    });
+  }
 
   async function openMyPageModal() {
     if (!window.supabaseClient) return;
@@ -1028,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!session || !session.user) return;
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder, phone')
+      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder, phone, intro, specialties, career_years, certifications, portfolio_photos, service_area')
       .eq('id', session.user.id)
       .maybeSingle();
     if (!profile) return;
@@ -1069,6 +1095,15 @@ document.addEventListener('DOMContentLoaded', () => {
       companyFields.classList.remove('hidden');
       document.getElementById('myPageCompanyName').value = profile.company_name || '';
       document.getElementById('myPageBusinessNum').value = profile.business_reg_no || '';
+      document.getElementById('myPageIntro').value = profile.intro || '';
+      document.getElementById('myPageCareerYears').value = profile.career_years || '';
+      document.getElementById('myPageCertifications').value = profile.certifications || '';
+      document.getElementById('myPageServiceArea').value = profile.service_area || '';
+      document.querySelectorAll('#myPageSpecialtiesGroup .specialty-btn').forEach(btn => {
+        btn.classList.toggle('selected', (profile.specialties || []).includes(btn.dataset.value));
+      });
+      myPageExistingPortfolioPhotos = profile.portfolio_photos || [];
+      renderExistingPortfolioPhotos();
     } else if (profile.user_type === 'worker') {
       workerFields.classList.remove('hidden');
       document.getElementById('myPageWorkerTypesDisplay').innerText =
@@ -1098,17 +1133,39 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data: currentProfile } = await supabaseClient
         .from('profiles').select('user_type').eq('id', myPageCurrentUserId).maybeSingle();
 
-      const updateFields = { address: document.getElementById('myPageAddress').value };
-      if (currentProfile && currentProfile.user_type === 'company') {
-        updateFields.company_name = document.getElementById('myPageCompanyName').value;
-        updateFields.business_reg_no = document.getElementById('myPageBusinessNum').value;
-      }
+      const originalText = saveMyPageInfoBtn.innerText;
+      saveMyPageInfoBtn.disabled = true;
+      saveMyPageInfoBtn.innerText = '저장 중...';
 
-      const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', myPageCurrentUserId);
-      if (error) { alert('저장 중 문제가 발생했습니다: ' + error.message); return; }
-      alert('저장되었습니다.');
-      await openMyPageModal();
-      showMyPageView('Info');
+      try {
+        const updateFields = { address: document.getElementById('myPageAddress').value };
+        if (currentProfile && currentProfile.user_type === 'company') {
+          updateFields.company_name = document.getElementById('myPageCompanyName').value;
+          updateFields.business_reg_no = document.getElementById('myPageBusinessNum').value;
+          updateFields.intro = document.getElementById('myPageIntro').value;
+          updateFields.career_years = document.getElementById('myPageCareerYears').value
+            ? parseInt(document.getElementById('myPageCareerYears').value, 10) : null;
+          updateFields.certifications = document.getElementById('myPageCertifications').value;
+          updateFields.service_area = document.getElementById('myPageServiceArea').value;
+          updateFields.specialties = Array.from(
+            document.querySelectorAll('#myPageSpecialtiesGroup .specialty-btn.selected')
+          ).map(btn => btn.dataset.value);
+
+          const portfolioInput = document.getElementById('portfolioPhotoInput');
+          const newPhotoUrls = await uploadPhotos(portfolioInput, myPageCurrentUserId, 'portfolio');
+          updateFields.portfolio_photos = myPageExistingPortfolioPhotos.concat(newPhotoUrls);
+          if (portfolioInput && portfolioInput._resetStoredFiles) portfolioInput._resetStoredFiles();
+        }
+
+        const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', myPageCurrentUserId);
+        if (error) { alert('저장 중 문제가 발생했습니다: ' + error.message); return; }
+        alert('저장되었습니다.');
+        await openMyPageModal();
+        showMyPageView('Info');
+      } finally {
+        saveMyPageInfoBtn.disabled = false;
+        saveMyPageInfoBtn.innerText = originalText;
+      }
     };
   }
 
