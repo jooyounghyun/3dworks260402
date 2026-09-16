@@ -149,6 +149,41 @@
             <label for="myPageBusinessNum">사업자등록번호</label>
             <input type="text" id="myPageBusinessNum" placeholder="000-00-00000">
           </div>
+          <div class="input-group">
+            <label for="myPageIntro">업체한줄소개</label>
+            <input type="text" id="myPageIntro" placeholder="업체를 한 줄로 소개해주세요">
+          </div>
+          <div class="input-group">
+            <label>주력분야 (중복 선택 가능)</label>
+            <div id="myPageSpecialtiesGroup" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
+              <button type="button" class="type-btn specialty-btn" data-value="demolition" style="padding:8px 12px; font-size:12px;">상가 철거</button>
+              <button type="button" class="type-btn specialty-btn" data-value="waste" style="padding:8px 12px; font-size:12px;">폐기물 처리</button>
+              <button type="button" class="type-btn specialty-btn" data-value="restoration" style="padding:8px 12px; font-size:12px;">원상복구</button>
+              <button type="button" class="type-btn specialty-btn" data-value="electric" style="padding:8px 12px; font-size:12px;">전기 공사</button>
+              <button type="button" class="type-btn specialty-btn" data-value="pipe" style="padding:8px 12px; font-size:12px;">배관·누수</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="myPageCareerYears">경력(년)</label>
+            <input type="number" id="myPageCareerYears" placeholder="예: 5" min="0">
+          </div>
+          <div class="input-group">
+            <label for="myPageCertifications">보유 자격증</label>
+            <input type="text" id="myPageCertifications" placeholder="예: 철거 자격증, 전기공사업 면허 등">
+          </div>
+          <div class="input-group">
+            <label for="myPageServiceArea">활동 지역</label>
+            <input type="text" id="myPageServiceArea" placeholder="예: 서울/경기, 전국 등">
+          </div>
+          <div class="input-group">
+            <label>작업 사진</label>
+            <div id="myPageExistingPortfolioPhotos" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-top:5px; margin-bottom:8px;"></div>
+            <div id="portfolioDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 18px; border-radius: 10px; text-align: center; cursor: pointer;">
+              <span style="color: #6c6f76; font-size: 13px;">클릭하거나 사진을 끌어다 놓아 시공 사진을 추가하세요</span>
+              <input type="file" id="portfolioPhotoInput" multiple accept="image/*" style="display:none;">
+            </div>
+            <div id="portfolioPhotoPreview" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;"></div>
+          </div>
         </div>
 
         <div id="myPageWorkerFields" class="hidden">
