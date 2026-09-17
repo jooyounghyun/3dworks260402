@@ -53,6 +53,12 @@
         </div>
 
         <div class="mypage-menu">
+          <button type="button" class="mypage-menu-item" id="myPageBrowseMenuItem" data-mypage-target="Browse">
+            <span>🔍 새 의뢰 둘러보기</span><span class="mypage-menu-arrow">›</span>
+          </button>
+          <button type="button" class="mypage-menu-item" id="myPageMyOffersMenuItem" data-mypage-target="MyOffers">
+            <span>📨 내 지원 현황</span><span class="mypage-menu-arrow">›</span>
+          </button>
           <button type="button" class="mypage-menu-item" data-mypage-target="History">
             <span>📋 내 요청 내역</span><span class="mypage-menu-arrow">›</span>
           </button>
@@ -87,6 +93,36 @@
         <div style="text-align:center; margin-top:14px;">
           <button type="button" id="myPageDeleteAccountBtn" style="background:none; border:none; color:var(--ink-muted); font-size:12px; text-decoration:underline; cursor:pointer;">회원탈퇴</button>
         </div>
+      </div>
+
+      <!-- 새 의뢰 둘러보기 (업체/구직자용) -->
+      <div id="myPageBrowseView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>새 의뢰 둘러보기</h2>
+          <span style="width:20px;"></span>
+        </div>
+        <div id="myPageBrowseList" style="margin-top:5px;"></div>
+      </div>
+
+      <!-- 내 지원 현황 (업체/구직자용) -->
+      <div id="myPageMyOffersView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>내 지원 현황</h2>
+          <span style="width:20px;"></span>
+        </div>
+        <div id="myPageMyOffersList" style="margin-top:5px;"></div>
+      </div>
+
+      <!-- 받은 제안 목록 (고객용) -->
+      <div id="myPageOffersView" class="hidden">
+        <div class="modal-header">
+          <button type="button" class="mypage-back-btn" data-mypage-back>‹</button>
+          <h2>받은 제안</h2>
+          <span style="width:20px;"></span>
+        </div>
+        <div id="myPageOffersList" style="margin-top:5px;"></div>
       </div>
 
       <!-- 요청 내역 화면 -->
@@ -241,7 +277,7 @@
   <div id="chatModal" class="modal hidden">
     <div class="modal-content" style="max-width:480px; width:92%; height:80vh; max-height:640px; display:flex; flex-direction:column;">
       <div class="modal-header">
-        <h2>문의 채팅</h2>
+        <h2 id="chatModalTitle">문의 채팅</h2>
         <button class="close-btn">&times;</button>
       </div>
       <div id="chatMessages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding:10px; background:#f0ece2; border-radius:8px;"></div>

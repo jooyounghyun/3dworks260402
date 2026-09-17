@@ -880,10 +880,282 @@ document.addEventListener('DOMContentLoaded', () => {
       chatBtn.type = 'button';
       chatBtn.innerText = '채팅하기';
       chatBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid #1d3557; background:#ffffff; color:#1d3557; cursor:pointer; flex-shrink:0;';
-      chatBtn.onclick = () => openChatModal(r.id);
+      chatBtn.onclick = () => openChatModal(r.id, null, 'customer');
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
+      actions.appendChild(chatBtn);
+      if (r.status === 'pending') {
+        const offersBtn = document.createElement('button');
+        offersBtn.type = 'button';
+        offersBtn.innerText = '받은 제안 보기';
+        offersBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid #ff6a3d; background:#ffffff; color:#ff6a3d; cursor:pointer; flex-shrink:0;';
+        offersBtn.onclick = () => openOffersView(r.id);
+        actions.appendChild(offersBtn);
+      }
       item.appendChild(info);
-      item.appendChild(chatBtn);
+      item.appendChild(actions);
       historyBox.appendChild(item);
+    });
+  }
+
+  const LOCATION_FIELD_MAP = {
+    demolition: 'demoLocation', waste: 'wasteLocation', restoration: 'restoreLocation',
+    electric: 'electricLocation', pipe: 'pipeLocation', manpower: 'manpowerLocation'
+  };
+  const DETAIL_NOTE_FIELD_MAP = {
+    demolition: 'demoDetailNote', waste: 'wasteDetailNote', restoration: 'restoreDetailNote',
+    electric: 'electricDetailNote', pipe: 'pipeDetailNote', manpower: 'manpowerDetailNote'
+  };
+
+  function timeAgo(dateStr) {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 60) return `${mins}분 전`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
+  }
+
+  // --- 새 의뢰 둘러보기 (업체/구직자) ---
+  async function renderMyPageBrowseList(userId, myProfile) {
+    const box = document.getElementById('myPageBrowseList');
+    if (!box) return;
+    box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">불러오는 중...</p>';
+
+    let query = supabaseClient.from('work_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false });
+    if (myProfile.user_type === 'company') {
+      if (myProfile.specialties && myProfile.specialties.length) {
+        query = query.in('request_type', myProfile.specialties);
+      } else {
+        query = query.neq('request_type', 'manpower');
+      }
+    } else if (myProfile.user_type === 'worker') {
+      query = query.eq('request_type', 'manpower');
+    }
+    const { data: requests } = await query;
+
+    const { data: myOffers } = await supabaseClient.from('offers').select('request_id').eq('company_id', userId);
+    const appliedIds = new Set((myOffers || []).map(o => o.request_id));
+
+    box.innerHTML = '';
+    if (!requests || requests.length === 0) {
+      box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">지금은 지원 가능한 의뢰가 없습니다.</p>';
+      return;
+    }
+
+    requests.forEach(r => {
+      const fields = (r.payload && r.payload.fields) || {};
+      const locationField = LOCATION_FIELD_MAP[r.request_type];
+      const noteField = DETAIL_NOTE_FIELD_MAP[r.request_type];
+      const location = (locationField && fields[locationField]) || '위치 정보 없음';
+      const note = (noteField && fields[noteField]) || '';
+      const photoCount = (r.photo_urls && r.photo_urls.length) || 0;
+      const alreadyApplied = appliedIds.has(r.id);
+
+      const card = document.createElement('div');
+      card.style.cssText = 'border:1px solid #ddd6c5; border-radius:14px; padding:16px; margin-bottom:14px; background:#fff;';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-size:14px; font-weight:700; color:#23262b;">${REQUEST_TYPE_LABELS[r.request_type] || r.request_type}</div>
+            <div style="font-size:12px; color:#6c6f76; margin-top:4px;">📍 ${location}</div>
+          </div>
+          <div style="font-size:11px; color:#6c6f76;">${timeAgo(r.created_at)}</div>
+        </div>
+        ${note ? `<div style="font-size:12.5px; color:#23262b; margin-top:10px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${note}</div>` : ''}
+        <div style="display:flex; gap:14px; margin-top:10px; font-size:12px; color:#6c6f76;">
+          <span>📷 사진 ${photoCount}장</span>
+        </div>
+        <div class="offer-form-${r.id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed #ddd6c5;">
+          <div class="input-group">
+            <input type="text" id="offerPrice-${r.id}" placeholder="제시 견적가 (예: 850,000원)">
+          </div>
+          <div class="input-group">
+            <input type="text" id="offerDate-${r.id}" placeholder="작업 가능일 (예: 이번 주 목요일)">
+          </div>
+          <div class="input-group">
+            <textarea id="offerNote-${r.id}" rows="2" placeholder="고객에게 남길 메모"></textarea>
+          </div>
+          <button type="button" data-submit-offer="${r.id}" class="btn btn-primary login-submit" style="margin-top:5px;">지원 제출하기</button>
+        </div>
+        <button type="button" data-toggle-offer="${r.id}" style="width:100%; margin-top:12px; padding:11px; border-radius:8px; border:none; background:${alreadyApplied ? '#e2e8f0' : 'var(--hazard)'}; color:${alreadyApplied ? '#334155' : '#fff'}; font-weight:700; font-size:13px; cursor:pointer;" ${alreadyApplied ? 'disabled' : ''}>
+          ${alreadyApplied ? '지원 완료' : '지원하기'}
+        </button>
+      `;
+      box.appendChild(card);
+    });
+
+    box.querySelectorAll('[data-toggle-offer]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.toggleOffer;
+        const form = box.querySelector('.offer-form-' + id);
+        if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    box.querySelectorAll('[data-submit-offer]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.submitOffer;
+        const price = document.getElementById('offerPrice-' + id).value;
+        const date = document.getElementById('offerDate-' + id).value;
+        const note = document.getElementById('offerNote-' + id).value;
+        if (!price) { alert('제시 견적가를 입력해주세요.'); return; }
+
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = '제출 중...';
+        const { error } = await supabaseClient.from('offers').insert({
+          request_id: id, company_id: userId, price, available_date: date, note
+        });
+        btn.disabled = false;
+        btn.innerText = originalText;
+        if (error) { alert('지원 제출에 실패했습니다: ' + error.message); return; }
+        alert('지원이 제출되었습니다.');
+        renderMyPageBrowseList(userId, myProfile);
+        renderMyPageMyOffers(userId);
+      });
+    });
+  }
+
+  // --- 내 지원 현황 (업체/구직자) ---
+  const OFFER_STATUS_LABELS = { pending: '응답 대기', selected: '선택됨', rejected: '선택 안 됨' };
+
+  async function renderMyPageMyOffers(userId) {
+    const box = document.getElementById('myPageMyOffersList');
+    if (!box) return;
+    box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">불러오는 중...</p>';
+
+    const { data: offers } = await supabaseClient
+      .from('offers')
+      .select('id, request_id, price, available_date, status, created_at')
+      .eq('company_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (!offers || offers.length === 0) {
+      box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">아직 지원한 의뢰가 없습니다.</p>';
+      return;
+    }
+
+    const requestIds = [...new Set(offers.map(o => o.request_id))];
+    const { data: requests } = await supabaseClient.from('work_requests').select('id, request_type').in('id', requestIds);
+    const requestMap = {};
+    (requests || []).forEach(r => requestMap[r.id] = r);
+
+    box.innerHTML = '';
+    offers.forEach(o => {
+      const req = requestMap[o.request_id] || {};
+      const dateStr = new Date(o.created_at).toLocaleDateString('ko-KR');
+      const card = document.createElement('div');
+      card.style.cssText = 'border:1px solid #ddd6c5; border-radius:12px; padding:14px; margin-bottom:10px; background:#fff;';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:14px; font-weight:700; color:#23262b;">${REQUEST_TYPE_LABELS[req.request_type] || req.request_type || '-'}</div>
+          <span style="font-size:11px; font-weight:700; color:${o.status === 'selected' ? '#fff' : '#6c6f76'}; background:${o.status === 'selected' ? '#ff6a3d' : '#f0ece2'}; padding:3px 9px; border-radius:999px;">${OFFER_STATUS_LABELS[o.status] || o.status}</span>
+        </div>
+        <div style="font-size:12px; color:#6c6f76; margin-top:4px;">${dateStr} · 제시가 ${o.price || '-'} · 가능일 ${o.available_date || '-'}</div>
+      `;
+      if (o.status === 'selected') {
+        const chatBtn = document.createElement('button');
+        chatBtn.type = 'button';
+        chatBtn.innerText = '고객과 채팅하기';
+        chatBtn.style.cssText = 'width:100%; margin-top:10px; padding:9px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;';
+        chatBtn.onclick = () => openChatModal(o.request_id, o.id, 'company', '고객과 채팅');
+        card.appendChild(chatBtn);
+      }
+      box.appendChild(card);
+    });
+  }
+
+  // --- 받은 제안 (고객) ---
+  let currentOffersRequestId = null;
+
+  async function openOffersView(requestId) {
+    currentOffersRequestId = requestId;
+    showMyPageView('Offers');
+    await renderMyPageOffersList(requestId);
+  }
+
+  async function renderMyPageOffersList(requestId) {
+    const box = document.getElementById('myPageOffersList');
+    if (!box) return;
+    box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">불러오는 중...</p>';
+
+    const { data: offers } = await supabaseClient
+      .from('offers')
+      .select('id, price, available_date, note, status, company_id')
+      .eq('request_id', requestId)
+      .order('created_at', { ascending: false });
+
+    if (!offers || offers.length === 0) {
+      box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">아직 받은 제안이 없습니다.</p>';
+      return;
+    }
+
+    const companyIds = [...new Set(offers.map(o => o.company_id))];
+    const { data: companies } = await supabaseClient
+      .from('profiles')
+      .select('id, company_name, career_years, completed_count')
+      .in('id', companyIds);
+    const companyMap = {};
+    (companies || []).forEach(c => companyMap[c.id] = c);
+
+    box.innerHTML = '';
+    offers.forEach(o => {
+      const c = companyMap[o.company_id] || {};
+      const isSelected = o.status === 'selected';
+      const card = document.createElement('div');
+      card.style.cssText = `border:1px solid ${isSelected ? '#ff6a3d' : '#ddd6c5'}; border-radius:14px; padding:16px; margin-bottom:14px; background:#fff;`;
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:15px; font-weight:700; color:#23262b;">${c.company_name || '업체'}</div>
+          ${isSelected ? '<span style="font-size:11px; font-weight:700; color:#fff; background:#ff6a3d; padding:3px 10px; border-radius:999px;">매칭 완료</span>' : ''}
+        </div>
+        <div style="font-size:12px; color:#6c6f76; margin-top:2px;">완료 ${c.completed_count || 0}건 · 경력 ${c.career_years || '-'}년</div>
+        ${o.note ? `<div style="font-size:12.5px; color:#23262b; margin-top:8px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${o.note}</div>` : ''}
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:12px; padding-top:10px; border-top:1px solid #ddd6c5;">
+          <div>
+            <div style="font-size:11px; color:#6c6f76;">제시 견적</div>
+            <div style="font-size:18px; font-weight:700; color:#1d3557;">${o.price || '-'}</div>
+          </div>
+          <div style="font-size:12px; color:#6c6f76;">가능일: ${o.available_date || '-'}</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="button" data-offer-chat="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;">채팅하기</button>
+          ${!isSelected ? `<button type="button" data-choose-offer="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:none; background:#ff6a3d; color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">매칭 완료</button>` : ''}
+        </div>
+      `;
+      box.appendChild(card);
+    });
+
+    box.querySelectorAll('[data-offer-chat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const offerId = btn.dataset.offerChat;
+        const offer = offers.find(o => o.id === offerId);
+        if (!offer) return;
+        const c = companyMap[offer.company_id] || {};
+        openChatModal(requestId, offerId, 'customer', (c.company_name || '업체') + '와 채팅');
+      });
+    });
+
+    box.querySelectorAll('[data-choose-offer]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const offerId = btn.dataset.chooseOffer;
+        const offer = offers.find(o => o.id === offerId);
+        if (!offer) return;
+        const confirmed = window.confirm('이 업체로 매칭을 확정하시겠어요? 다른 업체와의 채팅도 계속 볼 수 있어요.');
+        if (!confirmed) return;
+
+        const { error: e1 } = await supabaseClient.from('offers').update({ status: 'selected' }).eq('id', offerId);
+        const { error: e2 } = await supabaseClient
+          .from('work_requests')
+          .update({ assigned_provider_id: offer.company_id, status: 'matched' })
+          .eq('id', requestId);
+
+        if (e1 || e2) { alert('매칭 처리 중 문제가 발생했습니다.'); return; }
+        alert('매칭이 완료되었습니다.');
+        await renderMyPageOffersList(requestId);
+        await renderMyPageRequestHistory(myPageCurrentUserId);
+      });
     });
   }
 
@@ -956,9 +1228,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let currentChatRequestId = null;
+  let currentChatOfferId = null;
+  let currentChatSenderRole = 'customer';
 
-  async function openChatModal(requestId) {
+  // requestId: 대화 대상 요청, offerId: null이면 고객↔사장님 대화, 있으면 고객↔업체 대화
+  // senderRole: 지금 채팅창을 여는 '나'의 역할 ('customer' 또는 'company')
+  async function openChatModal(requestId, offerId, senderRole, title) {
     currentChatRequestId = requestId;
+    currentChatOfferId = offerId || null;
+    currentChatSenderRole = senderRole || 'customer';
+    const titleEl = document.getElementById('chatModalTitle');
+    if (titleEl) titleEl.innerText = title || (offerId ? '업체와 채팅' : '문의 채팅');
     closeAllModals();
     chatModal.classList.remove('hidden');
     await loadChatMessages();
@@ -966,16 +1246,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadChatMessages() {
     if (!currentChatRequestId) return;
-    const { data: msgs } = await supabaseClient
+    let query = supabaseClient
       .from('messages')
       .select('sender_role, content, created_at')
-      .eq('request_id', currentChatRequestId)
-      .order('created_at', { ascending: true });
+      .eq('request_id', currentChatRequestId);
+    query = currentChatOfferId ? query.eq('offer_id', currentChatOfferId) : query.is('offer_id', null);
+    const { data: msgs } = await query.order('created_at', { ascending: true });
     const box = document.getElementById('chatMessages');
     if (!box) return;
     box.innerHTML = '';
     (msgs || []).forEach(m => {
-      const isMe = m.sender_role === 'customer';
+      const isMe = m.sender_role === currentChatSenderRole;
       const bubble = document.createElement('div');
       bubble.style.cssText = `align-self:${isMe ? 'flex-end' : 'flex-start'}; background:${isMe ? '#ff6a3d' : '#ffffff'}; color:${isMe ? '#ffffff' : '#23262b'}; padding:8px 12px; border-radius:10px; max-width:78%; font-size:13px; border:1px solid #ddd6c5; word-break:break-word;`;
       bubble.innerText = m.content;
@@ -993,8 +1274,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!session) return;
     const { error } = await supabaseClient.from('messages').insert({
       request_id: currentChatRequestId,
+      offer_id: currentChatOfferId,
       sender_id: session.user.id,
-      sender_role: 'customer',
+      sender_role: currentChatSenderRole,
       content: text
     });
     if (error) { alert('메시지 전송에 실패했습니다: ' + error.message); return; }
@@ -1012,7 +1294,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showMyPageView(name) {
-    ['Home', 'History', 'Info', 'Bank', 'Support'].forEach(v => {
+    ['Home', 'History', 'Info', 'Bank', 'Support', 'Browse', 'MyOffers', 'Offers'].forEach(v => {
       const el = document.getElementById('myPage' + v + 'View');
       if (el) el.classList.toggle('hidden', v !== name);
     });
@@ -1098,6 +1380,11 @@ document.addEventListener('DOMContentLoaded', () => {
     companyFields.classList.add('hidden');
     workerFields.classList.add('hidden');
     bankMenuItem.style.display = (profile.user_type === 'company' || profile.user_type === 'worker') ? 'flex' : 'none';
+    const isProvider = (profile.user_type === 'company' || profile.user_type === 'worker');
+    const browseMenuItem = document.getElementById('myPageBrowseMenuItem');
+    const myOffersMenuItem = document.getElementById('myPageMyOffersMenuItem');
+    if (browseMenuItem) browseMenuItem.style.display = isProvider ? 'flex' : 'none';
+    if (myOffersMenuItem) myOffersMenuItem.style.display = isProvider ? 'flex' : 'none';
 
     const convertBtnByType = { user: 'convertToUserBtn', company: 'convertToCompanyBtn', worker: 'convertToWorkerBtn' };
     Object.entries(convertBtnByType).forEach(([type, btnId]) => {
@@ -1130,6 +1417,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderMyPageRequestHistory(session.user.id);
     renderMyPageSupportHistory(session.user.id);
+    if (profile.user_type === 'company' || profile.user_type === 'worker') {
+      renderMyPageBrowseList(session.user.id, profile);
+      renderMyPageMyOffers(session.user.id);
+    }
 
     // 이미 마이페이지가 열려있는 상태에서 저장 후 새로고침하는 경우엔
     // 모달을 껐다 켜지 않는다 (불필요한 깜빡임/전환 끊김 방지)

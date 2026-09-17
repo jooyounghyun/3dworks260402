@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     box.innerHTML = '불러오는 중...';
     const { data: msgs } = await supabaseClient
       .from('messages').select('sender_role, content, created_at')
-      .eq('request_id', requestId).order('created_at', { ascending: true });
+      .eq('request_id', requestId).is('offer_id', null).order('created_at', { ascending: true });
     box.innerHTML = '';
     (msgs || []).forEach(m => {
       const isAdmin = m.sender_role === 'admin';
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const text = input.value.trim();
     if (!text) return;
     const { error } = await supabaseClient.from('messages').insert({
-      request_id: requestId, sender_id: session.user.id, sender_role: 'admin', content: text
+      request_id: requestId, offer_id: null, sender_id: session.user.id, sender_role: 'admin', content: text
     });
     if (error) { alert('전송 실패: ' + error.message); return; }
     input.value = '';
