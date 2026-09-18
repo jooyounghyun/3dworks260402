@@ -907,6 +907,33 @@ document.addEventListener('DOMContentLoaded', () => {
     electric: 'electricDetailNote', pipe: 'pipeDetailNote', manpower: 'manpowerDetailNote'
   };
 
+  // 신청서 필드 id → 한글 라벨
+  const FIELD_LABEL_MAP = {
+    manpowerLocation: '현장 위치', manpowerCompanyName: '업체명/성함', manpowerCompanyContact: '업체 연락처',
+    manpowerManagerName: '현장 담당자', manpowerManagerContact: '담당자 연락처', manpowerStartDate: '작업 시작일',
+    manpowerWorkDays: '작업 일수(일)', manpowerStartTime: '작업 시작 시간', manpowerEndTime: '작업 종료 시간',
+    manpowerDetailNote: '상세 요청사항',
+    demoLocation: '현장 위치', demoArea: '평수(평)', demoHeight: '층고(m)', demoFloor: '현장 층수',
+    demoDate: '작업 희망 날짜', demoDetailNote: '상세 요청사항',
+    restoreLocation: '현장 위치', restoreArea: '평수(평)', restoreHeight: '층고(m)', restoreFloor: '현장 층수',
+    restoreDate: '작업 희망 날짜', restoreDetailNote: '상세 요청사항',
+    wasteLocation: '현장 위치', wasteDate: '수거 희망 날짜', wasteVolume: '예상 분량', wasteDetailNote: '상세 요청사항',
+    electricLocation: '현장 위치', electricArea: '평수(평)', electricHeight: '층고(m)', electricFloor: '현장 층수',
+    electricDate: '작업 희망 날짜', electricDetailNote: '상세 요청사항',
+    pipeLocation: '현장 위치', pipeFloor: '현장 층수', pipeDate: '작업 희망 날짜', pipeDetailNote: '상세 요청사항'
+  };
+
+  // 선택형 항목(체크박스/토글) 그룹 id → 한글 라벨
+  const SELECTION_LABEL_MAP = {
+    elevator: '엘리베이터 사용', parking: '주차 가능 여부',
+    'meal-btn': '식사 제공 여부', 'break-btn': '휴게공간 여부',
+    'demo-type-btn': '철거 범위', 'demo-env-btn': '현장 환경',
+    'restore-type-btn': '복구 범위', restoreMode: '진행 방식',
+    'waste-type-btn': '폐기물 종류',
+    'electric-type-btn': '전기 공사 종류', 'electric-env-btn': '현장 환경',
+    'pipe-type-btn': '배관 공사 종류', 'pipe-spot-btn': '누수 위치', 'pipe-env-btn': '현장 환경'
+  };
+
   function timeAgo(dateStr) {
     const diffMs = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diffMs / 60000);
@@ -954,11 +981,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const alreadyApplied = appliedIds.has(r.id);
 
       const detailRows = Object.entries(fields)
-        .filter(([k, v]) => v !== '' && v !== null && v !== undefined)
-        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${v}</span></div>`)
+        .filter(([k, v]) => v !== '' && v !== null && v !== undefined && k !== locationField && k !== noteField)
+        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${FIELD_LABEL_MAP[k] || k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${v}</span></div>`)
         .join('');
       const selectionRows = Object.entries(selections)
-        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${(v || []).join(', ')}</span></div>`)
+        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${SELECTION_LABEL_MAP[k] || k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${(v || []).join(', ')}</span></div>`)
         .join('');
 
       const card = document.createElement('div');
