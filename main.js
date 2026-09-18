@@ -945,12 +945,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     requests.forEach(r => {
       const fields = (r.payload && r.payload.fields) || {};
+      const selections = (r.payload && r.payload.selections) || {};
       const locationField = LOCATION_FIELD_MAP[r.request_type];
       const noteField = DETAIL_NOTE_FIELD_MAP[r.request_type];
       const location = (locationField && fields[locationField]) || '위치 정보 없음';
       const note = (noteField && fields[noteField]) || '';
       const photoCount = (r.photo_urls && r.photo_urls.length) || 0;
       const alreadyApplied = appliedIds.has(r.id);
+
+      const detailRows = Object.entries(fields)
+        .filter(([k, v]) => v !== '' && v !== null && v !== undefined)
+        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${v}</span></div>`)
+        .join('');
+      const selectionRows = Object.entries(selections)
+        .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${(v || []).join(', ')}</span></div>`)
+        .join('');
 
       const card = document.createElement('div');
       card.style.cssText = 'border:1px solid #ddd6c5; border-radius:14px; padding:16px; margin-bottom:14px; background:#fff;';
@@ -965,6 +974,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ${note ? `<div style="font-size:12.5px; color:#23262b; margin-top:10px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${note}</div>` : ''}
         <div style="display:flex; gap:14px; margin-top:10px; font-size:12px; color:#6c6f76;">
           <span>📷 사진 ${photoCount}장</span>
+        </div>
+        <button type="button" data-toggle-browse-detail="${r.id}" style="width:100%; margin-top:10px; padding:9px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;">상세보기</button>
+        <div class="browse-detail-${r.id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #ddd6c5;">
+          ${detailRows}${selectionRows}
+          <div class="browse-photos-${r.id}" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-top:10px;"></div>
         </div>
         <div class="offer-form-${r.id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed #ddd6c5;">
           <div class="input-group">
@@ -983,6 +997,30 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
       `;
       box.appendChild(card);
+    });
+
+    box.querySelectorAll('[data-toggle-browse-detail]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.toggleBrowseDetail;
+        const detail = box.querySelector('.browse-detail-' + id);
+        if (!detail) return;
+        detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+        if (detail.style.display !== 'block') return;
+
+        const photosBox = box.querySelector('.browse-photos-' + id);
+        if (!photosBox || photosBox.dataset.loaded === '1') return;
+        const req = requests.find(x => x.id === id);
+        const paths = (req && req.photo_urls) || [];
+        if (paths.length === 0) return;
+        photosBox.dataset.loaded = '1';
+
+        const { data: signed, error } = await supabaseClient.storage.from('work-photos').createSignedUrls(paths, 3600);
+        if (error || !signed) return;
+        photosBox.innerHTML = signed
+          .filter(s => s.signedUrl)
+          .map(s => `<img src="${s.signedUrl}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5;">`)
+          .join('');
+      });
     });
 
     box.querySelectorAll('[data-toggle-offer]').forEach(btn => {
