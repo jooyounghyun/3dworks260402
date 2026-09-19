@@ -77,6 +77,7 @@
       <div class="filter-row" id="statusFilterRow">
         <button type="button" class="filter-btn active" data-status="all">전체</button>
         <button type="button" class="filter-btn" data-status="pending">접수 대기</button>
+        <button type="button" class="filter-btn" data-status="payment_pending">결제 대기</button>
         <button type="button" class="filter-btn" data-status="matched">매칭 완료</button>
         <button type="button" class="filter-btn" data-status="completed">완료</button>
         <button type="button" class="filter-btn" data-status="cancelled">취소됨</button>
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     demolition: '상가 철거', waste: '폐기물 처리', restoration: '원상복구',
     electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
   };
-  const STATUS_LABELS = { pending: '접수 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
+  const STATUS_LABELS = { pending: '접수 대기', payment_pending: '결제 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
   const INQUIRY_STATUS_LABELS = { pending: '답변 대기', answered: '답변 완료' };
 
   const gateArea = document.getElementById('gateArea');

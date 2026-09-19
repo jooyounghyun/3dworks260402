@@ -851,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
     demolition: '상가 철거', waste: '폐기물 처리', restoration: '원상복구',
     electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
   };
-  const STATUS_LABELS = { pending: '접수 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
+  const STATUS_LABELS = { pending: '접수 대기', payment_pending: '결제 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
 
   async function renderMyPageRequestHistory(userId) {
     const historyBox = document.getElementById('myPageRequestHistory');
@@ -891,6 +891,13 @@ document.addEventListener('DOMContentLoaded', () => {
         offersBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:1px solid #ff6a3d; background:#ffffff; color:#ff6a3d; cursor:pointer; flex-shrink:0;';
         offersBtn.onclick = () => openOffersView(r.id);
         actions.appendChild(offersBtn);
+      } else if (r.status === 'payment_pending') {
+        const payBtn = document.createElement('button');
+        payBtn.type = 'button';
+        payBtn.innerText = '결제하기';
+        payBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:none; background:#ff6a3d; color:#fff; font-weight:700; cursor:pointer; flex-shrink:0;';
+        payBtn.onclick = () => mockPayment(r.id);
+        actions.appendChild(payBtn);
       }
       item.appendChild(info);
       item.appendChild(actions);
@@ -1140,10 +1147,22 @@ document.addEventListener('DOMContentLoaded', () => {
     await renderMyPageOffersList(requestId);
   }
 
+  const closeRecruitBtn = document.getElementById('closeRecruitBtn');
+  if (closeRecruitBtn) {
+    closeRecruitBtn.onclick = () => {
+      if (currentOffersRequestId) closeRecruitment(currentOffersRequestId);
+    };
+  }
+
   async function renderMyPageOffersList(requestId) {
     const box = document.getElementById('myPageOffersList');
+    const closeBtnWrap = document.getElementById('myPageCloseRecruitWrap');
     if (!box) return;
     box.innerHTML = '<p style="font-size:13px; color:#6c6f76;">불러오는 중...</p>';
+
+    const { data: reqRow } = await supabaseClient.from('work_requests').select('status').eq('id', requestId).maybeSingle();
+    const isOpen = reqRow && reqRow.status === 'pending';
+    if (closeBtnWrap) closeBtnWrap.style.display = isOpen ? 'block' : 'none';
 
     const { data: offers } = await supabaseClient
       .from('offers')
@@ -1164,7 +1183,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyMap = {};
     (companies || []).forEach(c => companyMap[c.id] = c);
 
-    box.innerHTML = '';
+    const selectedCount = offers.filter(o => o.status === 'selected').length;
+
+    box.innerHTML = `<p style="font-size:12px; color:#6c6f76; margin-bottom:10px;">✅ 지금까지 <b style="color:#ff6a3d;">${selectedCount}명</b> 선택했어요.${isOpen ? ' 필요한 만큼 여러 명 선택하실 수 있어요.' : ' (모집이 마감된 요청이에요)'}</p>`;
     offers.forEach(o => {
       const c = companyMap[o.company_id] || {};
       const isSelected = o.status === 'selected';
@@ -1173,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div style="font-size:15px; font-weight:700; color:#23262b;">${c.company_name || '업체'}</div>
-          ${isSelected ? '<span style="font-size:11px; font-weight:700; color:#fff; background:#ff6a3d; padding:3px 10px; border-radius:999px;">매칭 완료</span>' : ''}
+          ${isSelected ? '<span style="font-size:11px; font-weight:700; color:#fff; background:#ff6a3d; padding:3px 10px; border-radius:999px;">선택됨</span>' : ''}
         </div>
         <div style="font-size:12px; color:#6c6f76; margin-top:2px;">완료 ${c.completed_count || 0}건 · 경력 ${c.career_years || '-'}년</div>
         ${o.note ? `<div style="font-size:12.5px; color:#23262b; margin-top:8px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${o.note}</div>` : ''}
@@ -1186,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button type="button" data-offer-chat="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;">채팅하기</button>
-          ${!isSelected ? `<button type="button" data-choose-offer="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:none; background:#ff6a3d; color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">매칭 완료</button>` : ''}
+          ${(!isSelected && isOpen) ? `<button type="button" data-choose-offer="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:none; background:#ff6a3d; color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">선택하기</button>` : ''}
         </div>
       `;
       box.appendChild(card);
@@ -1205,23 +1226,33 @@ document.addEventListener('DOMContentLoaded', () => {
     box.querySelectorAll('[data-choose-offer]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const offerId = btn.dataset.chooseOffer;
-        const offer = offers.find(o => o.id === offerId);
-        if (!offer) return;
-        const confirmed = window.confirm('이 업체로 매칭을 확정하시겠어요? 다른 업체와의 채팅도 계속 볼 수 있어요.');
-        if (!confirmed) return;
-
-        const { error: e1 } = await supabaseClient.from('offers').update({ status: 'selected' }).eq('id', offerId);
-        const { error: e2 } = await supabaseClient
-          .from('work_requests')
-          .update({ assigned_provider_id: offer.company_id, status: 'matched' })
-          .eq('id', requestId);
-
-        if (e1 || e2) { alert('매칭 처리 중 문제가 발생했습니다.'); return; }
-        alert('매칭이 완료되었습니다.');
+        const { error } = await supabaseClient.from('offers').update({ status: 'selected' }).eq('id', offerId);
+        if (error) { alert('선택 중 문제가 발생했습니다.'); return; }
+        alert('선택되었습니다. 채팅으로 연락하실 수 있어요. 더 뽑으실 거면 계속 선택하시고, 다 뽑으셨으면 위에 "모집 마감하기"를 눌러주세요.');
         await renderMyPageOffersList(requestId);
-        await renderMyPageRequestHistory(myPageCurrentUserId);
       });
     });
+  }
+
+  async function closeRecruitment(requestId) {
+    const confirmed = window.confirm('모집을 마감하시겠어요? 마감 후에는 새로운 지원을 받을 수 없고, 결제 단계로 넘어가요.');
+    if (!confirmed) return;
+    const { error } = await supabaseClient.from('work_requests').update({ status: 'payment_pending' }).eq('id', requestId);
+    if (error) { alert('마감 처리 중 문제가 발생했습니다.'); return; }
+    alert('모집이 마감되었습니다. 이제 결제를 진행해주세요.');
+    showMyPageView('History');
+    await renderMyPageRequestHistory(myPageCurrentUserId);
+  }
+
+  // ⚠️ 실제 결제(포트원) 연동 전까지 쓰는 임시 확인 버튼입니다.
+  // 실제 연동되면 이 자리에 진짜 결제창이 뜨고, 결제 성공 웹훅을 받아서 자동으로 상태가 바뀌게 됩니다.
+  async function mockPayment(requestId) {
+    const confirmed = window.confirm('[임시] 아직 실제 결제 연동 전이라 확인 버튼으로 대신합니다.\n결제가 완료된 것으로 처리하고 매칭을 확정할까요?');
+    if (!confirmed) return;
+    const { error } = await supabaseClient.from('work_requests').update({ status: 'matched' }).eq('id', requestId);
+    if (error) { alert('처리 중 문제가 발생했습니다.'); return; }
+    alert('매칭이 확정되었습니다.');
+    await renderMyPageRequestHistory(myPageCurrentUserId);
   }
 
   const SUPPORT_STATUS_LABELS = { pending: '답변 대기', answered: '답변 완료' };
