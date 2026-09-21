@@ -280,6 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
       modal.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
       if (photoInputEl && photoInputEl._resetStoredFiles) photoInputEl._resetStoredFiles();
       modal.querySelectorAll('.type-btn.selected').forEach(b => b.classList.remove('selected'));
+
+      // 관련 업체/구직자한테 새 의뢰 알림 (실패해도 요청 접수 자체엔 영향 없도록 별도 처리)
+      supabaseClient.functions.invoke('notify-new-request', { body: { requestType } })
+        .catch(err => console.error('알림 발송 실패:', err));
     } catch (err) {
       console.error(err);
       alert('요청 접수 중 문제가 발생했습니다: ' + (err.message || err));
@@ -1481,6 +1485,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const myOffersMenuItem = document.getElementById('myPageMyOffersMenuItem');
     if (browseMenuItem) browseMenuItem.style.display = isProvider ? 'flex' : 'none';
     if (myOffersMenuItem) myOffersMenuItem.style.display = isProvider ? 'flex' : 'none';
+    const notifySection = document.getElementById('myPageNotifySection');
+    if (notifySection) notifySection.classList.toggle('hidden', !isProvider);
 
     const convertBtnByType = { user: 'convertToUserBtn', company: 'convertToCompanyBtn', worker: 'convertToWorkerBtn' };
     Object.entries(convertBtnByType).forEach(([type, btnId]) => {
@@ -1678,6 +1684,40 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error) { alert('전환 중 문제가 발생했습니다: ' + error.message); return; }
       alert('일반 사용자로 전환되었습니다.');
       await openMyPageModal();
+    };
+  }
+
+  // --- 새 의뢰 알림 설정 (업체/구직자) ---
+  const enableNotifyBtn = document.getElementById('enableNotifyBtn');
+  if (enableNotifyBtn) {
+    enableNotifyBtn.onclick = async () => {
+      if (!window.OneSignalDeferred) { alert('알림 서비스 연결에 문제가 있습니다.'); return; }
+      OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          await OneSignal.Notifications.requestPermission();
+
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (!session) return;
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('user_type, specialties')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          if (!profile) return;
+
+          if (profile.user_type === 'company' && profile.specialties && profile.specialties.length) {
+            const tags = {};
+            profile.specialties.forEach(s => { tags[s] = '1'; });
+            OneSignal.User.addTags(tags);
+          } else if (profile.user_type === 'worker') {
+            OneSignal.User.addTag('manpower', '1');
+          }
+
+          alert('알림 설정이 완료되었습니다. 등록하신 분야의 새 의뢰가 올라오면 알려드릴게요.');
+        } catch (err) {
+          alert('알림 설정 중 문제가 발생했습니다. 브라우저 알림 권한을 확인해주세요.');
+        }
+      });
     };
   }
 

@@ -76,6 +76,12 @@
           </button>
         </div>
 
+        <div id="myPageNotifySection" class="hidden" style="margin-top:20px; padding:14px; background:var(--surface-muted); border-radius:12px;">
+          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px;">🔔 새 의뢰 알림</div>
+          <p style="font-size:12px; color:var(--ink-muted); margin:0 0 10px;">등록하신 주력분야/공종에 맞는 새 의뢰가 올라오면 알림을 받아보세요. 아이폰은 먼저 "홈 화면에 추가"를 해주셔야 알림이 가요.</p>
+          <button type="button" id="enableNotifyBtn" class="btn btn-secondary" style="width:100%; padding:10px; font-size:12px;">알림 받기 설정</button>
+        </div>
+
         <div id="myPageConvertSection" style="margin-top:20px; padding:14px; background:var(--surface-muted); border-radius:12px;">
           <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px;">회원 유형 전환</div>
           <p style="font-size:12px; color:var(--ink-muted); margin:0 0 10px;">필요에 따라 회원 유형을 바꿀 수 있어요.</p>
@@ -1205,6 +1211,15 @@
   </footer>
 </div>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "425deff8-810f-43ff-b711-9264f3fd6b3c",
+    });
+  });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="main.js"></script>
