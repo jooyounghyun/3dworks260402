@@ -467,7 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
-      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal
+      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal,
+      document.getElementById('iosAddHomeModal')
     ];
     modals.forEach(modal => {
       if (modal) modal.classList.add('hidden');
@@ -1719,9 +1720,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 아이폰 + 아직 홈 화면에 추가 안 한 상태인지 확인
+  function isIosNotStandalone() {
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+    return isIos && !isStandalone;
+  }
+
   const enableNotifyBtn = document.getElementById('enableNotifyBtn');
   if (enableNotifyBtn) {
     enableNotifyBtn.onclick = async () => {
+      if (isIosNotStandalone()) {
+        closeAllModals();
+        const guideModal = document.getElementById('iosAddHomeModal');
+        if (guideModal) guideModal.classList.remove('hidden');
+        return;
+      }
       if (!window.OneSignalDeferred) { alert('알림 서비스 연결에 문제가 있습니다.'); return; }
       OneSignalDeferred.push(async (OneSignal) => {
         try {

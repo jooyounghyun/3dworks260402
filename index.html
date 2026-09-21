@@ -284,6 +284,36 @@
     </div>
   </div>
 
+  <!-- ✅ 아이폰 홈 화면 추가 안내 모달 -->
+  <div id="iosAddHomeModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>먼저 홈 화면에 추가해주세요</h2>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p style="font-size:13px; color:var(--ink-muted); margin-bottom:16px;">아이폰은 애플 정책상, 사이트를 홈 화면에 추가해야만 알림을 받을 수 있어요. 딱 한 번만 해주시면 돼요.</p>
+
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:var(--steel); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">1</div>
+        <div style="font-size:13px; color:var(--ink); padding-top:4px;">화면 아래(또는 위)에 있는 <b>공유 버튼</b>(네모 위에 화살표 ⬆️ 모양)을 눌러주세요.</div>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:var(--steel); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">2</div>
+        <div style="font-size:13px; color:var(--ink); padding-top:4px;">메뉴를 아래로 내려서 <b>"홈 화면에 추가"</b>를 눌러주세요.</div>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:var(--steel); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">3</div>
+        <div style="font-size:13px; color:var(--ink); padding-top:4px;">오른쪽 위 <b>"추가"</b>를 누르면 홈 화면에 아이콘이 생겨요.</div>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:20px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:var(--hazard); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;">4</div>
+        <div style="font-size:13px; color:var(--ink); padding-top:4px;"><b>그 아이콘으로 다시 들어와서</b> 로그인 후 "알림 받기 설정"을 눌러주세요.</div>
+      </div>
+
+      <button type="button" class="close-btn btn btn-primary login-submit" style="border:none;">확인했어요</button>
+    </div>
+  </div>
+
   <!-- ✅ 채팅 모달 -->
   <div id="chatModal" class="modal hidden">
     <div class="modal-content" style="max-width:480px; width:92%; height:80vh; max-height:640px; display:flex; flex-direction:column;">
