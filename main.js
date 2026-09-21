@@ -1487,6 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (myOffersMenuItem) myOffersMenuItem.style.display = isProvider ? 'flex' : 'none';
     const notifySection = document.getElementById('myPageNotifySection');
     if (notifySection) notifySection.classList.toggle('hidden', !isProvider);
+    if (isProvider && window.__checkNotifyStatus) window.__checkNotifyStatus();
 
     const convertBtnByType = { user: 'convertToUserBtn', company: 'convertToCompanyBtn', worker: 'convertToWorkerBtn' };
     Object.entries(convertBtnByType).forEach(([type, btnId]) => {
@@ -1688,6 +1689,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 새 의뢰 알림 설정 (업체/구직자) ---
+  function updateNotifyStatusLabel(isEnabled) {
+    const label = document.getElementById('notifyStatusLabel');
+    if (!label) return;
+    if (isEnabled) {
+      label.innerText = '● 알림 켜짐';
+      label.style.color = '#0f7a44';
+    } else {
+      label.innerText = '● 알림 꺼짐';
+      label.style.color = '#ef4444';
+    }
+  }
+
+  // 마이페이지 열 때마다 실제 브라우저 권한 상태를 확인해서 표시
+  if (window.OneSignalDeferred) {
+    OneSignalDeferred.push(async (OneSignal) => {
+      window.__checkNotifyStatus = () => {
+        try {
+          updateNotifyStatusLabel(!!OneSignal.Notifications.permission);
+        } catch (e) { /* 무시 */ }
+      };
+      window.__checkNotifyStatus();
+    });
+  }
+
   const enableNotifyBtn = document.getElementById('enableNotifyBtn');
   if (enableNotifyBtn) {
     enableNotifyBtn.onclick = async () => {
@@ -1695,6 +1720,14 @@ document.addEventListener('DOMContentLoaded', () => {
       OneSignalDeferred.push(async (OneSignal) => {
         try {
           await OneSignal.Notifications.requestPermission();
+
+          const granted = !!OneSignal.Notifications.permission;
+          updateNotifyStatusLabel(granted);
+
+          if (!granted) {
+            alert('알림이 차단되어 있어요. 브라우저 주소창 왼쪽의 자물쇠(또는 정보) 아이콘 → 사이트 설정에서 "알림"을 허용으로 바꿔주세요.');
+            return;
+          }
 
           const { data: { session } } = await supabaseClient.auth.getSession();
           if (!session) return;
@@ -1715,7 +1748,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           alert('알림 설정이 완료되었습니다. 등록하신 분야의 새 의뢰가 올라오면 알려드릴게요.');
         } catch (err) {
-          alert('알림 설정 중 문제가 발생했습니다. 브라우저 알림 권한을 확인해주세요.');
+          console.error('알림 설정 오류:', err);
+          alert('알림 설정 중 문제가 발생했습니다: ' + (err.message || err));
         }
       });
     };
