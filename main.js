@@ -1183,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyIds = [...new Set(offers.map(o => o.company_id))];
     const { data: companies } = await supabaseClient
       .from('profiles')
-      .select('id, company_name, career_years, completed_count')
+      .select('id, company_name, phone, career_years, completed_count, certifications, equipment')
       .in('id', companyIds);
     const companyMap = {};
     (companies || []).forEach(c => companyMap[c.id] = c);
@@ -1198,10 +1198,11 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.cssText = `border:1px solid ${isSelected ? '#ff6a3d' : '#ddd6c5'}; border-radius:14px; padding:16px; margin-bottom:14px; background:#fff;`;
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:15px; font-weight:700; color:#23262b;">${c.company_name || '업체'}</div>
+          <div style="font-size:15px; font-weight:700; color:#23262b;">${c.company_name || c.phone || '지원자'}</div>
           ${isSelected ? '<span style="font-size:11px; font-weight:700; color:#fff; background:#ff6a3d; padding:3px 10px; border-radius:999px;">선택됨</span>' : ''}
         </div>
         <div style="font-size:12px; color:#6c6f76; margin-top:2px;">완료 ${c.completed_count || 0}건 · 경력 ${c.career_years || '-'}년</div>
+        ${(c.equipment || c.certifications) ? `<div style="font-size:12px; color:#6c6f76; margin-top:4px;">${c.equipment ? '🛠 ' + c.equipment : ''}${(c.equipment && c.certifications) ? ' · ' : ''}${c.certifications ? '📜 ' + c.certifications : ''}</div>` : ''}
         ${o.note ? `<div style="font-size:12.5px; color:#23262b; margin-top:8px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${o.note}</div>` : ''}
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:12px; padding-top:10px; border-top:1px solid #ddd6c5;">
           <div>

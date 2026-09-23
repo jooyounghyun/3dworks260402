@@ -249,6 +249,42 @@
             <div id="myPageWorkerTypesDisplay" style="font-size:13px; color:#23262b; padding:10px; background:#f0ece2; border-radius:8px; margin-top:5px;">-</div>
             <button type="button" id="myPageEditWorkerTypesBtn" class="btn btn-secondary" style="margin-top:8px; padding:10px; font-size:12px;">공종 다시 선택하기</button>
           </div>
+          <div class="input-group">
+            <label for="myPageWorkerCareerYears">경력(년)</label>
+            <input type="number" id="myPageWorkerCareerYears" placeholder="예: 5" min="0">
+          </div>
+          <div class="input-group">
+            <label>나이대</label>
+            <div id="myPageAgeRangeGroup" class="env-selection" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
+              <button type="button" class="type-btn age-range-btn" data-value="20대" style="padding:8px 12px; font-size:12px;">20대</button>
+              <button type="button" class="type-btn age-range-btn" data-value="30대" style="padding:8px 12px; font-size:12px;">30대</button>
+              <button type="button" class="type-btn age-range-btn" data-value="40대" style="padding:8px 12px; font-size:12px;">40대</button>
+              <button type="button" class="type-btn age-range-btn" data-value="50대" style="padding:8px 12px; font-size:12px;">50대</button>
+              <button type="button" class="type-btn age-range-btn" data-value="60대 이상" style="padding:8px 12px; font-size:12px;">60대 이상</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="myPageWorkerCertifications">보유 자격증</label>
+            <input type="text" id="myPageWorkerCertifications" placeholder="예: 굴착기 운전기능사 등">
+          </div>
+          <div class="input-group">
+            <label for="myPageWorkerEquipment">보유 장비</label>
+            <input type="text" id="myPageWorkerEquipment" placeholder="예: 소형 타격기, 개인 공구 세트 등">
+          </div>
+          <div class="input-group">
+            <label for="myPageWorkerServiceArea">활동 지역</label>
+            <input type="text" id="myPageWorkerServiceArea" placeholder="예: 서울/경기, 전국 등">
+          </div>
+          <div class="input-group">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="myPageIsForeign" style="width:auto;">
+              외국인입니다
+            </label>
+          </div>
+          <div id="myPageVisaTypeGroup" class="input-group hidden">
+            <label for="myPageVisaType">체류자격(비자 종류)</label>
+            <input type="text" id="myPageVisaType" placeholder="예: E-9, H-2, F-4 등">
+          </div>
         </div>
 
         <div id="myPagePasswordSection" class="hidden" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
