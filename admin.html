@@ -70,6 +70,7 @@
     <div class="admin-tabs">
       <button type="button" class="admin-tab-btn active" data-admin-tab="requests">요청 관리</button>
       <button type="button" class="admin-tab-btn" data-admin-tab="inquiries">문의 관리</button>
+      <button type="button" class="admin-tab-btn" data-admin-tab="members">회원 관리</button>
     </div>
 
     <!-- 요청 관리 -->
@@ -88,6 +89,15 @@
     <!-- 문의 관리 -->
     <div id="inquiriesTab" style="display:none;">
       <div id="inquiriesList"></div>
+    </div>
+
+    <!-- 회원 관리 (인력풀/업체 현황) -->
+    <div id="membersTab" style="display:none;">
+      <div class="filter-row" id="memberFilterRow">
+        <button type="button" class="filter-btn active" data-member-type="company">업체</button>
+        <button type="button" class="filter-btn" data-member-type="worker">일용구직자</button>
+      </div>
+      <div id="membersList"></div>
     </div>
   </div>
 </div>
@@ -136,7 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const target = btn.dataset.adminTab;
       document.getElementById('requestsTab').style.display = target === 'requests' ? 'block' : 'none';
       document.getElementById('inquiriesTab').style.display = target === 'inquiries' ? 'block' : 'none';
+      document.getElementById('membersTab').style.display = target === 'members' ? 'block' : 'none';
       if (target === 'inquiries') loadInquiries();
+      if (target === 'members') loadMembers();
     });
   });
 
@@ -235,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error || !signed) return;
         photosBox.innerHTML = signed
           .filter(s => s.signedUrl)
-          .map(s => `<img src="${s.signedUrl}">`)
+          .map(s => `<a href="${s.signedUrl}" target="_blank"><img src="${s.signedUrl}" style="cursor:zoom-in;"></a>`)
           .join('');
       });
     });
@@ -337,6 +349,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('답변이 등록되었습니다.');
         loadInquiries();
       });
+    });
+  }
+
+  // --- 회원 관리 (인력풀/업체 현황) ---
+  let currentMemberType = 'company';
+
+  document.querySelectorAll('#memberFilterRow .filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#memberFilterRow .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMemberType = btn.dataset.memberType;
+      loadMembers();
+    });
+  });
+
+  async function loadMembers() {
+    const listEl = document.getElementById('membersList');
+    listEl.innerHTML = '<p class="empty-msg">불러오는 중...</p>';
+
+    const selectFields = currentMemberType === 'company'
+      ? 'id, company_name, phone, intro, specialties, career_years, certifications, service_area, completed_count, created_at'
+      : 'id, phone, worker_types, career_years, certifications, equipment, service_area, age_range, is_foreign, visa_type, completed_count, created_at';
+
+    const { data: members, error } = await supabaseClient
+      .from('profiles')
+      .select(selectFields)
+      .eq('user_type', currentMemberType)
+      .order('created_at', { ascending: false });
+
+    if (error) { listEl.innerHTML = '<p class="empty-msg">불러오기 실패: ' + error.message + '</p>'; return; }
+    if (!members || members.length === 0) { listEl.innerHTML = '<p class="empty-msg">등록된 회원이 없습니다.</p>'; return; }
+
+    listEl.innerHTML = `<p class="empty-msg" style="text-align:left; padding:0 0 10px;">총 ${members.length}명 등록됨</p>`;
+
+    members.forEach(m => {
+      const dateStr = new Date(m.created_at).toLocaleDateString('ko-KR');
+      const card = document.createElement('div');
+      card.className = 'inquiry-card';
+
+      let bodyHtml = '';
+      if (currentMemberType === 'company') {
+        const label = m.company_name || m.phone || '업체';
+        const specialtiesLabel = (m.specialties || []).map(s => REQUEST_TYPE_LABELS[s] || s).join(', ') || '-';
+        bodyHtml = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:15px; font-weight:700;">${label}</div>
+            <div class="req-meta">가입일 ${dateStr}</div>
+          </div>
+          <div class="req-meta" style="margin-top:4px;">${m.phone || '-'}</div>
+          ${m.intro ? `<div style="font-size:12.5px; margin-top:8px; color:var(--ink);">${m.intro}</div>` : ''}
+          <div style="font-size:12.5px; margin-top:8px; line-height:1.7;">
+            <b>주력분야</b> ${specialtiesLabel}<br>
+            <b>경력</b> ${m.career_years || '-'}년 · <b>활동지역</b> ${m.service_area || '-'}<br>
+            <b>자격증</b> ${m.certifications || '-'}<br>
+            <b>완료 건수</b> ${m.completed_count || 0}건
+          </div>
+        `;
+      } else {
+        const label = m.phone || '구직자';
+        const workerTypesLabel = (m.worker_types || []).join(', ') || '-';
+        bodyHtml = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:15px; font-weight:700;">${label}</div>
+            <div class="req-meta">가입일 ${dateStr}</div>
+          </div>
+          <div style="font-size:12.5px; margin-top:8px; line-height:1.7;">
+            <b>공종</b> ${workerTypesLabel}<br>
+            <b>경력</b> ${m.career_years || '-'}년 · <b>나이대</b> ${m.age_range || '-'} · <b>활동지역</b> ${m.service_area || '-'}<br>
+            <b>자격증</b> ${m.certifications || '-'}<br>
+            <b>보유장비</b> ${m.equipment || '-'}<br>
+            ${m.is_foreign ? `<b>외국인</b> 예 (체류자격: ${m.visa_type || '미입력'})<br>` : ''}
+            <b>구직 활동 건수</b> ${m.completed_count || 0}건
+          </div>
+        `;
+      }
+
+      card.innerHTML = bodyHtml;
+      listEl.appendChild(card);
     });
   }
 

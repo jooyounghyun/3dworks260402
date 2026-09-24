@@ -910,6 +910,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 사진 확대보기
+  window.openLightbox = function(url) {
+    const box = document.getElementById('photoLightbox');
+    const img = document.getElementById('photoLightboxImg');
+    if (!box || !img) return;
+    img.src = url;
+    box.style.display = 'flex';
+  };
+  window.closeLightbox = function() {
+    const box = document.getElementById('photoLightbox');
+    if (box) box.style.display = 'none';
+  };
+
   const LOCATION_FIELD_MAP = {
     demolition: 'demoLocation', waste: 'wasteLocation', restoration: 'restoreLocation',
     electric: 'electricLocation', pipe: 'pipeLocation', manpower: 'manpowerLocation'
@@ -1057,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error || !signed) return;
         photosBox.innerHTML = signed
           .filter(s => s.signedUrl)
-          .map(s => `<img src="${s.signedUrl}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5;">`)
+          .map(s => `<img src="${s.signedUrl}" onclick="window.openLightbox('${s.signedUrl}')" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #ddd6c5; cursor:zoom-in;">`)
           .join('');
       });
     });
