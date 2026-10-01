@@ -1117,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { data: offers } = await supabaseClient
       .from('offers')
-      .select('id, request_id, price, available_date, status, created_at')
+      .select('id, request_id, price, available_date, note, status, created_at')
       .eq('company_id', userId)
       .order('created_at', { ascending: false });
 
@@ -1127,9 +1127,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const requestIds = [...new Set(offers.map(o => o.request_id))];
-    const { data: requests } = await supabaseClient.from('work_requests').select('id, request_type').in('id', requestIds);
+    const { data: requests } = await supabaseClient.from('work_requests').select('id, request_type, status, payload, user_id').in('id', requestIds);
     const requestMap = {};
     (requests || []).forEach(r => requestMap[r.id] = r);
+
+    const employerIds = [...new Set((requests || []).map(r => r.user_id))];
+    const { data: employers } = await supabaseClient.from('profiles').select('id, phone, company_name').in('id', employerIds);
+    const employerMap = {};
+    (employers || []).forEach(e => employerMap[e.id] = e);
+
+    const { data: myProfile } = await supabaseClient.from('profiles').select('phone, company_name, user_type').eq('id', userId).maybeSingle();
 
     box.innerHTML = '';
     offers.forEach(o => {
@@ -1151,9 +1158,120 @@ document.addEventListener('DOMContentLoaded', () => {
         chatBtn.style.cssText = 'width:100%; margin-top:10px; padding:9px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;';
         chatBtn.onclick = () => openChatModal(o.request_id, o.id, 'company', '고객과 채팅');
         card.appendChild(chatBtn);
+
+        if (req.request_type === 'manpower') {
+          const employer = employerMap[req.user_id] || {};
+          const docRow = document.createElement('div');
+          docRow.style.cssText = 'display:flex; gap:8px; margin-top:8px;';
+
+          const contractBtn = document.createElement('button');
+          contractBtn.type = 'button';
+          contractBtn.innerText = '근로계약서';
+          contractBtn.style.cssText = 'flex:1; padding:9px; border-radius:8px; border:1px solid #ffb703; background:#fff; color:#8a6d00; font-weight:700; font-size:12px; cursor:pointer;';
+          contractBtn.onclick = () => openLaborDocument('contract', o, req, employer, myProfile);
+          docRow.appendChild(contractBtn);
+
+          if (req.status === 'completed') {
+            const payslipBtn = document.createElement('button');
+            payslipBtn.type = 'button';
+            payslipBtn.innerText = '임금명세서';
+            payslipBtn.style.cssText = 'flex:1; padding:9px; border-radius:8px; border:1px solid #ffb703; background:#fff; color:#8a6d00; font-weight:700; font-size:12px; cursor:pointer;';
+            payslipBtn.onclick = () => openLaborDocument('payslip', o, req, employer, myProfile);
+            docRow.appendChild(payslipBtn);
+          }
+
+          card.appendChild(docRow);
+        }
       }
       box.appendChild(card);
     });
+  }
+
+  // --- 근로계약서 / 임금명세서 (인쇄용 문서 생성) ---
+  function openLaborDocument(docType, offer, request, employer, worker) {
+    const fields = (request.payload && request.payload.fields) || {};
+    const location = fields.manpowerLocation || '-';
+    const startDate = fields.manpowerStartDate || '-';
+    const workDays = fields.manpowerWorkDays || '-';
+    const startTime = fields.manpowerStartTime || '-';
+    const endTime = fields.manpowerEndTime || '-';
+
+    const employerName = employer.company_name || employer.phone || '-';
+    const employerContact = employer.phone || '-';
+    const workerName = worker.company_name || worker.phone || '-';
+    const workerContact = worker.phone || '-';
+    const today = new Date().toLocaleDateString('ko-KR');
+
+    let title, bodyHtml;
+
+    if (docType === 'contract') {
+      title = '일용직 근로계약서';
+      bodyHtml = `
+        <p>${employerName}(이하 "사업주")과(와) ${workerName}(이하 "근로자")은(는) 다음과 같이 근로계약을 체결한다.</p>
+        <table>
+          <tr><th>근무 장소</th><td>${location}</td></tr>
+          <tr><th>업무 내용</th><td>${REQUEST_TYPE_LABELS[request.request_type] || request.request_type}</td></tr>
+          <tr><th>근로 시작일</th><td>${startDate}</td></tr>
+          <tr><th>근로 일수</th><td>${workDays}일</td></tr>
+          <tr><th>근로 시간</th><td>${startTime} ~ ${endTime}</td></tr>
+          <tr><th>임금(일당)</th><td>${offer.price || '-'}</td></tr>
+          <tr><th>임금 지급일</th><td>작업 종료 후 당일 (근로자와 협의 시 익일)</td></tr>
+          <tr><th>지급 방법</th><td>근로자 명의 계좌로 직접 송금</td></tr>
+        </table>
+        <p style="margin-top:24px; font-size:12px; color:#555;">
+          ※ 본 계약서는 3D해결사 플랫폼을 통해 매칭된 작업 건에 대해 자동 생성되었습니다.<br>
+          ※ 4대보험, 산재보험 등 법정 사항은 관련 법령에 따라 사업주가 별도 이행합니다.
+        </p>
+        <div class="sign-row">
+          <div><div>사업주: ${employerName}</div><div>연락처: ${employerContact}</div><div style="margin-top:30px;">(서명 또는 인)</div></div>
+          <div><div>근로자: ${workerName}</div><div>연락처: ${workerContact}</div><div style="margin-top:30px;">(서명 또는 인)</div></div>
+        </div>
+      `;
+    } else {
+      title = '임금명세서';
+      bodyHtml = `
+        <table>
+          <tr><th>지급 대상</th><td>${workerName} (${workerContact})</td></tr>
+          <tr><th>지급자(사업주)</th><td>${employerName}</td></tr>
+          <tr><th>근무 장소</th><td>${location}</td></tr>
+          <tr><th>업무 내용</th><td>${REQUEST_TYPE_LABELS[request.request_type] || request.request_type}</td></tr>
+          <tr><th>근로 일수</th><td>${workDays}일</td></tr>
+          <tr><th>임금 지급일</th><td>${today}</td></tr>
+        </table>
+        <table style="margin-top:16px;">
+          <tr><th>지급 항목</th><th>금액</th></tr>
+          <tr><td>기본급(일당)</td><td>${offer.price || '-'}</td></tr>
+          <tr><td>공제액</td><td>- (세금 공제는 별도 정산)</td></tr>
+          <tr style="font-weight:bold;"><td>실지급액</td><td>${offer.price || '-'}</td></tr>
+        </table>
+        <p style="margin-top:24px; font-size:12px; color:#555;">
+          ※ 본 명세서는 3D해결사 플랫폼을 통해 자동 생성되었으며, 세금(갑근세 등) 공제는 포함되어 있지 않습니다. 정확한 세액은 사업주와 별도 확인해주세요.
+        </p>
+      `;
+    }
+
+    const html = `
+      <!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title}</title>
+      <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 40px; color: #23262b; max-width: 700px; margin: 0 auto; }
+        h1 { font-size: 22px; text-align: center; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 10px; font-size: 13px; text-align: left; }
+        th { background: #f0ece2; width: 140px; }
+        .sign-row { display: flex; justify-content: space-between; margin-top: 50px; font-size: 13px; gap: 40px; }
+        .print-btn { display: block; margin: 0 auto 20px; padding: 10px 20px; font-size: 14px; cursor: pointer; }
+        @media print { .print-btn { display: none; } }
+      </style></head>
+      <body>
+        <button class="print-btn" onclick="window.print()">🖨 인쇄 / PDF로 저장</button>
+        <h1>${title}</h1>
+        ${bodyHtml}
+      </body></html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
+    else { alert('팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해주세요.'); }
   }
 
   // --- 받은 제안 (고객) ---
