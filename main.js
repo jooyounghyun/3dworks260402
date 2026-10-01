@@ -1465,7 +1465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!session || !session.user) return;
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder, phone, intro, specialties, career_years, certifications, portfolio_photos, service_area')
+      .select('user_type, company_name, business_reg_no, worker_types, address, bank_name, bank_account_number, account_holder, phone, intro, specialties, career_years, certifications, portfolio_photos, service_area, age_range, equipment, is_foreign, visa_type, founding_member')
       .eq('id', session.user.id)
       .maybeSingle();
     if (!profile) return;
@@ -1527,6 +1527,37 @@ document.addEventListener('DOMContentLoaded', () => {
       workerFields.classList.remove('hidden');
       document.getElementById('myPageWorkerTypesDisplay').innerText =
         (profile.worker_types && profile.worker_types.length) ? profile.worker_types.join(', ') : '등록된 공종이 없습니다';
+      document.getElementById('myPageWorkerCareerYears').value = profile.career_years || '';
+      document.getElementById('myPageWorkerCertifications').value = profile.certifications || '';
+      document.getElementById('myPageWorkerEquipment').value = profile.equipment || '';
+      document.getElementById('myPageWorkerServiceArea').value = profile.service_area || '';
+      document.querySelectorAll('#myPageAgeRangeGroup .age-range-btn').forEach(btn => {
+        btn.classList.toggle('selected', profile.age_range === btn.dataset.value);
+      });
+      document.getElementById('myPageIsForeign').checked = !!profile.is_foreign;
+      document.getElementById('myPageVisaTypeGroup').classList.toggle('hidden', !profile.is_foreign);
+      document.getElementById('myPageVisaType').value = profile.visa_type || '';
+    }
+
+    const foundingSection = document.getElementById('myPageFoundingSection');
+    if (foundingSection) {
+      if (profile.founding_member) {
+        foundingSection.classList.remove('hidden');
+        const { count } = await supabaseClient
+          .from('work_requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .eq('request_type', 'manpower')
+          .eq('status', 'completed');
+        const completed = count || 0;
+        const progress = completed % 10;
+        const freeReady = completed > 0 && progress === 0;
+        document.getElementById('foundingProgressText').innerText =
+          freeReady ? `${completed}건 완료 — 다음 인력지원 1건 무료예요!` : `${progress} / 10건`;
+        document.getElementById('foundingProgressBar').style.width = (freeReady ? 100 : progress * 10) + '%';
+      } else {
+        foundingSection.classList.add('hidden');
+      }
     }
 
     document.getElementById('myPageBankName').value = profile.bank_name || '';
@@ -1578,6 +1609,17 @@ document.addEventListener('DOMContentLoaded', () => {
           const newPhotoUrls = await uploadPortfolioPhotos(portfolioInput, myPageCurrentUserId, 'portfolio');
           updateFields.portfolio_photos = myPageExistingPortfolioPhotos.concat(newPhotoUrls);
           if (portfolioInput && portfolioInput._resetStoredFiles) portfolioInput._resetStoredFiles();
+        } else if (currentProfile && currentProfile.user_type === 'worker') {
+          updateFields.career_years = document.getElementById('myPageWorkerCareerYears').value
+            ? parseInt(document.getElementById('myPageWorkerCareerYears').value, 10) : null;
+          updateFields.certifications = document.getElementById('myPageWorkerCertifications').value;
+          updateFields.equipment = document.getElementById('myPageWorkerEquipment').value;
+          updateFields.service_area = document.getElementById('myPageWorkerServiceArea').value;
+          const selectedAgeBtn = document.querySelector('#myPageAgeRangeGroup .age-range-btn.selected');
+          updateFields.age_range = selectedAgeBtn ? selectedAgeBtn.dataset.value : null;
+          updateFields.is_foreign = document.getElementById('myPageIsForeign').checked;
+          updateFields.visa_type = document.getElementById('myPageIsForeign').checked
+            ? document.getElementById('myPageVisaType').value : null;
         }
 
         const { error } = await supabaseClient.from('profiles').update(updateFields).eq('id', myPageCurrentUserId);
@@ -1607,6 +1649,13 @@ document.addEventListener('DOMContentLoaded', () => {
       await openMyPageModal();
       showMyPageView('Bank');
     };
+  }
+
+  const myPageIsForeignCheckbox = document.getElementById('myPageIsForeign');
+  if (myPageIsForeignCheckbox) {
+    myPageIsForeignCheckbox.addEventListener('change', () => {
+      document.getElementById('myPageVisaTypeGroup').classList.toggle('hidden', !myPageIsForeignCheckbox.checked);
+    });
   }
 
   const myPageEditWorkerTypesBtn = document.getElementById('myPageEditWorkerTypesBtn');
