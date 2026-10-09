@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 상세 모달들
   const demolitionModal = document.getElementById('demolitionModal');
+  const otherRequestModal = document.getElementById('otherRequestModal');
   const wasteModal = document.getElementById('wasteModal');
   const electricModal = document.getElementById('electricModal');
   const pipeModal = document.getElementById('pipeModal');
@@ -474,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
-      demolitionModal, wasteModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal,
+      demolitionModal, wasteModal, otherRequestModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal,
       document.getElementById('iosAddHomeModal')
     ];
     modals.forEach(modal => {
@@ -1472,6 +1473,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- 팀으로 맡기기 > 기타: 문의 접수 (고객센터 문의 테이블에 저장, 관리자 '문의 관리'에 표시) ---
+  const submitOtherRequestBtn = document.getElementById('submitOtherRequestBtn');
+  if (submitOtherRequestBtn) {
+    submitOtherRequestBtn.onclick = async () => {
+      const content = document.getElementById('otherRequestContent').value.trim();
+      if (!content) return alert('필요한 작업 내용을 입력해주세요.');
+      const user = await requireLogin();
+      if (!user) return;
+      const location = document.getElementById('otherRequestLocation').value.trim();
+      const date = document.getElementById('otherRequestDate').value;
+      const lines = ['[팀으로 맡기기 · 기타 작업 문의]'];
+      if (location) lines.push('현장 위치: ' + location);
+      if (date) lines.push('희망 날짜: ' + date);
+      lines.push('', content);
+
+      const originalText = submitOtherRequestBtn.innerText;
+      submitOtherRequestBtn.disabled = true;
+      submitOtherRequestBtn.innerText = '접수 중...';
+      try {
+        const { error } = await supabaseClient.from('support_inquiries').insert({
+          user_id: user.id,
+          content: lines.join('\n')
+        });
+        if (error) throw error;
+        alert('문의가 접수되었습니다. 담당자가 확인 후 연락드릴게요.');
+        document.getElementById('otherRequestContent').value = '';
+        document.getElementById('otherRequestLocation').value = '';
+        document.getElementById('otherRequestDate').value = '';
+        closeAllModals();
+      } catch (err) {
+        console.error(err);
+        alert('문의 접수 중 문제가 발생했습니다: ' + (err.message || err));
+      } finally {
+        submitOtherRequestBtn.disabled = false;
+        submitOtherRequestBtn.innerText = originalText;
+      }
+    };
+  }
+
   const submitSupportBtn = document.getElementById('submitSupportBtn');
   if (submitSupportBtn) {
     submitSupportBtn.onclick = async () => {
@@ -2289,6 +2329,7 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
       else if (txt === '전기 공사') electricModal.classList.remove('hidden');
       else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
+        else if (txt === '기타') otherRequestModal.classList.remove('hidden');
     };
   } else {
     // confirmServiceBtn이 정의되지 않았을 경우를 대비
@@ -2302,6 +2343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
           else if (txt === '전기 공사') electricModal.classList.remove('hidden');
         else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
+        else if (txt === '기타') otherRequestModal.classList.remove('hidden');
       };
     }
   }

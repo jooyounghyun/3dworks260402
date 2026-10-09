@@ -763,13 +763,13 @@
   </div>
 
   <!-- ✅ 주요 서비스 선택 모달 -->
-  <div id="serviceModal" class="modal hidden">
+  <div id="serviceModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>주요 서비스 선택</h2>
+        <h2>팀으로 맡기기</h2>
         <button id="closeServiceBtn" class="close-btn">&times;</button>
       </div>
-      <p class="step-title">원하시는 서비스를 선택해주세요</p>
+      <div class="mp-step"><span class="mp-num">1</span>어떤 작업이 필요하세요?</div>
       <div class="service-selection">
         <button class="service-item-btn">상가 철거</button>
         <button class="service-item-btn">폐기물 처리</button>
@@ -777,17 +777,51 @@
         <button class="service-item-btn">전기 공사</button>
         <button class="service-item-btn">기타</button>
       </div>
-      <button id="confirmServiceBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">선택 완료</button>
+      <p class="mp-note">작업을 선택하면 다음 화면에서 현장 정보를 입력합니다.</p>
+      <div class="mp-submit-bar"><button id="confirmServiceBtn" class="btn btn-primary login-submit">선택 완료</button></div>
+    </div>
+  </div>
+
+  <!-- ✅ 기타 작업 문의 접수 모달 (팀으로 맡기기 > 기타) -->
+  <div id="otherRequestModal" class="modal hidden team-sheet">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>기타 작업 문의</h2>
+        <button id="closeOtherRequestBtn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="mp-step"><span class="mp-num">1</span>어떤 작업이 필요하세요?</div>
+      <div class="input-group">
+        <label for="otherRequestContent">작업 내용</label>
+        <textarea id="otherRequestContent" rows="5" placeholder="예: 간판 철거 후 재설치, 방화문 교체 등 필요한 작업을 자유롭게 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+      </div>
+
+      <div class="mp-step"><span class="mp-num">2</span>현장 정보 <span style="font-weight:500; font-size:12px; color:var(--ink-muted);">(선택)</span></div>
+      <div class="input-group">
+        <label for="otherRequestLocation">현장 위치</label>
+        <input type="text" id="otherRequestLocation" placeholder="예: 서울특별시 강남구 역삼동">
+        <p style="font-size:11px; color:var(--ink-muted); margin-top:4px;">📍 서울·수도권 중심으로 서비스 중입니다</p>
+      </div>
+      <div class="input-group">
+        <label for="otherRequestDate">작업 희망 날짜</label>
+        <input type="date" id="otherRequestDate">
+      </div>
+      <p class="mp-note">접수 후 담당자가 확인해서 연락드립니다. 답변은 마이페이지 &gt; 고객센터 문의에서도 볼 수 있어요.</p>
+
+      <div class="mp-submit-bar"><button id="submitOtherRequestBtn" class="btn btn-primary login-submit">문의 접수하기</button></div>
     </div>
   </div>
 
   <!-- ✅ 상가 철거 상세 정보 입력 모달 -->
-  <div id="demolitionModal" class="modal hidden">
+  <div id="demolitionModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
         <h2>상가 철거 상세 정보</h2>
         <button id="closeDemolitionBtn" class="close-btn">&times;</button>
       </div>
+
+      <div class="mp-step"><span class="mp-num">1</span>현장 위치 · 규모</div>
+
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="demoLocation">현장 위치</label>
         <input type="text" id="demoLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
@@ -804,6 +838,8 @@
           <input type="number" id="demoHeight" placeholder="예: 3.5" step="0.1">
         </div>
       </div>
+
+      <div class="mp-step"><span class="mp-num">2</span>일정 · 현장 여건</div>
 
       <div class="modal-row" style="gap: 10px; margin-top: 10px;">
         <div class="input-group" style="flex: 1;">
@@ -832,6 +868,8 @@
           </div>
         </div>
       </div>
+
+      <div class="mp-step"><span class="mp-num">3</span>작업 내용</div>
 
       <!-- 추가된 세부 선택 항목 -->
       <div class="input-group" style="margin-top: 15px;">
@@ -867,6 +905,8 @@
         <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">마감재·색상 등은 아래 상세 요청사항에 적어주세요.</p>
       </div>
 
+      <div class="mp-step"><span class="mp-num">4</span>요청사항 · 현장 사진</div>
+
       <div class="input-group" style="margin-top: 15px;">
         <label for="demoDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
         <textarea id="demoDetailNote" rows="3" placeholder="예: 간판도 같이 철거 부탁드립니다, 특정 요일은 피해주세요 등" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
@@ -880,23 +920,27 @@
         </div>
         <div id="photoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
-      <button id="submitDemolitionBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+      <div class="mp-submit-bar"><button id="submitDemolitionBtn" class="btn btn-primary login-submit">전문가에게 전달하기</button></div>
     </div>
   </div>
 
   <!-- ✅ 폐기물 처리 상세 정보 입력 모달 -->
-  <div id="wasteModal" class="modal hidden">
+  <div id="wasteModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
         <h2>폐기물 처리 상세 정보</h2>
         <button id="closeWasteBtn" class="close-btn">&times;</button>
       </div>
-      
+
+      <div class="mp-step"><span class="mp-num">1</span>현장 위치</div>
+
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="wasteLocation">현장 위치</label>
         <input type="text" id="wasteLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
         <p style="font-size:11px; color:var(--ink-muted); margin-top:4px;">📍 서울·수도권 중심으로 서비스 중입니다</p>
       </div>
+
+      <div class="mp-step"><span class="mp-num">2</span>일정 · 현장 여건</div>
 
       <div class="modal-row" style="gap: 10px; margin-bottom: 15px;">
         <div class="input-group" style="flex: 1;">
@@ -916,16 +960,6 @@
       </div>
 
       <div class="input-group" style="margin-bottom: 15px;">
-        <label>폐기물 종류 (중복 선택 가능)</label>
-        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
-          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">혼합 폐기물</button>
-          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">목재/가구</button>
-          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">폐콘크리트</button>
-          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">기타/가전</button>
-        </div>
-      </div>
-
-      <div class="input-group" style="margin-bottom: 15px;">
         <label>엘리베이터 유무</label>
         <div class="env-selection" style="display: flex; gap: 10px; margin-top: 5px;">
           <button type="button" class="env-btn elevator-btn type-btn" data-value="있음" style="flex: 1; padding: 10px; font-size: 13px;">있음</button>
@@ -941,6 +975,20 @@
         </div>
       </div>
 
+      <div class="mp-step"><span class="mp-num">3</span>폐기물 종류</div>
+
+      <div class="input-group" style="margin-bottom: 15px;">
+        <label>폐기물 종류 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">혼합 폐기물</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">목재/가구</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">폐콘크리트</button>
+          <button type="button" class="waste-type-btn type-btn" style="padding: 10px; font-size: 13px;">기타/가전</button>
+        </div>
+      </div>
+
+      <div class="mp-step"><span class="mp-num">4</span>요청사항 · 현장 사진</div>
+
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="wasteDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
         <textarea id="wasteDetailNote" rows="3" placeholder="예: 냉장고 등 대형가전 포함, 새벽 시간대 수거 희망 등" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
@@ -955,18 +1003,20 @@
         <div id="wastePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
 
-      <button id="submitWasteBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+      <div class="mp-submit-bar"><button id="submitWasteBtn" class="btn btn-primary login-submit">전문가에게 전달하기</button></div>
     </div>
   </div>
 
   <!-- ✅ 전기 공사 상세 정보 입력 모달 (신규 추가) -->
-  <div id="electricModal" class="modal hidden">
+  <div id="electricModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
         <h2>전기 공사 상세 정보</h2>
         <button id="closeElectricBtn" class="close-btn">&times;</button>
       </div>
-      
+
+      <div class="mp-step"><span class="mp-num">1</span>현장 위치 · 규모</div>
+
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="electricLocation">현장 위치</label>
         <input type="text" id="electricLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
@@ -984,6 +1034,8 @@
         </div>
       </div>
 
+      <div class="mp-step"><span class="mp-num">2</span>일정 · 현장 여건</div>
+
       <div class="modal-row" style="gap: 10px; margin-top: 10px;">
         <div class="input-group" style="flex: 1;">
           <label for="electricFloor">현장 층수</label>
@@ -993,19 +1045,6 @@
           <label for="electricDate">작업 희망 날짜</label>
           <input type="date" id="electricDate">
         </div>
-      </div>
-
-      <div class="input-group" style="margin-top: 15px;">
-        <label>공사 유형 (중복 선택 가능)</label>
-        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
-          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">신규 인테리어</button>
-          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">노후 설비 교체</button>
-          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">조명/스위치 교체</button>
-          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">증설/승압 공사</button>
-          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">누전/긴급 수리</button>
-          <button type="button" class="electric-type-btn type-btn" id="electricOtherBtn" style="padding: 10px; font-size: 13px;">기타</button>
-        </div>
-        <input type="text" id="electricOtherInput" placeholder="기타 공사 내용을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
       </div>
 
       <div class="input-group" style="margin-top: 15px;">
@@ -1041,6 +1080,23 @@
         </div>
       </div>
 
+      <div class="mp-step"><span class="mp-num">3</span>공사 유형</div>
+
+      <div class="input-group" style="margin-top: 15px;">
+        <label>공사 유형 (중복 선택 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">신규 인테리어</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">노후 설비 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">조명/스위치 교체</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">증설/승압 공사</button>
+          <button type="button" class="electric-type-btn type-btn" style="padding: 10px; font-size: 13px;">누전/긴급 수리</button>
+          <button type="button" class="electric-type-btn type-btn" id="electricOtherBtn" style="padding: 10px; font-size: 13px;">기타</button>
+        </div>
+        <input type="text" id="electricOtherInput" placeholder="기타 공사 내용을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
+      </div>
+
+      <div class="mp-step"><span class="mp-num">4</span>요청사항 · 현장 사진</div>
+
       <div class="input-group" style="margin-top: 15px;">
         <label for="electricDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
         <textarea id="electricDetailNote" rows="3" placeholder="예: 분전반 위치, 원하는 콘센트 개수/위치 등 구체적으로 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
@@ -1054,23 +1110,27 @@
         </div>
         <div id="electricPhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
-      <button id="submitElectricBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+      <div class="mp-submit-bar"><button id="submitElectricBtn" class="btn btn-primary login-submit">전문가에게 전달하기</button></div>
     </div>
   </div>
 
   <!-- ✅ 배관막힘 누수공사 상세 정보 입력 모달 (신규 추가) -->
-  <div id="pipeModal" class="modal hidden">
+  <div id="pipeModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
         <h2>배관막힘 누수공사 상세 정보</h2>
         <button id="closePipeBtn" class="close-btn">&times;</button>
       </div>
-      
+
+      <div class="mp-step"><span class="mp-num">1</span>현장 위치</div>
+
       <div class="input-group" style="margin-bottom: 15px;">
         <label for="pipeLocation">현장 위치</label>
         <input type="text" id="pipeLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
         <p style="font-size:11px; color:var(--ink-muted); margin-top:4px;">📍 서울·수도권 중심으로 서비스 중입니다</p>
       </div>
+
+      <div class="mp-step"><span class="mp-num">2</span>일정 · 현장 여건</div>
 
       <div class="modal-row" style="gap: 10px; margin-top: 10px;">
         <div class="input-group" style="flex: 1;">
@@ -1082,6 +1142,25 @@
           <input type="date" id="pipeDate">
         </div>
       </div>
+
+      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label>엘리베이터 사용</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label>주차 가능 여부</label>
+          <div class="env-selection" style="display: flex; gap: 5px;">
+            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
+            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
+          </div>
+          </div>
+      </div>
+
+      <div class="mp-step"><span class="mp-num">3</span>작업 내용</div>
 
       <div class="input-group" style="margin-top: 15px;">
         <label>작업 유형 (중복 선택 가능)</label>
@@ -1114,22 +1193,7 @@
         </div>
       </div>
 
-      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
-        <div class="input-group" style="flex: 1;">
-          <label>엘리베이터 사용</label>
-          <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
-            <button type="button" class="type-btn pipe-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
-          </div>
-        </div>
-        <div class="input-group" style="flex: 1;">
-          <label>주차 가능 여부</label>
-          <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
-            <button type="button" class="type-btn pipe-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
-          </div>
-          </div>
-      </div>
+      <div class="mp-step"><span class="mp-num">4</span>요청사항 · 현장 사진</div>
 
       <div class="input-group" style="margin-top: 15px;">
         <label for="pipeDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
@@ -1144,7 +1208,7 @@
         </div>
         <div id="pipePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
-      <button id="submitPipeBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
+      <div class="mp-submit-bar"><button id="submitPipeBtn" class="btn btn-primary login-submit">전문가에게 전달하기</button></div>
     </div>
   </div>
 
