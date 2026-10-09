@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 마이페이지 ---
   const REQUEST_TYPE_LABELS = {
-    demolition: '상가 철거', waste: '폐기물 처리', restoration: '원상복구',
+    demolition: '철거', waste: '폐기물 처리', restoration: '원상복구',
     electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
   };
   const STATUS_LABELS = { pending: '접수 대기', payment_pending: '결제 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
@@ -1013,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (myProfile.user_type === 'company') {
       if (myProfile.specialties && myProfile.specialties.length) {
         const specs = new Set(myProfile.specialties);
-        if (specs.has('restoration')) specs.add('demolition'); // 원상복구는 상가 철거 옵션으로 통합됨
+        if (specs.has('restoration')) specs.add('demolition'); // 원상복구는 철거 옵션으로 통합됨
         query = query.in('request_type', Array.from(specs));
       } else {
         query = query.neq('request_type', 'manpower');
@@ -2361,7 +2361,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.classList.toggle('selected');
   });
 
-  // 상가 철거: '원상복구 필요' 선택 시에만 복구 항목 노출
+  // 철거: '원상복구 필요' 선택 시에만 복구 항목 노출
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.demo-restore-opt-btn')) return;
     const yes = document.getElementById('demoRestoreYesBtn');
