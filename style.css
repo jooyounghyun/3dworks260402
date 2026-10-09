@@ -800,3 +800,12 @@ footer {
 /* 서비스 선택 화면은 내용이 짧아서, 선택 완료 버튼을 화면 맨 아래에 두기 */
 #serviceModal .modal-content { display: flex; flex-direction: column; }
 #serviceModal .mp-submit-bar { margin-top: auto; }
+
+/* 팀으로 맡기기 서비스 선택: 세로로 꽉 찬 큰 카드 5개 */
+#serviceModal .service-selection { display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(5, 1fr); gap: 10px; flex: 1; min-height: 0; margin-bottom: 8px; }
+#serviceModal .service-item-btn { display: flex !important; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; text-align: left; padding: 10px 16px !important; min-height: 64px; border-radius: 14px !important; }
+#serviceModal .svc-ic { font-size: 30px; line-height: 1; flex: 0 0 auto; }
+#serviceModal .svc-tx { display: flex; flex-direction: column; gap: 3px; }
+#serviceModal .svc-tx b { font-size: 17px; font-weight: 800; }
+#serviceModal .svc-tx small { font-size: 12px; font-weight: 400; opacity: .75; }
+@media (min-width: 601px) { #serviceModal .service-selection { min-height: 420px; } }
