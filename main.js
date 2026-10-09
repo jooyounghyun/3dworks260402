@@ -2324,12 +2324,12 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmServiceBtn.onclick = () => {
       const selected = document.querySelector('.service-item-btn.selected');
       if (!selected) return alert('서비스를 선택해주세요.');
-      const txt = selected.innerText.trim(); closeAllModals();
-      if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
-      else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
-      else if (txt === '전기 공사') electricModal.classList.remove('hidden');
-      else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
-        else if (txt === '기타') otherRequestModal.classList.remove('hidden');
+      const txt = selected.dataset.service; closeAllModals();
+      if (txt === 'demolition') demolitionModal.classList.remove('hidden');
+      else if (txt === 'waste') wasteModal.classList.remove('hidden');
+      else if (txt === 'electric') electricModal.classList.remove('hidden');
+      else if (txt === 'pipe') pipeModal.classList.remove('hidden');
+        else if (txt === 'other') otherRequestModal.classList.remove('hidden');
     };
   } else {
     // confirmServiceBtn이 정의되지 않았을 경우를 대비
@@ -2338,12 +2338,12 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmBtn.onclick = () => {
         const selected = document.querySelector('.service-item-btn.selected');
         if (!selected) return alert('서비스를 선택해주세요.');
-        const txt = selected.innerText.trim(); closeAllModals();
-        if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
-        else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
-          else if (txt === '전기 공사') electricModal.classList.remove('hidden');
-        else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
-        else if (txt === '기타') otherRequestModal.classList.remove('hidden');
+        const txt = selected.dataset.service; closeAllModals();
+        if (txt === 'demolition') demolitionModal.classList.remove('hidden');
+        else if (txt === 'waste') wasteModal.classList.remove('hidden');
+          else if (txt === 'electric') electricModal.classList.remove('hidden');
+        else if (txt === 'pipe') pipeModal.classList.remove('hidden');
+        else if (txt === 'other') otherRequestModal.classList.remove('hidden');
       };
     }
   }
