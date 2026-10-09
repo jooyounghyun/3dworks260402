@@ -740,3 +740,20 @@ footer {
   #manpowerModal .modal-content { width: 100%; max-width: none; height: 100%; max-height: 100%; border-radius: 0; border-left: none; border-right: none; padding: 16px 16px 0; }
   .mp-submit-bar { margin: 20px -16px 0; padding-left: 16px; padding-right: 16px; }
 }
+
+/* ✅ 날짜·시간 입력칸: 휴대폰(iOS)에서 기본 폭 때문에 옆 칸을 밀어내지 않도록 고정 */
+.mp-date-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 8px; margin-bottom: 12px; align-items: end; }
+.mp-date-row .input-group { min-width: 0; margin-bottom: 0 !important; }
+.modal-content input[type="date"],
+.modal-content input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  text-align: left;
+}
+.modal-content input[type="date"]::-webkit-date-and-time-value,
+.modal-content input[type="time"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
+.mp-date-row select { min-height: 40px; }
