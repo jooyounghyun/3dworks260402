@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       modal.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
       if (photoInputEl && photoInputEl._resetStoredFiles) photoInputEl._resetStoredFiles();
       modal.querySelectorAll('.type-btn.selected').forEach(b => b.classList.remove('selected'));
+      if (requestType === 'manpower' && window.resetManpowerForm) window.resetManpowerForm();
 
       // 관련 업체/구직자한테 새 의뢰 알림 (실패해도 요청 접수 자체엔 영향 없도록 별도 처리)
       supabaseClient.functions.invoke('notify-new-request', { body: { requestType } })
@@ -864,12 +865,28 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const STATUS_LABELS = { pending: '접수 대기', payment_pending: '결제 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
 
+  // '아무때나 3시간' 의뢰: 인력이 정해진 뒤 의뢰자가 시작 시각을 확정 (근로계약서에 시각이 들어가야 해서)
+  async function confirmManpowerTime(r, userId) {
+    const input = prompt('작업 시작 시각을 24시간 형식으로 입력해주세요. (예: 14:00)\n작업은 3시간 동안 진행됩니다.');
+    if (input === null) return;
+    const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(input.trim());
+    if (!m) return alert('시각 형식이 올바르지 않습니다. 예: 14:00');
+    const startMin = Number(m[1]) * 60 + Number(m[2]);
+    if (startMin + 180 > 24 * 60) return alert('같은 날 안에 3시간 작업이 끝나도록 시작 시각을 정해주세요.');
+    const fmt = (min) => String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+    const fields = { ...((r.payload && r.payload.fields) || {}), manpowerStartTime: fmt(startMin), manpowerEndTime: fmt(startMin + 180) };
+    const { error } = await supabaseClient.from('work_requests').update({ payload: { ...(r.payload || {}), fields } }).eq('id', r.id);
+    if (error) return alert('저장에 실패했습니다: ' + error.message);
+    alert('작업 시각이 확정되었습니다. 이제 근로계약서를 확인할 수 있어요.');
+    renderMyPageRequestHistory(userId);
+  }
+
   async function renderMyPageRequestHistory(userId) {
     const historyBox = document.getElementById('myPageRequestHistory');
     if (!historyBox) return;
     const { data: requests } = await supabaseClient
       .from('work_requests')
-      .select('id, request_type, status, created_at')
+      .select('id, request_type, status, created_at, payload')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -882,10 +899,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = document.createElement('div');
       item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #ddd6c5; border-radius:8px; margin-bottom:8px;';
       const dateStr = new Date(r.created_at).toLocaleDateString('ko-KR');
+      const rf = (r.payload && r.payload.fields) || {};
+      const timeUnset = r.request_type === 'manpower' && rf.manpowerTimeSlot === '아무때나 3시간' && !rf.manpowerStartTime;
       const info = document.createElement('div');
       info.innerHTML = `
         <div style="font-size:13px; font-weight:700;">${REQUEST_TYPE_LABELS[r.request_type] || r.request_type}</div>
-        <div style="font-size:12px; color:#6c6f76;">${dateStr} · ${STATUS_LABELS[r.status] || r.status}</div>
+        <div style="font-size:12px; color:#6c6f76;">${dateStr} · ${STATUS_LABELS[r.status] || r.status}${timeUnset ? ' · ⏰ 작업 시각 미확정' : ''}</div>
       `;
       const chatBtn = document.createElement('button');
       chatBtn.type = 'button';
@@ -895,6 +914,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const actions = document.createElement('div');
       actions.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
       actions.appendChild(chatBtn);
+      if (timeUnset && ['payment_pending', 'matched', 'completed'].includes(r.status)) {
+        const timeBtn = document.createElement('button');
+        timeBtn.type = 'button';
+        timeBtn.innerText = '작업 시각 확정';
+        timeBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:none; background:#ffb703; color:#23262b; font-weight:700; cursor:pointer; flex-shrink:0;';
+        timeBtn.onclick = () => confirmManpowerTime(r, userId);
+        actions.appendChild(timeBtn);
+      }
       if (r.status === 'pending') {
         const offersBtn = document.createElement('button');
         offersBtn.type = 'button';
@@ -943,7 +970,7 @@ document.addEventListener('DOMContentLoaded', () => {
     manpowerLocation: '현장 위치', manpowerCompanyName: '업체명/성함', manpowerCompanyContact: '업체 연락처',
     manpowerManagerName: '현장 담당자', manpowerManagerContact: '담당자 연락처', manpowerStartDate: '작업 시작일',
     manpowerWorkDays: '작업 일수(일)', manpowerStartTime: '작업 시작 시간', manpowerEndTime: '작업 종료 시간',
-    manpowerDetailNote: '상세 요청사항',
+    manpowerDetailNote: '상세 요청사항', manpowerTimeSlot: '작업 시간대',
     demoLocation: '현장 위치', demoArea: '평수(평)', demoHeight: '층고(m)', demoFloor: '현장 층수',
     demoDate: '작업 희망 날짜', demoDetailNote: '상세 요청사항',
     restoreLocation: '현장 위치', restoreArea: '평수(평)', restoreHeight: '층고(m)', restoreFloor: '현장 층수',
@@ -1015,9 +1042,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const alreadyApplied = appliedIds.has(r.id);
 
       const detailRows = Object.entries(fields)
-        .filter(([k, v]) => v !== '' && v !== null && v !== undefined && k !== locationField && k !== noteField)
+        .filter(([k, v]) => v !== '' && v !== null && v !== undefined && k !== locationField && k !== noteField && k !== 'manpowerItemsJson')
         .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${FIELD_LABEL_MAP[k] || k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${v}</span></div>`)
         .join('');
+      let itemsRows = '';
+      try {
+        const its = JSON.parse(fields.manpowerItemsJson || '[]');
+        itemsRows = its.map(i => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">요청 인력</span><span style="color:#23262b; text-align:right; max-width:65%;">${i.name} × ${i.count}명 · 1인 ${Number(i.unit_wage).toLocaleString()}원</span></div>`).join('');
+      } catch (e) { /* 이전 형식의 요청은 무시 */ }
       const selectionRows = Object.entries(selections)
         .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${SELECTION_LABEL_MAP[k] || k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${(v || []).join(', ')}</span></div>`)
         .join('');
@@ -1038,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <button type="button" data-toggle-browse-detail="${r.id}" style="width:100%; margin-top:10px; padding:9px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;">상세보기</button>
         <div class="browse-detail-${r.id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #ddd6c5;">
-          ${detailRows}${selectionRows}
+          ${itemsRows}${detailRows}${selectionRows}
           <div class="browse-photos-${r.id}" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-top:10px;"></div>
         </div>
         <div class="offer-form-${r.id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed #ddd6c5;">
@@ -1177,7 +1209,14 @@ document.addEventListener('DOMContentLoaded', () => {
           contractBtn.type = 'button';
           contractBtn.innerText = '근로계약서';
           contractBtn.style.cssText = 'flex:1; padding:9px; border-radius:8px; border:1px solid #ffb703; background:#fff; color:#8a6d00; font-weight:700; font-size:12px; cursor:pointer;';
-          contractBtn.onclick = () => openLaborDocument('contract', o, req, employer, myProfile);
+          contractBtn.onclick = () => {
+            const rf = (req.payload && req.payload.fields) || {};
+            if (rf.manpowerTimeSlot === '아무때나 3시간' && !rf.manpowerStartTime) {
+              alert('작업 시작 시각이 아직 확정되지 않았습니다. 의뢰하신 분이 시각을 확정하면 근로계약서를 확인할 수 있어요.');
+              return;
+            }
+            openLaborDocument('contract', o, req, employer, myProfile);
+          };
           docRow.appendChild(contractBtn);
 
           if (req.status === 'completed') {
@@ -1223,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr><th>근로 시작일</th><td>${startDate}</td></tr>
           <tr><th>근로 일수</th><td>${workDays}일</td></tr>
           <tr><th>근로 시간</th><td>${startTime} ~ ${endTime}</td></tr>
-          <tr><th>임금(일당)</th><td>${offer.price || '-'}</td></tr>
+          <tr><th>임금(1인 기준)</th><td>${offer.price || '-'}</td></tr>
           <tr><th>임금 지급일</th><td>작업 종료 후 당일 (근로자와 협의 시 익일)</td></tr>
           <tr><th>지급 방법</th><td>근로자 명의 계좌로 직접 송금</td></tr>
         </table>
@@ -1249,7 +1288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </table>
         <table style="margin-top:16px;">
           <tr><th>지급 항목</th><th>금액</th></tr>
-          <tr><td>기본급(일당)</td><td>${offer.price || '-'}</td></tr>
+          <tr><td>기본급(1인 기준)</td><td>${offer.price || '-'}</td></tr>
           <tr><td>공제액</td><td>- (세금 공제는 별도 정산)</td></tr>
           <tr style="font-weight:bold;"><td>실지급액</td><td>${offer.price || '-'}</td></tr>
         </table>
@@ -2017,84 +2056,228 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('signupPhone').value = signupState.phone;
   }
 
-  // --- 5. 인력 지원 요청 로직 복구 ---
-  function renderTypeList() {
-    const typeList = document.getElementById('typeList');
-    const title = document.getElementById('manpowerTypeTitle');
-    const backBtn = document.getElementById('backTypeBtn');
-    if (!typeList) return;
-    typeList.innerHTML = '';
-    let currentData = MANPOWER_HIERARCHY;
-    selectionPath.forEach(path => { currentData = currentData[path]; });
+  // --- 5. 인력 지원 요청: 화면에서 바로 직종 선택 + 시간대별 단가 ---
+  const MP_SLOTS = {
+    '종일': { start: '08:00', end: '17:00', hours: 8 },
+    '오전 반일': { start: '08:00', end: '12:00', hours: 4 },
+    '오후 반일': { start: '13:00', end: '17:00', hours: 4 },
+    '아무때나 3시간': { start: '', end: '', hours: 3 },
+    '직접 입력': { start: '', end: '', hours: null }
+  };
+  const MP_COEF_3H = 0.55;     // 3시간 이하
+  const MP_COEF_HALF = 0.65;   // 4시간(반일)
+  const mpState = { slot: '종일', cat: Object.keys(MANPOWER_HIERARCHY)[0], trade: '', items: [] };
 
-    if (selectionPath.length === 0) {
-      if (title) title.innerText = "인력 대분류 선택";
-      if (backBtn) backBtn.style.display = 'none';
-      if (document.getElementById('typeBreadcrumb')) document.getElementById('typeBreadcrumb').style.display = 'none';
-    } else {
-      if (title) title.innerText = selectionPath[selectionPath.length - 1];
-      if (backBtn) backBtn.style.display = 'block';
-      if (document.getElementById('typeBreadcrumb')) {
-        document.getElementById('typeBreadcrumb').style.display = 'block';
-        document.getElementById('currentCategory').innerText = selectionPath[selectionPath.length - 1];
-      }
+  const mpStartEl = document.getElementById('manpowerStartTime');
+  const mpEndEl = document.getElementById('manpowerEndTime');
+
+  function mpTimeToMin(v) {
+    if (!v) return null;
+    const [h, m] = v.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  // 실제 근무시간(시간). 직접입력은 시작~종료에서 점심 1시간(6시간 이상일 때)을 뺀다
+  function mpWorkHours() {
+    const slot = MP_SLOTS[mpState.slot];
+    if (slot.hours != null) return slot.hours;
+    const sm = mpTimeToMin(mpStartEl && mpStartEl.value);
+    const em = mpTimeToMin(mpEndEl && mpEndEl.value);
+    if (sm == null || em == null || em <= sm) return null;
+    let span = (em - sm) / 60;
+    if (span >= 6) span -= 1;
+    return span;
+  }
+
+  // 기본 단가(일당) → 시간대 반영 단가
+  function mpAdjustWage(base) {
+    const h = mpWorkHours();
+    if (h == null) return base;
+    let w;
+    if (h <= 3) w = base * MP_COEF_3H;
+    else if (h <= 4) w = base * (MP_COEF_3H + (MP_COEF_HALF - MP_COEF_3H) * (h - 3));
+    else if (h <= 8) w = base * (MP_COEF_HALF + (1 - MP_COEF_HALF) * (h - 4) / 4);
+    else w = base + (h - 8) * (base / 8) * 1.5; // 8시간 초과분은 시급 1.5배
+    return Math.round(w / 1000) * 1000;
+  }
+
+  function mpFindNode(path) {
+    let node = MANPOWER_HIERARCHY;
+    for (const k of path) node = node && node[k];
+    return node;
+  }
+
+  function mpRenderSlots() {
+    document.querySelectorAll('#mpSlotList .mp-slot').forEach(b => b.classList.toggle('selected', b.dataset.slot === mpState.slot));
+    const custom = document.getElementById('mpCustomTime');
+    if (custom) custom.style.display = mpState.slot === '직접 입력' ? 'block' : 'none';
+    const hidden = document.getElementById('manpowerTimeSlot');
+    if (hidden) hidden.value = mpState.slot;
+    const note = document.getElementById('mpTimeNote');
+    if (!note) return;
+    const slot = MP_SLOTS[mpState.slot];
+    if (mpState.slot === '종일') note.innerText = '08:00 ~ 17:00 · 8시간 기준(점심 1시간 제외) · 기본 단가 100%';
+    else if (mpState.slot === '오전 반일' || mpState.slot === '오후 반일') note.innerText = `${slot.start} ~ ${slot.end} · 4시간 · 기본 단가의 ${Math.round(MP_COEF_HALF * 100)}%`;
+    else if (mpState.slot === '아무때나 3시간') note.innerText = `하루 중 3시간 · 기본 단가의 ${Math.round(MP_COEF_3H * 100)}% · 작업 시작 시각은 인력이 정해진 뒤 마이페이지에서 확정해주세요.`;
+    else {
+      const h = mpWorkHours();
+      note.innerText = h == null ? '시작·종료 시각을 입력해주세요.' : `${h}시간 기준 단가 적용 (6시간 이상이면 점심 1시간 제외${h > 8 ? ', 8시간 초과분은 시급의 1.5배' : ''})`;
     }
+  }
 
-    Object.keys(currentData).forEach(key => {
-      const btn = document.createElement('button');
-      btn.className = 'type-btn';
-      btn.style.width = '100%'; btn.style.textAlign = 'left'; btn.style.marginBottom = '8px';
-      const isLeaf = typeof currentData[key] === 'number';
-      btn.innerHTML = `<span>${key}</span> ${isLeaf ? `<span style="float:right; color:#1d3557; font-weight:700;">${currentData[key].toLocaleString()}원</span>` : '<span style="float:right; color:#6c6f76;">&gt;</span>'}`;
-      btn.onclick = () => { if (isLeaf) selectManpowerType(key, currentData[key]); else { selectionPath.push(key); renderTypeList(); } };
-      typeList.appendChild(btn);
+  function mpRenderCats() {
+    const box = document.getElementById('mpCatTabs');
+    if (!box) return;
+    box.innerHTML = '';
+    Object.keys(MANPOWER_HIERARCHY).forEach(cat => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mp-tab' + (cat === mpState.cat ? ' selected' : '');
+      b.dataset.cat = cat;
+      b.innerText = cat;
+      box.appendChild(b);
     });
   }
 
-  function selectManpowerType(name, wage) {
-    if (activeManpowerItem) {
-      activeManpowerItem.querySelector('.manpower-type-btn').innerText = name;
-      activeManpowerItem.querySelector('.manpower-type-btn').style.color = '#23262b';
-      activeManpowerItem.querySelector('.manpower-type-btn').style.fontWeight = '700';
-      activeManpowerItem.querySelector('.manpower-type-btn').style.borderColor = '#ff6a3d';
-      activeManpowerItem.querySelector('.manpower-type-val').value = name;
-      activeManpowerItem.querySelector('.manpower-wage').value = wage;
-      updateManpowerSummary();
-      manpowerTypeModal.classList.add('hidden');
+  function mpRenderTrades() {
+    const box = document.getElementById('mpTradeList');
+    if (!box) return;
+    box.innerHTML = '';
+    Object.keys(MANPOWER_HIERARCHY[mpState.cat] || {}).forEach(trade => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mp-chip mp-trade' + (trade === mpState.trade ? ' selected' : '');
+      b.dataset.trade = trade;
+      b.innerText = trade;
+      box.appendChild(b);
+    });
+  }
+
+  function mpRenderDetails() {
+    const box = document.getElementById('mpDetailList');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!mpState.trade) {
+      box.innerHTML = '<p class="mp-hint">직종을 선택하면 작업 종류가 나옵니다.</p>';
+      return;
+    }
+    const node = mpFindNode([mpState.cat, mpState.trade]) || {};
+    Object.keys(node).forEach(name => {
+      const base = node[name];
+      const added = mpState.items.some(i => i.trade === mpState.trade && i.name === name);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mp-detail-row' + (added ? ' selected' : '');
+      b.dataset.name = name;
+      b.innerHTML = `<span>${added ? '✓ ' : ''}${name}</span><span class="mp-price">${mpAdjustWage(base).toLocaleString()}원</span>`;
+      box.appendChild(b);
+    });
+  }
+
+  function mpRenderSelected() {
+    const wrap = document.getElementById('mpSelectedBox');
+    const list = document.getElementById('mpSelectedList');
+    if (!wrap || !list) return;
+    wrap.style.display = mpState.items.length ? 'block' : 'none';
+    list.innerHTML = '';
+    mpState.items.forEach((it, idx) => {
+      const row = document.createElement('div');
+      row.className = 'mp-selected-item';
+      row.innerHTML = `
+        <div class="mp-selected-name">${it.name}<small>${it.trade} · 1인 ${mpAdjustWage(it.base).toLocaleString()}원</small></div>
+        <div class="mp-stepper">
+          <button type="button" data-mp-minus="${idx}">−</button>
+          <span>${it.count}</span>
+          <button type="button" data-mp-plus="${idx}">+</button>
+        </div>
+        <button type="button" class="mp-remove" data-mp-remove="${idx}">&times;</button>`;
+      list.appendChild(row);
+    });
+  }
+
+  function mpUpdateSummary() {
+    const days = parseInt((document.getElementById('manpowerWorkDays') || {}).value) || 1;
+    let sum = 0;
+    mpState.items.forEach(i => { sum += mpAdjustWage(i.base) * i.count; });
+    const total = sum * days;
+    const fee = Math.floor(total * 0.1);
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+    set('wageTotalDisplay', total.toLocaleString() + '원');
+    set('matchingFeeDisplay', fee.toLocaleString() + '원');
+    set('totalAmountDisplay', (total + fee).toLocaleString() + '원');
+    set('mpBarTotal', (total + fee).toLocaleString() + '원');
+    // 요청 내용을 저장할 수 있게 숨김 입력칸에 JSON으로 보관
+    const json = document.getElementById('manpowerItemsJson');
+    if (json) {
+      json.value = JSON.stringify(mpState.items.map(i => ({
+        group: i.group, trade: i.trade, name: i.name,
+        base_wage: i.base, unit_wage: mpAdjustWage(i.base), count: i.count
+      })));
     }
   }
+  const updateManpowerSummary = mpUpdateSummary;
 
-  if (document.getElementById('backTypeBtn')) {
-    document.getElementById('backTypeBtn').onclick = () => { selectionPath.pop(); renderTypeList(); };
+  function mpRenderAll() {
+    mpRenderSlots(); mpRenderCats(); mpRenderTrades(); mpRenderDetails(); mpRenderSelected(); mpUpdateSummary();
   }
 
-  if (manpowerSelectionList) {
-    manpowerSelectionList.onclick = (e) => {
-      if (e.target.classList.contains('manpower-type-btn')) { activeManpowerItem = e.target.closest('.manpower-item'); selectionPath = []; renderTypeList(); manpowerTypeModal.classList.remove('hidden'); }
-      if (e.target.classList.contains('remove-manpower-btn')) { if (manpowerSelectionList.querySelectorAll('.manpower-item').length > 1) { e.target.closest('.manpower-item').remove(); updateManpowerSummary(); } }
-    };
+  function mpApplySlot(name) {
+    mpState.slot = name;
+    const slot = MP_SLOTS[name];
+    if (mpStartEl && mpEndEl) {
+      if (name === '직접 입력') {
+        if (!mpStartEl.value) mpStartEl.value = '08:00';
+        if (!mpEndEl.value) mpEndEl.value = '17:00';
+      } else {
+        mpStartEl.value = slot.start;
+        mpEndEl.value = slot.end;
+      }
+    }
+    mpRenderAll();
   }
 
-  if (document.getElementById('addManpowerBtn')) {
-    document.getElementById('addManpowerBtn').onclick = () => {
-      const newItem = document.createElement('div');
-      newItem.className = 'manpower-item manpower-grid'; newItem.style.marginTop = '10px';
-      newItem.innerHTML = `<button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #ffffff; border: 1px solid #ddd6c5; color: #6c6f76; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button><input type="hidden" class="manpower-type-val"><input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;"><select class="manpower-count" style="flex: 1; height: 38px;"><option value="" selected disabled>인원</option>${[...Array(20).keys()].map(i => `<option value="${i+1}">${i+1}명</option>`).join('')}</select><button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>`;
-      manpowerSelectionList.appendChild(newItem);
-    };
-  }
+  window.resetManpowerForm = function () {
+    mpState.items = [];
+    mpState.trade = '';
+    mpState.cat = Object.keys(MANPOWER_HIERARCHY)[0];
+    const days = document.getElementById('manpowerWorkDays');
+    if (days) days.value = '1';
+    mpApplySlot('종일');
+  };
 
-  function updateManpowerSummary() {
-    const items = document.querySelectorAll('.manpower-item');
-    const days = parseInt(document.getElementById('manpowerWorkDays').value) || 1;
-    let sum = 0; items.forEach(item => { sum += (parseInt(item.querySelector('.manpower-wage').value) || 0) * (parseInt(item.querySelector('.manpower-count').value) || 0); });
-    const total = sum * days; const fee = Math.floor(total * 0.1);
-    document.getElementById('wageTotalDisplay').innerText = total.toLocaleString() + '원';
-    document.getElementById('matchingFeeDisplay').innerText = fee.toLocaleString() + '원';
-    document.getElementById('totalAmountDisplay').innerText = (total + fee).toLocaleString() + '원';
-  }
+  document.addEventListener('click', (e) => {
+    const slotBtn = e.target.closest('.mp-slot');
+    if (slotBtn) return mpApplySlot(slotBtn.dataset.slot);
+    const tab = e.target.closest('.mp-tab');
+    if (tab) { mpState.cat = tab.dataset.cat; mpState.trade = ''; mpRenderCats(); mpRenderTrades(); mpRenderDetails(); return; }
+    const trade = e.target.closest('.mp-trade');
+    if (trade) { mpState.trade = trade.dataset.trade; mpRenderTrades(); mpRenderDetails(); return; }
+    const detail = e.target.closest('.mp-detail-row');
+    if (detail) {
+      const name = detail.dataset.name;
+      const idx = mpState.items.findIndex(i => i.trade === mpState.trade && i.name === name);
+      if (idx >= 0) mpState.items.splice(idx, 1);
+      else mpState.items.push({ group: mpState.cat, trade: mpState.trade, name, base: mpFindNode([mpState.cat, mpState.trade])[name], count: 1 });
+      mpRenderDetails(); mpRenderSelected(); mpUpdateSummary();
+      return;
+    }
+    const minus = e.target.closest('[data-mp-minus]');
+    const plus = e.target.closest('[data-mp-plus]');
+    const rem = e.target.closest('[data-mp-remove]');
+    if (minus) { const it = mpState.items[+minus.dataset.mpMinus]; if (it && it.count > 1) it.count--; }
+    else if (plus) { const it = mpState.items[+plus.dataset.mpPlus]; if (it && it.count < 20) it.count++; }
+    else if (rem) { mpState.items.splice(+rem.dataset.mpRemove, 1); mpRenderDetails(); }
+    else return;
+    mpRenderSelected(); mpUpdateSummary();
+  });
 
-  document.addEventListener('input', (e) => { if (e.target.classList.contains('manpower-wage') || e.target.classList.contains('manpower-count') || e.target.id === 'manpowerWorkDays') updateManpowerSummary(); });
+  ['manpowerWorkDays', 'manpowerStartTime', 'manpowerEndTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => { mpRenderSlots(); mpRenderDetails(); mpRenderSelected(); mpUpdateSummary(); });
+  });
+
+  mpRenderAll();
 
   // --- 6. 기타 서비스 및 모달 ---
   if (typeof confirmServiceBtn !== 'undefined' && confirmServiceBtn) {
@@ -2170,7 +2353,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const submitManpowerBtn = document.getElementById('submitManpowerBtn');
   if (submitManpowerBtn) {
-    submitManpowerBtn.onclick = () => saveWorkRequest('manpower', manpowerModal, null, submitManpowerBtn);
+    submitManpowerBtn.onclick = () => {
+      if (mpState.items.length === 0) return alert('필요한 인력(직종과 작업 종류)을 선택해주세요.');
+      if (mpState.slot === '직접 입력' && mpWorkHours() == null) return alert('작업 시작·종료 시각을 올바르게 입력해주세요.');
+      saveWorkRequest('manpower', manpowerModal, null, submitManpowerBtn);
+    };
   }
 
   // --- 9. '기타' 선택 시 상세 입력창 열기 (restoreOtherBtn, electricOtherBtn, pipeOtherBtn 공통 처리) ---
@@ -2183,20 +2370,6 @@ document.addEventListener('DOMContentLoaded', () => {
       else input.value = '';
     });
   });
-
-  // --- 11. 인력지원: 작업 시간 프리셋 버튼 ---
-  const manpowerStartTime = document.getElementById('manpowerStartTime');
-  const manpowerEndTime = document.getElementById('manpowerEndTime');
-  document.querySelectorAll('.time-preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (manpowerStartTime) manpowerStartTime.value = btn.dataset.start;
-      if (manpowerEndTime) manpowerEndTime.value = btn.dataset.end;
-      document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-  if (manpowerStartTime) manpowerStartTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
-  if (manpowerEndTime) manpowerEndTime.addEventListener('input', () => document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active')));
 
   // --- 12. 사진 업로드 드롭존 (클릭/드래그로 파일 선택 + 누적 미리보기 + 개별 삭제) ---
   const MAX_PHOTOS = 10;

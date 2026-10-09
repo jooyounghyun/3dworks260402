@@ -604,18 +604,19 @@
 
   <!-- ✅ 인력 지원 요청 모달 -->
   <div id="manpowerModal" class="modal hidden">
-    <div class="modal-content" style="max-width: 450px;">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>인력 지원 요청</h2>
         <button id="closeManpowerBtn" class="close-btn">&times;</button>
       </div>
 
+      <!-- 1. 현장 정보 -->
+      <div class="mp-step"><span class="mp-num">1</span>현장 정보</div>
       <div class="input-group">
         <label for="manpowerLocation">현장 위치</label>
         <input type="text" id="manpowerLocation" placeholder="예: 서울특별시 강남구 역삼동">
         <p style="font-size:11px; color:var(--ink-muted); margin-top:4px;">📍 서울·수도권 중심으로 서비스 중입니다</p>
       </div>
-
       <div class="modal-row">
         <div class="input-group">
           <label for="manpowerCompanyName">업체명/성함</label>
@@ -626,8 +627,6 @@
           <input type="text" id="manpowerCompanyContact" readonly>
         </div>
       </div>
-
-      <!-- ✅ 추가된 현장 담당자 정보 -->
       <div class="modal-row">
         <div class="input-group">
           <label for="manpowerManagerName">현장 담당자</label>
@@ -639,14 +638,15 @@
         </div>
       </div>
 
-      <!-- ✅ 추가된 작업 날짜 및 일수 -->
+      <!-- 2. 작업 일정 -->
+      <div class="mp-step"><span class="mp-num">2</span>작업 일정</div>
       <div class="modal-row">
         <div class="input-group" style="flex: 1.5;">
           <label for="manpowerStartDate">작업 시작일</label>
           <input type="date" id="manpowerStartDate">
         </div>
         <div class="input-group" style="flex: 1;">
-          <label for="manpowerWorkDays">작업 일수 (일)</label>
+          <label for="manpowerWorkDays">작업 일수</label>
           <select id="manpowerWorkDays">
             <option value="1" selected>1일</option>
             <option value="2">2일</option>
@@ -663,7 +663,7 @@
             <option value="13">13일</option>
             <option value="14">14일</option>
             <option value="15">15일</option>
-            <option value="16">16명</option>
+            <option value="16">16일</option>
             <option value="17">17일</option>
             <option value="18">18일</option>
             <option value="19">19일</option>
@@ -681,63 +681,44 @@
           </select>
         </div>
       </div>
-
-      <div class="input-group" style="margin-top: 10px;">
-        <label>작업 시간</label>
-        <div class="modal-row" style="gap: 10px; margin-bottom: 0;">
-          <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
-            <input type="time" id="manpowerStartTime" value="08:00">
-          </div>
-          <span style="align-self: center; color: var(--ink-muted); font-size: 13px;">~</span>
-          <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
-            <input type="time" id="manpowerEndTime" value="17:00">
+      <div class="input-group">
+        <label>작업 시간대 <span style="color:var(--ink-muted); font-weight:400;">(시간에 따라 단가가 달라져요)</span></label>
+        <div class="mp-chip-grid" id="mpSlotList">
+          <button type="button" class="mp-chip mp-slot selected" data-slot="종일">종일<small>08:00 ~ 17:00</small></button>
+          <button type="button" class="mp-chip mp-slot" data-slot="오전 반일">오전 반일<small>08:00 ~ 12:00</small></button>
+          <button type="button" class="mp-chip mp-slot" data-slot="오후 반일">오후 반일<small>13:00 ~ 17:00</small></button>
+          <button type="button" class="mp-chip mp-slot" data-slot="아무때나 3시간">아무때나 3시간<small>시각은 나중에 확정</small></button>
+          <button type="button" class="mp-chip mp-slot" data-slot="직접 입력" style="grid-column: span 2;">직접 입력</button>
+        </div>
+        <div id="mpCustomTime" style="display:none; margin-top:10px;">
+          <div class="modal-row" style="gap: 10px; margin-bottom: 0;">
+            <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
+              <input type="time" id="manpowerStartTime" value="08:00">
+            </div>
+            <span style="align-self: center; color: var(--ink-muted); font-size: 13px;">~</span>
+            <div class="input-group" style="flex: 1; margin-bottom: 0 !important;">
+              <input type="time" id="manpowerEndTime" value="17:00">
+            </div>
           </div>
         </div>
-        <div class="env-selection" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-          <button type="button" class="time-preset-btn" data-start="07:00" data-end="16:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">07:00 ~ 16:00</button>
-          <button type="button" class="time-preset-btn" data-start="08:00" data-end="17:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">08:00 ~ 17:00</button>
-          <button type="button" class="time-preset-btn" data-start="09:00" data-end="18:00" style="flex: 1; min-width: 90px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd6c5; background: #ffffff; color: #23262b; cursor: pointer;">09:00 ~ 18:00</button>
-        </div>
+        <p class="mp-note" id="mpTimeNote"></p>
+        <input type="hidden" id="manpowerTimeSlot" value="종일">
+        <input type="hidden" id="manpowerItemsJson" value="[]">
       </div>
 
-      <div class="input-group" style="margin-top: 15px;">
-        <label>요청 인력 상세</label>
-        <div id="manpowerSelectionList" style="display: flex; flex-direction: column; gap: 10px;">
-          <div class="manpower-item manpower-grid">
-            <button type="button" class="manpower-type-btn" style="flex: 2; text-align: left; background: #ffffff; border: 1px solid #ddd6c5; color: #6c6f76; padding: 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">인력 유형 선택</button>
-            <input type="hidden" class="manpower-type-val">
-            <input type="number" class="manpower-wage" placeholder="임금" value="0" style="flex: 1.5;">
-            <select class="manpower-count" style="flex: 1; height: 38px;">
-              <option value="" selected disabled>인원</option>
-              <option value="1">1명</option>
-              <option value="2">2명</option>
-              <option value="3">3명</option>
-              <option value="4">4명</option>
-              <option value="5">5명</option>
-              <option value="6">6명</option>
-              <option value="7">7명</option>
-              <option value="8">8명</option>
-              <option value="9">9명</option>
-              <option value="10">10명</option>
-              <option value="11">11명</option>
-              <option value="12">12명</option>
-              <option value="13">13명</option>
-              <option value="14">14명</option>
-              <option value="15">15명</option>
-              <option value="16">16명</option>
-              <option value="17">17명</option>
-              <option value="18">18명</option>
-              <option value="19">19명</option>
-              <option value="20">20명</option>
-            </select>
-            <button type="button" class="remove-manpower-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px; padding:0 5px; line-height:1;">&times;</button>
-          </div>
-        </div>
-        <button id="addManpowerBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px; padding: 10px; font-size: 13px;">+ 다른 인력 추가</button>
+      <!-- 3. 필요 인력 -->
+      <div class="mp-step"><span class="mp-num">3</span>필요 인력</div>
+      <div class="mp-tabs" id="mpCatTabs"></div>
+      <div class="mp-chip-grid" id="mpTradeList"></div>
+      <div id="mpDetailList"></div>
+      <div id="mpSelectedBox" style="display:none; margin-top:16px;">
+        <label>선택한 인력 (1인 단가 · 인원)</label>
+        <div id="mpSelectedList"></div>
       </div>
 
-      <!-- ✅ 추가된 식사 및 휴게시간 -->
-      <div class="modal-row" style="margin-top: 15px;">
+      <!-- 4. 현장 여건 및 요청사항 -->
+      <div class="mp-step"><span class="mp-num">4</span>현장 여건 · 요청사항</div>
+      <div class="modal-row">
         <div class="input-group">
           <label>식사 제공</label>
           <div class="env-selection" style="display: flex; gap: 5px;">
@@ -754,8 +735,7 @@
         </div>
       </div>
 
-      <!-- 예상 견적 요약 -->
-      <div class="price-summary" style="margin-top: 20px; padding: 15px; background: #f0ece2; border-radius: 8px; border: 1px solid #ddd6c5;">
+      <div class="price-summary" style="margin-top: 14px; padding: 15px; background: #f0ece2; border-radius: 8px; border: 1px solid #ddd6c5;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
           <span>총 인건비</span>
           <span id="wageTotalDisplay">0원</span>
@@ -775,27 +755,10 @@
         <textarea id="manpowerDetailNote" rows="3" placeholder="예: 출입증 필요, 특정 경력자 우선 등 요청사항을 적어주세요" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
       </div>
 
-      <button id="submitManpowerBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">지원 요청하기</button>
-    </div>
-  </div>
-
-  <!-- ✅ 인력 유형 선택 모달 (계층형) -->
-  <div id="manpowerTypeModal" class="modal hidden" style="z-index: 1100;">
-    <div class="modal-content" style="max-width: 320px;">
-      <div class="modal-header">
-        <h2 id="manpowerTypeTitle">인력 유형 선택</h2>
-        <button id="closeTypeBtn" class="close-btn">&times;</button>
+      <div class="mp-submit-bar">
+        <div class="mp-bar-total">예상 합계<b id="mpBarTotal">0원</b></div>
+        <button id="submitManpowerBtn" class="btn btn-primary login-submit">지원 요청하기</button>
       </div>
-      
-      <div id="typeBreadcrumb" style="font-size: 12px; color: #6c6f76; margin-bottom: 10px; display: none;">
-        홈 > <span id="currentCategory"></span>
-      </div>
-
-      <div id="typeList" class="type-selection">
-        <!-- 버튼들이 동적으로 생성됨 -->
-      </div>
-
-      <button id="backTypeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 15px; display: none;">뒤로가기</button>
     </div>
   </div>
 

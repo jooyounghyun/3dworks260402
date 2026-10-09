@@ -705,3 +705,38 @@ footer {
   font-size: 13px;
   color: var(--ink-muted);
 }
+
+/* ✅ 인력 지원 요청: 단계형 폼 + 직종 바로 선택 + 하단 고정 제출바 */
+#manpowerModal .modal-content { max-width: 480px; width: 92%; max-height: 92vh; padding-bottom: 0; }
+.mp-step { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: var(--steel); margin: 22px 0 12px; }
+.mp-step:first-of-type { margin-top: 2px; }
+.mp-num { width: 22px; height: 22px; border-radius: 50%; background: var(--steel); color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mp-chip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.mp-chip { padding: 12px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font-body); line-height: 1.3; text-align: center; }
+.mp-chip small { display: block; font-weight: 500; font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+.mp-chip.selected { background: var(--hazard); border-color: var(--hazard); color: #fff; }
+.mp-chip.selected small { color: rgba(255, 255, 255, 0.92); }
+.mp-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.mp-tab { flex: 1; padding: 10px; border: none; border-bottom: 3px solid var(--border); background: none; font-weight: 700; font-size: 13px; color: var(--ink-muted); cursor: pointer; font-family: var(--font-body); }
+.mp-tab.selected { color: var(--steel); border-bottom-color: var(--hazard); }
+.mp-hint { font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
+.mp-detail-row { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px; margin-top: 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 13px; text-align: left; cursor: pointer; font-family: var(--font-body); }
+.mp-detail-row.selected { border-color: var(--hazard); background: #fff4ef; }
+.mp-detail-row .mp-price { color: var(--steel); font-weight: 800; white-space: nowrap; }
+.mp-selected-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--hazard); border-radius: 10px; margin-top: 6px; background: #fff; }
+.mp-selected-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; }
+.mp-selected-name small { display: block; font-weight: 500; color: var(--ink-muted); font-size: 11px; }
+.mp-stepper { display: flex; align-items: center; gap: 6px; }
+.mp-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: #fff; font-size: 16px; line-height: 1; cursor: pointer; color: var(--ink); }
+.mp-stepper span { min-width: 22px; text-align: center; font-weight: 800; font-size: 14px; }
+.mp-remove { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; }
+.mp-note { font-size: 12px; color: var(--ink-muted); margin-top: 8px; line-height: 1.5; }
+.mp-submit-bar { position: sticky; bottom: 0; display: flex; align-items: center; gap: 12px; margin: 20px -24px 0; padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -6px 14px rgba(18, 35, 60, 0.08); }
+.mp-bar-total { flex: 0 0 auto; font-size: 11px; color: var(--ink-muted); line-height: 1.3; }
+.mp-bar-total b { display: block; font-size: 16px; color: var(--steel); }
+.mp-submit-bar .btn-primary.login-submit { flex: 1; margin-top: 0 !important; }
+@media (max-width: 600px) {
+  #manpowerModal { align-items: stretch; }
+  #manpowerModal .modal-content { width: 100%; max-width: none; height: 100%; max-height: 100%; border-radius: 0; border-left: none; border-right: none; padding: 16px 16px 0; }
+  .mp-submit-bar { margin: 20px -16px 0; padding-left: 16px; padding-right: 16px; }
+}
