@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 상세 모달들
   const demolitionModal = document.getElementById('demolitionModal');
   const wasteModal = document.getElementById('wasteModal');
-  const restorationModal = document.getElementById('restorationModal');
   const electricModal = document.getElementById('electricModal');
   const pipeModal = document.getElementById('pipeModal');
   const manpowerTypeModal = document.getElementById('manpowerTypeModal');
@@ -467,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeAllModals() {
     const modals = [
       loginModal, signupModal, serviceModal, manpowerModal,
-      demolitionModal, wasteModal, restorationModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal,
+      demolitionModal, wasteModal, electricModal, pipeModal, manpowerTypeModal, myPageModal, chatModal, forgotPasswordModal,
       document.getElementById('iosAddHomeModal')
     ];
     modals.forEach(modal => {
@@ -954,6 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'meal-btn': '식사 제공 여부', 'break-btn': '휴게공간 여부',
     'demo-type-btn': '철거 범위', 'demo-env-btn': '현장 환경',
     'restore-type-btn': '복구 범위', restoreMode: '진행 방식',
+    restoreOption: '원상복구', restoreScope: '복구 항목',
     'waste-type-btn': '폐기물 종류',
     'electric-type-btn': '전기 공사 종류', 'electric-env-btn': '현장 환경',
     'pipe-type-btn': '배관 공사 종류', 'pipe-spot-btn': '누수 위치', 'pipe-env-btn': '현장 환경'
@@ -977,7 +977,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let query = supabaseClient.from('work_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false });
     if (myProfile.user_type === 'company') {
       if (myProfile.specialties && myProfile.specialties.length) {
-        query = query.in('request_type', myProfile.specialties);
+        const specs = new Set(myProfile.specialties);
+        if (specs.has('restoration')) specs.add('demolition'); // 원상복구는 상가 철거 옵션으로 통합됨
+        query = query.in('request_type', Array.from(specs));
       } else {
         query = query.neq('request_type', 'manpower');
       }
@@ -2095,7 +2097,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const txt = selected.innerText.trim(); closeAllModals();
       if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
       else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
-      else if (txt === '상가 원상복구') restorationModal.classList.remove('hidden');
       else if (txt === '전기 공사') electricModal.classList.remove('hidden');
       else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
     };
@@ -2109,8 +2110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const txt = selected.innerText.trim(); closeAllModals();
         if (txt === '상가 철거') demolitionModal.classList.remove('hidden');
         else if (txt === '폐기물 처리') wasteModal.classList.remove('hidden');
-        else if (txt === '상가 원상복구') restorationModal.classList.remove('hidden');
-        else if (txt === '전기 공사') electricModal.classList.remove('hidden');
+          else if (txt === '전기 공사') electricModal.classList.remove('hidden');
         else if (txt === '배관막힘 누수공사') pipeModal.classList.remove('hidden');
       };
     }
@@ -2129,6 +2129,17 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.classList.toggle('selected');
   });
 
+  // 상가 철거: '원상복구 필요' 선택 시에만 복구 항목 노출
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.demo-restore-opt-btn')) return;
+    const yes = document.getElementById('demoRestoreYesBtn');
+    const group = document.getElementById('demoRestoreScopeGroup');
+    if (!yes || !group) return;
+    const show = yes.classList.contains('selected');
+    group.classList.toggle('hidden', !show);
+    if (!show) group.querySelectorAll('.type-btn.selected').forEach(b => b.classList.remove('selected'));
+  });
+
   // --- 7. 작업 요청 폼 제출 (실제 저장) ---
   const submitDemolitionBtn = document.getElementById('submitDemolitionBtn');
   if (submitDemolitionBtn) {
@@ -2138,11 +2149,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitWasteBtn = document.getElementById('submitWasteBtn');
   if (submitWasteBtn) {
     submitWasteBtn.onclick = () => saveWorkRequest('waste', wasteModal, document.getElementById('wastePhotoInput'), submitWasteBtn);
-  }
-
-  const submitRestorationBtn = document.getElementById('submitRestorationBtn');
-  if (submitRestorationBtn) {
-    submitRestorationBtn.onclick = () => saveWorkRequest('restoration', restorationModal, document.getElementById('restorePhotoInput'), submitRestorationBtn);
   }
 
   const submitElectricBtn = document.getElementById('submitElectricBtn');

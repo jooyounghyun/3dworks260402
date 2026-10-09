@@ -224,7 +224,6 @@
             <div id="myPageSpecialtiesGroup" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
               <button type="button" class="type-btn specialty-btn" data-value="demolition" style="padding:8px 12px; font-size:12px;">상가 철거</button>
               <button type="button" class="type-btn specialty-btn" data-value="waste" style="padding:8px 12px; font-size:12px;">폐기물 처리</button>
-              <button type="button" class="type-btn specialty-btn" data-value="restoration" style="padding:8px 12px; font-size:12px;">원상복구</button>
               <button type="button" class="type-btn specialty-btn" data-value="electric" style="padding:8px 12px; font-size:12px;">전기 공사</button>
               <button type="button" class="type-btn specialty-btn" data-value="pipe" style="padding:8px 12px; font-size:12px;">배관·누수</button>
             </div>
@@ -538,6 +537,12 @@
             <button id="checkBusinessBtn" class="btn btn-secondary" style="width: auto; padding: 0 10px; font-size: 12px;">진위 확인</button>
           </div>
         </div>
+        <div style="margin-top:16px; padding:14px; background:#f0ece2; border-radius:10px; font-size:12px; color:#6c6f76; line-height:1.6;">
+          <b style="color:#23262b;">수수료 안내</b><br>
+          "팀으로 맡기기" 수주 성사 시, 작업 완료 후 정산할 때 차감돼요.<br>
+          200만원 이하 8% · 200만~1,000만원 6% · 1,000만원 초과 4.5%<br>
+          인력지원에 응모해서 성사된 경우는 <b style="color:#23262b;">수수료 없이 전액</b> 받으세요 (의뢰하신 분이 별도로 부담해요).
+        </div>
         <button id="nextToFinalStepFromCompanyBtn" class="btn btn-primary login-submit" style="margin-top: 20px;" disabled>다음 단계</button>
       </div>
 
@@ -546,6 +551,10 @@
         <p class="step-title">작업 가능한 유형을 모두 선택해주세요</p>
         <div id="workerTypeSelection" class="type-selection" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 5px;">
           <!-- JS에서 동적으로 생성됨 -->
+        </div>
+        <div style="margin-top:16px; padding:14px; background:#f0ece2; border-radius:10px; font-size:12px; color:#6c6f76; line-height:1.6;">
+          <b style="color:#23262b;">수수료 안내</b><br>
+          <b style="color:#23262b;">수수료 0원</b> — 제시하신 견적 그대로 받으세요. 의뢰하신 분이 매칭 수수료를 별도로 부담해요.
         </div>
         <button id="nextToFinalStepFromWorkerBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">다음 단계</button>
       </div>
@@ -580,7 +589,7 @@
       전문가가 팀으로 해결합니다
     </h1>
     <p>
-      철거, 폐기물, 원상복구, 하구수 처리까지<br>
+      철거·원상복구, 폐기물, 하수구 처리까지<br>
       믿을 수 있는 전문가 팀을 연결해드립니다
     </p>
     <p style="font-size:13px; color:var(--ink-muted); margin-top:-24px; margin-bottom:32px;">
@@ -801,7 +810,6 @@
       <div class="service-selection">
         <button class="service-item-btn">상가 철거</button>
         <button class="service-item-btn">폐기물 처리</button>
-        <button class="service-item-btn">상가 원상복구</button>
         <button class="service-item-btn">배관막힘 누수공사</button>
         <button class="service-item-btn">전기 공사</button>
         <button class="service-item-btn">기타</button>
@@ -875,6 +883,28 @@
       </div>
 
       <div class="input-group" style="margin-top: 15px;">
+        <label>철거 후 원상복구</label>
+        <div class="env-selection" style="display: flex; gap: 8px; margin-top: 5px;">
+          <button type="button" class="type-btn demo-restore-opt-btn" id="demoRestoreYesBtn" data-group="restoreOption" data-value="원상복구 필요" style="flex: 1; padding: 10px; font-size: 13px;">원상복구 필요</button>
+          <button type="button" class="type-btn demo-restore-opt-btn" id="demoRestoreNoBtn" data-group="restoreOption" data-value="철거만 (복구 불필요)" style="flex: 1; padding: 10px; font-size: 13px;">철거만 (복구 불필요)</button>
+        </div>
+        <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">철거 후 원래 상태로 복구까지 필요하면 선택해주세요. 업체가 철거와 복구를 함께 견적해드립니다.</p>
+      </div>
+
+      <div class="input-group hidden" id="demoRestoreScopeGroup" style="margin-top: 15px;">
+        <label>복구 필요 항목 (해당하는 것만 선택, 중복 가능)</label>
+        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="천장 복구" style="padding: 10px; font-size: 13px;">천장 복구</button>
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="바닥 복구" style="padding: 10px; font-size: 13px;">바닥 복구</button>
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="벽면 복구" style="padding: 10px; font-size: 13px;">벽면 복구</button>
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="가벽 설치" style="padding: 10px; font-size: 13px;">가벽 설치</button>
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="전기 복구" style="padding: 10px; font-size: 13px;">전기 복구</button>
+          <button type="button" class="type-btn demo-restore-scope-btn" data-group="restoreScope" data-value="전체 복구" style="padding: 10px; font-size: 13px;">전체 복구</button>
+        </div>
+        <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">마감재·색상 등은 아래 상세 요청사항에 적어주세요.</p>
+      </div>
+
+      <div class="input-group" style="margin-top: 15px;">
         <label for="demoDetailNote">상세 요청사항 (자유롭게 적어주세요)</label>
         <textarea id="demoDetailNote" rows="3" placeholder="예: 간판도 같이 철거 부탁드립니다, 특정 요일은 피해주세요 등" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
       </div>
@@ -888,98 +918,6 @@
         <div id="photoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
       </div>
       <button id="submitDemolitionBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
-    </div>
-  </div>
-
-  <!-- ✅ 상가 원상복구 상세 정보 입력 모달 -->
-  <div id="restorationModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>상가 원상복구 상세 정보</h2>
-        <button id="closeRestorationBtn" class="close-btn">&times;</button>
-      </div>
-      <div class="input-group" style="margin-bottom: 15px;">
-        <label for="restoreLocation">현장 위치</label>
-        <input type="text" id="restoreLocation" placeholder="예: 서울특별시 강남구 역삼동" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
-        <p style="font-size:11px; color:var(--ink-muted); margin-top:4px;">📍 서울·수도권 중심으로 서비스 중입니다</p>
-      </div>
-
-      <div class="modal-row" style="gap: 10px;">
-        <div class="input-group" style="flex: 1;">
-          <label for="restoreArea">평수 입력 (평)</label>
-          <input type="number" id="restoreArea" placeholder="예: 20">
-        </div>
-        <div class="input-group" style="flex: 1;">
-          <label for="restoreHeight">층고 입력 (m)</label>
-          <input type="number" id="restoreHeight" placeholder="예: 3.5" step="0.1">
-        </div>
-      </div>
-
-      <div class="modal-row" style="gap: 10px; margin-top: 10px;">
-        <div class="input-group" style="flex: 1;">
-          <label for="restoreFloor">현장 층수</label>
-          <input type="number" id="restoreFloor" placeholder="예: 2">
-        </div>
-        <div class="input-group" style="flex: 1;">
-          <label for="restoreDate">작업 희망 날짜</label>
-          <input type="date" id="restoreDate">
-        </div>
-      </div>
-
-      <div class="modal-row" style="margin-top: 15px; gap: 10px;">
-        <div class="input-group" style="flex: 1;">
-          <label>엘리베이터 사용</label>
-          <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
-            <button type="button" class="type-btn restore-env-btn" data-group="elevator" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
-          </div>
-        </div>
-        <div class="input-group" style="flex: 1;">
-          <label>주차 가능 여부</label>
-          <div class="env-selection" style="display: flex; gap: 5px;">
-            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="가능" style="flex: 1; padding: 8px; font-size: 12px;">가능</button>
-            <button type="button" class="type-btn restore-env-btn" data-group="parking" data-value="불가" style="flex: 1; padding: 8px; font-size: 12px;">불가</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="input-group" style="margin-top: 15px;">
-        <label>진행 방식</label>
-        <div class="env-selection" style="display: flex; gap: 8px; margin-top: 5px;">
-          <button type="button" class="type-btn restore-mode-btn" id="restoreModeFullBtn" data-group="restoreMode" data-value="전체 철거 후 원상복구" style="flex: 1; padding: 10px; font-size: 13px;">전체 철거 후 원상복구</button>
-          <button type="button" class="type-btn restore-mode-btn" id="restoreModePartialBtn" data-group="restoreMode" data-value="철거 없이 부분 복구" style="flex: 1; padding: 10px; font-size: 13px;">철거 없이 부분 복구</button>
-        </div>
-        <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">기존 시설물을 먼저 철거해야 하면 왼쪽을 선택해주세요. 철거 작업까지 포함해 견적을 안내해드립니다. 어느 쪽이든 아래에서 실제 복구가 필요한 항목을 선택해주세요.</p>
-      </div>
-
-      <div class="input-group" id="restoreScopeGroup" style="margin-top: 15px;">
-        <label>복구 필요 항목 (해당하는 것만 선택, 중복 가능)</label>
-        <div class="type-selection" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 5px;">
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">천장 복구</button>
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">바닥 복구</button>
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">벽면 복구</button>
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">가벽 설치</button>
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">전기 복구</button>
-          <button type="button" class="restore-type-btn type-btn" style="padding: 10px; font-size: 13px;">전체 복구</button>
-          <button type="button" class="restore-type-btn type-btn" id="restoreOtherBtn" style="padding: 10px; font-size: 13px; grid-column: span 2;">기타</button>
-        </div>
-        <input type="text" id="restoreOtherInput" placeholder="기타 복구 항목을 입력하세요" class="hidden" style="width: 100%; margin-top: 10px; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box;">
-      </div>
-
-      <div class="input-group" style="margin-top: 15px;">
-        <label for="restoreDetailNote">상세 요청사항 (마감재·색상 등 구체적으로 적어주세요)</label>
-        <textarea id="restoreDetailNote" rows="3" placeholder="예: 천장은 우물천장으로, 바닥은 원목마루 원상태로 복구 희망합니다." style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #ddd6c5; border-radius: 8px; color: #23262b; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
-      </div>
-
-      <div class="photo-upload-section" style="margin-top: 20px;">
-        <p class="step-title" style="text-align: left; font-size: 14px; margin-bottom: 10px;">현장 사진 (3장 ~ 10장 필수)</p>
-        <div id="restorePhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 30px; border-radius: 12px; text-align: center; cursor: pointer;">
-          <span style="color: #6c6f76; font-size: 14px;">여기를 클릭하거나 사진을 드래그하세요</span>
-          <input type="file" id="restorePhotoInput" multiple accept="image/*" style="display:none;">
-        </div>
-        <div id="restorePhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
-      </div>
-      <button id="submitRestorationBtn" class="btn btn-primary login-submit" style="margin-top: 20px;">전문가에게 전달하기</button>
     </div>
   </div>
 
@@ -1260,10 +1198,6 @@
       <div class="card">
         <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></span>
         폐기물 처리
-      </div>
-      <div class="card">
-        <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="13" height="6" rx="1"/><line x1="9" y1="10" x2="9" y2="14"/><rect x="6" y="14" width="6" height="6" rx="1"/></svg></span>
-        상가 원상복구
       </div>
       <div class="card">
         <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.8 3.2 4.5 5.8 4.5 8.3a4.5 4.5 0 0 1-9 0c0-2.5 1.7-5.1 4.5-8.3z"/></svg></span>
