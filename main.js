@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
         "땅파기/삽질/톱/낫질 작업 및 잡일": 190000,
         "예초작업": 200000,
         "예초작업 및 개인장비지침": 250000
-      },
+      }
+    },
+    "기술인력": {
       "철거공": {
         "가벽/천장 철거": 180000,
         "뿌레카 철거(바닥)": 190000,
@@ -56,9 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "유압크라샤 철거": 210000,
         "프리즈마 절단": 230000,
         "프리즈마 절단 및 개인장비지침": 280000
-      }
-    },
-    "기술인력": {
+      },
       "전기공": {
         "내선(인테리어)전공": 230000,
         "외선 및 고압 전공": 300000
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 선택형 항목(체크박스/토글) 그룹 id → 한글 라벨
   const SELECTION_LABEL_MAP = {
     elevator: '엘리베이터 사용', parking: '주차 가능 여부',
-    'meal-btn': '식사 제공 여부', 'break-btn': '휴게공간 여부',
+    'meal-btn': '중식 제공 여부', 'break-btn': '휴게공간 여부',
     'demo-type-btn': '철거 범위', 'demo-env-btn': '현장 환경',
     'restore-type-btn': '복구 범위', restoreMode: '진행 방식',
     restoreOption: '원상복구', restoreScope: '복구 항목',
@@ -2398,6 +2398,11 @@ document.addEventListener('DOMContentLoaded', () => {
     submitManpowerBtn.onclick = () => {
       if (mpState.items.length === 0) return alert('필요한 인력(직종과 작업 종류)을 선택해주세요.');
       if (mpState.slot === '직접 입력' && mpWorkHours() == null) return alert('작업 시작·종료 시각을 올바르게 입력해주세요.');
+      if (!manpowerModal.querySelector('.meal-btn.selected')) {
+        const mealBox = manpowerModal.querySelector('.meal-btn');
+        if (mealBox) mealBox.closest('.input-group').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return alert('중식 제공 여부를 선택해주세요.');
+      }
       saveWorkRequest('manpower', manpowerModal, null, submitManpowerBtn);
     };
   }
