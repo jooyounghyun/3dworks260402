@@ -2132,7 +2132,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 기본 단가(일당) → 시간대 반영 단가
-  function mpAdjustWage(base) {
+  // '개인장비지참' 항목은 장비비 5만원이 단가에 포함되어 있고, 이 금액은 근무시간과 상관없이 줄이지 않는다
+  const MP_EQUIP_FEE = 50000;
+  function mpAdjustWage(base, name) {
+    const fee = (name && name.indexOf('개인장비지참') >= 0) ? MP_EQUIP_FEE : 0;
+    return mpAdjustLabor(base - fee) + fee;
+  }
+  function mpAdjustLabor(base) {
     const h = mpWorkHours();
     if (h == null) return base;
     let w;
@@ -2211,7 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
       b.type = 'button';
       b.className = 'mp-detail-row' + (added ? ' selected' : '');
       b.dataset.name = name;
-      b.innerHTML = `<span>${added ? '✓ ' : ''}${name}</span><span class="mp-price">${mpAdjustWage(base).toLocaleString()}원</span>`;
+      b.innerHTML = `<span>${added ? '✓ ' : ''}${name}</span><span class="mp-price">${mpAdjustWage(base, name).toLocaleString()}원</span>`;
       box.appendChild(b);
     });
   }
@@ -2226,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = document.createElement('div');
       row.className = 'mp-selected-item';
       row.innerHTML = `
-        <div class="mp-selected-name">${it.name}<small>${it.trade} · 1인 ${mpAdjustWage(it.base).toLocaleString()}원</small></div>
+        <div class="mp-selected-name">${it.name}<small>${it.trade} · 1인 ${mpAdjustWage(it.base, it.name).toLocaleString()}원</small></div>
         <div class="mp-stepper">
           <button type="button" data-mp-minus="${idx}">−</button>
           <span>${it.count}</span>
@@ -2240,7 +2246,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function mpUpdateSummary() {
     const days = parseInt((document.getElementById('manpowerWorkDays') || {}).value) || 1;
     let sum = 0;
-    mpState.items.forEach(i => { sum += mpAdjustWage(i.base) * i.count; });
+    mpState.items.forEach(i => { sum += mpAdjustWage(i.base, i.name) * i.count; });
     const total = sum * days;
     const fee = Math.floor(total * 0.1);
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
@@ -2253,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (json) {
       json.value = JSON.stringify(mpState.items.map(i => ({
         group: i.group, trade: i.trade, name: i.name,
-        base_wage: i.base, unit_wage: mpAdjustWage(i.base), count: i.count
+        base_wage: i.base, unit_wage: mpAdjustWage(i.base, i.name), count: i.count
       })));
     }
   }
