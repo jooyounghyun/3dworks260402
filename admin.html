@@ -320,6 +320,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const profileMap = {};
     (profiles || []).forEach(p => profileMap[p.id] = p);
 
+    const escInq = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     listEl.innerHTML = '';
     inquiries.forEach(q => {
       const p = profileMap[q.user_id] || {};
@@ -331,11 +332,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.className = 'inquiry-card';
       card.innerHTML = `
         <div class="req-meta">${requesterLabel} · ${dateStr} <span class="status-pill ${statusClass}">${INQUIRY_STATUS_LABELS[q.status] || q.status}</span></div>
-        <div style="margin-top:8px; font-size:13.5px; white-space:pre-wrap;">${q.content}</div>
-        <textarea class="reply-box" placeholder="답변을 입력하세요" data-inquiry-id="${q.id}">${q.admin_reply || ''}</textarea>
+        <div style="margin-top:8px; font-size:13.5px; white-space:pre-wrap;">${escInq(q.content)}</div>
+        ${(q.photo_urls && q.photo_urls.length) ? `<div class="inq-photos" style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px;"></div>` : ''}
+        <textarea class="reply-box" placeholder="답변을 입력하세요" data-inquiry-id="${q.id}">${escInq(q.admin_reply || '')}</textarea>
         <button type="button" class="filter-btn" style="margin-top:6px;" data-submit-reply="${q.id}">답변 등록</button>
       `;
       listEl.appendChild(card);
+      // 첨부 사진: 비공개 저장소라서 임시 링크를 발급받아 보여줌
+      if (q.photo_urls && q.photo_urls.length) {
+        supabaseClient.storage.from('work-photos').createSignedUrls(q.photo_urls, 3600).then(({ data: signed }) => {
+          const box = card.querySelector('.inq-photos');
+          if (!box) return;
+          box.innerHTML = (signed || []).filter(s => s.signedUrl).map(s =>
+            `<a href="${s.signedUrl}" target="_blank" rel="noopener"><img src="${s.signedUrl}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px;" alt="첨부 사진"></a>`).join('');
+        });
+      }
     });
 
     listEl.querySelectorAll('[data-submit-reply]').forEach(btn => {

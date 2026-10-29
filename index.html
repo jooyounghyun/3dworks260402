@@ -814,6 +814,14 @@
         <label for="otherRequestDate">작업 희망 날짜</label>
         <input type="date" id="otherRequestDate">
       </div>
+      <div class="mp-step"><span class="mp-num">3</span>현장 사진 <span style="font-weight:500; font-size:12px; color:var(--ink-muted);">(선택, 최대 10장)</span></div>
+      <div class="photo-upload-section" style="margin-top: 4px;">
+        <div id="otherPhotoDropzone" class="dropzone" style="border: 2px dashed #ddd6c5; background: #f0ece2; padding: 24px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+          <span style="color: #6c6f76; font-size: 14px;">여기를 눌러 사진을 올려주세요</span>
+          <input type="file" id="otherPhotoInput" multiple accept="image/*" style="display:none;">
+        </div>
+        <div id="otherPhotoPreview" class="photo-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;"></div>
+      </div>
       <p class="mp-note">접수 후 담당자가 확인해서 연락드립니다. 답변은 마이페이지 &gt; 고객센터 문의에서도 볼 수 있어요.</p>
 
       <div class="mp-submit-bar"><button id="submitOtherRequestBtn" class="btn btn-primary login-submit">문의 접수하기</button></div>
@@ -1269,6 +1277,7 @@
       <a href="terms.html" style="color: #c7d2e0; text-decoration: underline; margin-right: 16px;">이용약관</a>
       <a href="privacy.html" style="color: #c7d2e0; text-decoration: underline;">개인정보처리방침</a>
     </div>
+    <div style="margin-top: 10px; font-size: 12px;">문의: <a href="mailto:3dworks@3dworks.co.kr" style="color: #c7d2e0; text-decoration: underline;">3dworks@3dworks.co.kr</a></div>
   </footer>
 </div>
 

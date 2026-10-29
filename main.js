@@ -1644,12 +1644,17 @@ document.addEventListener('DOMContentLoaded', () => {
       submitOtherRequestBtn.disabled = true;
       submitOtherRequestBtn.innerText = '접수 중...';
       try {
-        const { error } = await supabaseClient.from('support_inquiries').insert({
-          user_id: user.id,
-          content: lines.join('\n')
-        });
+        const photoInput = document.getElementById('otherPhotoInput');
+        const wantedCount = (photoInput && photoInput.files) ? photoInput.files.length : 0;
+        const photoPaths = await uploadPhotos(photoInput, user.id, 'inquiry');
+        const row = { user_id: user.id, content: lines.join('\n') };
+        if (photoPaths.length) row.photo_urls = photoPaths;
+        const { error } = await supabaseClient.from('support_inquiries').insert(row);
         if (error) throw error;
-        alert('문의가 접수되었습니다. 담당자가 확인 후 연락드릴게요.');
+        if (photoInput && photoInput._resetStoredFiles) photoInput._resetStoredFiles();
+        alert(wantedCount > photoPaths.length
+          ? `문의가 접수되었습니다. (사진 ${wantedCount - photoPaths.length}장은 올리지 못했어요. 필요하면 채팅이나 문의로 다시 보내주세요.)`
+          : '문의가 접수되었습니다. 담당자가 확인 후 연락드릴게요.');
         document.getElementById('otherRequestContent').value = '';
         document.getElementById('otherRequestLocation').value = '';
         document.getElementById('otherRequestDate').value = '';
