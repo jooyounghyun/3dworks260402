@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 마이페이지 ---
   const REQUEST_TYPE_LABELS = {
     demolition: '철거', waste: '폐기물 처리', restoration: '원상복구',
-    electric: '전기 공사', pipe: '배관·누수', manpower: '인력 지원'
+    electric: '전기 공사', pipe: '하수구·누수', manpower: '인력 지원'
   };
   const STATUS_LABELS = { pending: '접수 대기', payment_pending: '결제 대기', matched: '매칭 완료', completed: '완료', cancelled: '취소됨' };
 
@@ -1051,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let itemsRows = '';
       try {
         const its = JSON.parse(fields.manpowerItemsJson || '[]');
-        itemsRows = its.map(i => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">요청 인력</span><span style="color:#23262b; text-align:right; max-width:65%;">${i.name} × ${i.count}명 · 1인 ${Number(i.unit_wage).toLocaleString()}원</span></div>`).join('');
+        itemsRows = its.map(i => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">요청 인력</span><span style="color:#23262b; text-align:right; max-width:65%;">${i.name} × ${i.count}명 · 1인 ${Number(i.worker_wage != null ? i.worker_wage : i.unit_wage).toLocaleString()}원</span></div>`).join('');
       } catch (e) { /* 이전 형식의 요청은 무시 */ }
       const selectionRows = Object.entries(selections)
         .map(([k, v]) => `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0ece2; font-size:12px;"><span style="color:#6c6f76;">${SELECTION_LABEL_MAP[k] || k}</span><span style="color:#23262b; text-align:right; max-width:65%;">${(v || []).join(', ')}</span></div>`)
@@ -2138,6 +2138,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const fee = (name && name.indexOf('개인장비지참') >= 0) ? MP_EQUIP_FEE : 0;
     return mpAdjustLabor(base - fee) + fee;
   }
+  // 의뢰인에게 보여주는 단가: 인건비에 매칭 수수료 10%를 이미 얹고, 만원 단위로 올림. 개인장비지참 장비비는 올리지 않는다.
+  // (근로자에게 보이는 금액은 mpWorkerPay: 의뢰인 단가에서 1만원만 뺀 값)
+  function mpPrice(base, name) {
+    const fee = (name && name.indexOf('개인장비지참') >= 0) ? MP_EQUIP_FEE : 0;
+    const labor = mpAdjustLabor(base - fee);
+    return Math.ceil((labor * 11) / 100000) * 10000 + fee;
+  }
+  // 인력을 하는 분(근로자)에게 보이는 단가 = 의뢰인 단가 - 1만원. 이 1만원은 의뢰인이 내는 매칭 수수료이며 근로자 부담이 아니다.
+  const MP_PLATFORM_FEE = 10000;
+  function mpWorkerPay(base, name) { return mpPrice(base, name) - MP_PLATFORM_FEE; }
   function mpAdjustLabor(base) {
     const h = mpWorkHours();
     if (h == null) return base;
@@ -2217,7 +2227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       b.type = 'button';
       b.className = 'mp-detail-row' + (added ? ' selected' : '');
       b.dataset.name = name;
-      b.innerHTML = `<span>${added ? '✓ ' : ''}${name}</span><span class="mp-price">${mpAdjustWage(base, name).toLocaleString()}원</span>`;
+      b.innerHTML = `<span>${added ? '✓ ' : ''}${name}</span><span class="mp-price">${mpPrice(base, name).toLocaleString()}원</span>`;
       box.appendChild(b);
     });
   }
@@ -2232,7 +2242,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = document.createElement('div');
       row.className = 'mp-selected-item';
       row.innerHTML = `
-        <div class="mp-selected-name">${it.name}<small>${it.trade} · 1인 ${mpAdjustWage(it.base, it.name).toLocaleString()}원</small></div>
+        <div class="mp-selected-name">${it.name}<small>${it.trade} · 1인 ${mpPrice(it.base, it.name).toLocaleString()}원</small></div>
         <div class="mp-stepper">
           <button type="button" data-mp-minus="${idx}">−</button>
           <span>${it.count}</span>
@@ -2246,20 +2256,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function mpUpdateSummary() {
     const days = parseInt((document.getElementById('manpowerWorkDays') || {}).value) || 1;
     let sum = 0;
-    mpState.items.forEach(i => { sum += mpAdjustWage(i.base, i.name) * i.count; });
+    mpState.items.forEach(i => { sum += mpPrice(i.base, i.name) * i.count; });
     const total = sum * days;
-    const fee = Math.floor(total * 0.1);
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
-    set('wageTotalDisplay', total.toLocaleString() + '원');
-    set('matchingFeeDisplay', fee.toLocaleString() + '원');
-    set('totalAmountDisplay', (total + fee).toLocaleString() + '원');
-    set('mpBarTotal', (total + fee).toLocaleString() + '원');
+    set('totalAmountDisplay', total.toLocaleString() + '원');
+    set('mpBarTotal', total.toLocaleString() + '원');
     // 요청 내용을 저장할 수 있게 숨김 입력칸에 JSON으로 보관
     const json = document.getElementById('manpowerItemsJson');
     if (json) {
       json.value = JSON.stringify(mpState.items.map(i => ({
         group: i.group, trade: i.trade, name: i.name,
-        base_wage: i.base, unit_wage: mpAdjustWage(i.base, i.name), count: i.count
+        base_wage: i.base, unit_wage: mpPrice(i.base, i.name), worker_wage: mpWorkerPay(i.base, i.name), count: i.count
       })));
     }
   }

@@ -225,7 +225,7 @@
               <button type="button" class="type-btn specialty-btn" data-value="demolition" style="padding:8px 12px; font-size:12px;">철거</button>
               <button type="button" class="type-btn specialty-btn" data-value="waste" style="padding:8px 12px; font-size:12px;">폐기물 처리</button>
               <button type="button" class="type-btn specialty-btn" data-value="electric" style="padding:8px 12px; font-size:12px;">전기 공사</button>
-              <button type="button" class="type-btn specialty-btn" data-value="pipe" style="padding:8px 12px; font-size:12px;">배관·누수</button>
+              <button type="button" class="type-btn specialty-btn" data-value="pipe" style="padding:8px 12px; font-size:12px;">하수구·누수</button>
             </div>
           </div>
           <div class="input-group">
@@ -736,15 +736,7 @@
       </div>
 
       <div class="price-summary" style="margin-top: 14px; padding: 15px; background: #f0ece2; border-radius: 8px; border: 1px solid #ddd6c5;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-          <span>총 인건비</span>
-          <span id="wageTotalDisplay">0원</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-          <span>매칭 수수료 (10%)</span>
-          <span id="matchingFeeDisplay">0원</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #ddd6c5; font-weight: bold; color: #1d3557;">
+        <div style="display: flex; justify-content: space-between; font-weight: bold; color: #1d3557;">
           <span>예상 합계</span>
           <span id="totalAmountDisplay">0원</span>
         </div>
@@ -1114,11 +1106,11 @@
     </div>
   </div>
 
-  <!-- ✅ 배관막힘 누수공사 상세 정보 입력 모달 (신규 추가) -->
+  <!-- ✅ 하수구 막힘 · 누수 해결 상세 정보 입력 모달 (신규 추가) -->
   <div id="pipeModal" class="modal hidden team-sheet">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>배관막힘 누수공사 상세 정보</h2>
+        <h2>하수구 막힘 · 누수 해결 상세 정보</h2>
         <button id="closePipeBtn" class="close-btn">&times;</button>
       </div>
 
@@ -1228,7 +1220,7 @@
       </div>
       <div class="card">
         <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.8 3.2 4.5 5.8 4.5 8.3a4.5 4.5 0 0 1-9 0c0-2.5 1.7-5.1 4.5-8.3z"/></svg></span>
-        배관막힘 누수공사
+        하수구 막힘 · 누수 해결
       </div>
       <div class="card">
         <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 11 14 9 22 21 10 13 10 13 2"/></svg></span>
