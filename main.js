@@ -48,18 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     "기술인력": {
       "철거공": {
-        "가벽/천장 철거": 180000,
-        "뿌레카 철거(바닥)": 190000,
-        "뿌레카 철거(벽/천장)": 200000,
-        "글라인더 면갈이(천장)": 190000,
-        "글라인더 면갈이(바닥/벽)": 180000,
-        "글라인더 면갈이(천장) 및 개인장비지참": 240000,
-        "글라인더 면갈이(바닥/벽) 및 개인장비지참": 230000,
-        "지붕/옥상 철거": 180000,
-        "석면 해체 작업": 200000,
-        "유압크라샤 철거": 210000,
-        "프리즈마 절단": 230000,
-        "프리즈마 절단 및 개인장비지참": 280000
+        "가벽/천장 철거": 230000,
+        "뿌레카 철거(바닥)": 240000,
+        "뿌레카 철거(벽/천장)": 250000,
+        "글라인더 면갈이(천장)": 240000,
+        "글라인더 면갈이(바닥/벽)": 230000,
+        "글라인더 면갈이(천장) 및 개인장비지참": 290000,
+        "글라인더 면갈이(바닥/벽) 및 개인장비지참": 280000,
+        "지붕/옥상 철거": 230000,
+        "석면 해체 작업": 250000,
+        "유압크라샤 철거": 260000,
+        "프리즈마 절단": 280000,
+        "프리즈마 절단 및 개인장비지참": 330000
       },
       "전기공": {
         "내선(인테리어)전공": 230000,
@@ -939,6 +939,13 @@ document.addEventListener('DOMContentLoaded', () => {
         payBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:none; background:#ff6a3d; color:#fff; font-weight:700; cursor:pointer; flex-shrink:0;';
         payBtn.onclick = () => mockPayment(r.id);
         actions.appendChild(payBtn);
+      } else if (r.status === 'completed') {
+        const reviewBtn = document.createElement('button');
+        reviewBtn.type = 'button';
+        reviewBtn.innerText = '후기 남기기';
+        reviewBtn.style.cssText = 'padding:6px 12px; font-size:12px; border-radius:6px; border:none; background:#ffb703; color:#23262b; font-weight:700; cursor:pointer; flex-shrink:0;';
+        reviewBtn.onclick = () => openReviewModal(r.id);
+        actions.appendChild(reviewBtn);
       }
       item.appendChild(info);
       item.appendChild(actions);
@@ -1341,6 +1348,140 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+
+  // ===== 업체 상세 프로필 / 평점·후기 =====
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const starsText = n => { const r = Math.max(0, Math.min(5, Math.round(n))); return '★'.repeat(r) + '☆'.repeat(5 - r); };
+
+  async function fetchRatingMap(ids) {
+    const map = {};
+    if (!ids || !ids.length) return map;
+    const { data } = await supabaseClient.from('reviews').select('reviewee_id, rating').in('reviewee_id', ids);
+    (data || []).forEach(r => {
+      const m = map[r.reviewee_id] || (map[r.reviewee_id] = { sum: 0, count: 0 });
+      m.sum += r.rating; m.count++;
+    });
+    Object.values(map).forEach(m => { m.avg = m.sum / m.count; });
+    return map;
+  }
+  function ratingHtml(m) {
+    return (m && m.count)
+      ? `<span style="color:#ffb703;">★</span> <b>${m.avg.toFixed(1)}</b> <span style="color:#6c6f76;">(후기 ${m.count}개)</span>`
+      : '<span style="color:#6c6f76;">아직 후기가 없어요</span>';
+  }
+  function specialtyTags(list) {
+    return (Array.isArray(list) ? list : []).map(k => `<span class="rv-tag">${esc(REQUEST_TYPE_LABELS[k] || k)}</span>`).join('');
+  }
+
+  function openOverlay(id) { const el = document.getElementById(id); if (el) el.classList.remove('rv-hidden'); }
+  function closeOverlay(id) { const el = document.getElementById(id); if (el) el.classList.add('rv-hidden'); }
+  ['companyDetailOverlay', 'reviewOverlay'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', e => { if (e.target === el) closeOverlay(id); });
+  });
+  const cdClose = document.getElementById('companyDetailClose');
+  if (cdClose) cdClose.onclick = () => closeOverlay('companyDetailOverlay');
+  const rvClose = document.getElementById('reviewClose');
+  if (rvClose) rvClose.onclick = () => closeOverlay('reviewOverlay');
+
+  async function openCompanyDetail(companyId) {
+    const body = document.getElementById('companyDetailBody');
+    if (!body) return;
+    body.innerHTML = '<p class="rv-empty">불러오는 중...</p>';
+    openOverlay('companyDetailOverlay');
+    const { data: p } = await supabaseClient.from('profiles')
+      .select('id, user_type, company_name, phone, intro, specialties, worker_types, career_years, certifications, equipment, service_area, portfolio_photos, completed_count')
+      .eq('id', companyId).maybeSingle();
+    if (!p) { body.innerHTML = '<p class="rv-empty">정보를 불러오지 못했어요.</p>'; return; }
+    const { data: reviews } = await supabaseClient.from('reviews')
+      .select('rating, comment, created_at').eq('reviewee_id', companyId).order('created_at', { ascending: false }).limit(30);
+    const list = reviews || [];
+    const avg = list.length ? list.reduce((a, r) => a + r.rating, 0) / list.length : 0;
+    const title = document.getElementById('companyDetailTitle');
+    const name = p.company_name || (p.user_type === 'worker' ? '구직자' : '업체');
+    if (title) title.innerText = name;
+    const wt = Array.isArray(p.worker_types) ? p.worker_types.join(', ') : (p.worker_types || '');
+    const rows = [
+      ['활동 지역', p.service_area], ['경력', p.career_years ? p.career_years + '년' : ''],
+      ['완료 건수', (p.completed_count || 0) + '건'], ['직종', wt], ['보유 자격증', p.certifications], ['보유 장비', p.equipment]
+    ].filter(r => r[1]).map(r => `<div class="rv-row"><span>${r[0]}</span><span>${esc(r[1])}</span></div>`).join('');
+    const photos = (Array.isArray(p.portfolio_photos) ? p.portfolio_photos : []).filter(Boolean);
+    body.innerHTML = `
+      <div class="rv-card">
+        <div class="rv-name">${esc(name)}</div>
+        <div class="rv-sub">${list.length ? `<span style="color:#ffb703;">★</span> <b>${avg.toFixed(1)}</b> · 후기 ${list.length}개` : '아직 후기가 없어요'}</div>
+        ${p.intro ? `<div style="font-size:13px; color:#23262b; margin-top:10px;">${esc(p.intro)}</div>` : ''}
+        ${(Array.isArray(p.specialties) && p.specialties.length) ? `<div class="rv-tags">${specialtyTags(p.specialties)}</div>` : ''}
+      </div>
+      ${rows ? `<div class="rv-card">${rows}</div>` : ''}
+      ${photos.length ? `<div class="rv-card"><div class="rv-name" style="font-size:14px;">작업 사진</div><div class="rv-photos">${photos.map(u => `<img src="${esc(u)}" alt="작업 사진" data-lightbox="${esc(u)}">`).join('')}</div></div>` : ''}
+      <div class="rv-card">
+        <div class="rv-name" style="font-size:14px;">후기</div>
+        ${list.length ? list.map(r => `
+          <div class="rv-review">
+            <div class="rv-stars">${starsText(r.rating)}</div>
+            ${r.comment ? `<div class="rv-comment">${esc(r.comment)}</div>` : ''}
+            <div class="rv-date">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div>
+          </div>`).join('') : '<p class="rv-empty">아직 등록된 후기가 없어요.</p>'}
+      </div>`;
+    body.querySelectorAll('[data-lightbox]').forEach(img => img.addEventListener('click', () => window.openLightbox(img.dataset.lightbox)));
+  }
+
+  // 완료된 요청에서, 내가 선택했던 업체/구직자에게 평점·후기 남기기
+  async function openReviewModal(requestId) {
+    const body = document.getElementById('reviewBody');
+    if (!body) return;
+    body.innerHTML = '<p class="rv-empty">불러오는 중...</p>';
+    openOverlay('reviewOverlay');
+    const { data: offers } = await supabaseClient.from('offers').select('company_id').eq('request_id', requestId).eq('status', 'selected');
+    const ids = [...new Set((offers || []).map(o => o.company_id))];
+    if (!ids.length) { body.innerHTML = '<p class="rv-empty">후기를 남길 대상이 없어요.</p>'; return; }
+    const { data: profs } = await supabaseClient.from('profiles').select('id, company_name, phone, user_type').in('id', ids);
+    const { data: mine } = await supabaseClient.from('reviews').select('reviewee_id, rating, comment').eq('request_id', requestId).eq('reviewer_id', myPageCurrentUserId);
+    const doneMap = {}; (mine || []).forEach(r => { doneMap[r.reviewee_id] = r; });
+    const nameOf = {}; (profs || []).forEach(p => { nameOf[p.id] = p.company_name || (p.user_type === 'worker' ? '구직자' : '업체'); });
+
+    body.innerHTML = '';
+    ids.forEach(cid => {
+      const card = document.createElement('div');
+      card.className = 'rv-card';
+      const done = doneMap[cid];
+      if (done) {
+        card.innerHTML = `<div class="rv-name" style="font-size:15px;">${esc(nameOf[cid] || '업체')}</div>
+          <div class="rv-stars" style="margin-top:6px;">${starsText(done.rating)}</div>
+          ${done.comment ? `<div class="rv-comment">${esc(done.comment)}</div>` : ''}
+          <div class="rv-date">후기를 남겨주셨어요. 감사합니다.</div>`;
+      } else {
+        card.innerHTML = `<div class="rv-name" style="font-size:15px;">${esc(nameOf[cid] || '업체')}</div>
+          <div class="rv-star-pick" data-rating="0">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" aria-label="${n}점">★</button>`).join('')}</div>
+          <textarea class="rv-textarea" maxlength="500" placeholder="작업은 어떠셨나요? (선택)"></textarea>
+          <button type="button" class="rv-btn">후기 등록</button>`;
+        const pick = card.querySelector('.rv-star-pick');
+        pick.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+          const n = +b.dataset.star; pick.dataset.rating = n;
+          pick.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.star <= n));
+        }));
+        card.querySelector('.rv-btn').addEventListener('click', async (ev) => {
+          const rating = +pick.dataset.rating;
+          if (!rating) { alert('별점을 선택해주세요.'); return; }
+          const btn = ev.currentTarget; btn.disabled = true;
+          const comment = card.querySelector('.rv-textarea').value.trim();
+          const { error } = await supabaseClient.from('reviews').insert({
+            request_id: requestId, reviewer_id: myPageCurrentUserId, reviewee_id: cid, rating, comment: comment || null
+          });
+          if (error) {
+            btn.disabled = false;
+            alert((error.code === '23505') ? '이미 후기를 남기셨어요.' : '후기 등록 중 문제가 발생했어요. 완료된 요청에만 남길 수 있어요.');
+            return;
+          }
+          alert('후기가 등록되었어요. 감사합니다!');
+          await openReviewModal(requestId);
+        });
+      }
+      body.appendChild(card);
+    });
+  }
+
   async function renderMyPageOffersList(requestId) {
     const box = document.getElementById('myPageOffersList');
     const closeBtnWrap = document.getElementById('myPageCloseRecruitWrap');
@@ -1365,8 +1506,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const companyIds = [...new Set(offers.map(o => o.company_id))];
     const { data: companies } = await supabaseClient
       .from('profiles')
-      .select('id, company_name, phone, career_years, completed_count, certifications, equipment')
+      .select('id, company_name, phone, career_years, completed_count, certifications, equipment, intro, specialties, service_area')
       .in('id', companyIds);
+    const ratingMap = await fetchRatingMap(companyIds);
     const companyMap = {};
     (companies || []).forEach(c => companyMap[c.id] = c);
 
@@ -1383,7 +1525,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:15px; font-weight:700; color:#23262b;">${c.company_name || c.phone || '지원자'}</div>
           ${isSelected ? '<span style="font-size:11px; font-weight:700; color:#fff; background:#ff6a3d; padding:3px 10px; border-radius:999px;">선택됨</span>' : ''}
         </div>
-        <div style="font-size:12px; color:#6c6f76; margin-top:2px;">완료 ${c.completed_count || 0}건 · 경력 ${c.career_years || '-'}년</div>
+        <div style="font-size:12.5px; margin-top:3px;">${ratingHtml(ratingMap[o.company_id])}</div>
+        <div style="font-size:12px; color:#6c6f76; margin-top:2px;">완료 ${c.completed_count || 0}건 · 경력 ${c.career_years || '-'}년${c.service_area ? ' · ' + esc(c.service_area) : ''}</div>
+        ${c.intro ? `<div style="font-size:12.5px; color:#23262b; margin-top:6px;">${esc(c.intro)}</div>` : ''}
+        ${(Array.isArray(c.specialties) && c.specialties.length) ? `<div class="rv-tags" style="margin-top:8px;">${specialtyTags(c.specialties)}</div>` : ''}
         ${(c.equipment || c.certifications) ? `<div style="font-size:12px; color:#6c6f76; margin-top:4px;">${c.equipment ? '🛠 ' + c.equipment : ''}${(c.equipment && c.certifications) ? ' · ' : ''}${c.certifications ? '📜 ' + c.certifications : ''}</div>` : ''}
         ${o.note ? `<div style="font-size:12.5px; color:#23262b; margin-top:8px; background:#f0ece2; padding:8px 10px; border-radius:8px;">${o.note}</div>` : ''}
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:12px; padding-top:10px; border-top:1px solid #ddd6c5;">
@@ -1394,11 +1539,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:12px; color:#6c6f76;">가능일: ${o.available_date || '-'}</div>
         </div>
         <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="button" data-company-detail="${o.company_id}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #6c6f76; background:#fff; color:#23262b; font-weight:700; font-size:12.5px; cursor:pointer;">상세 정보</button>
           <button type="button" data-offer-chat="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:1px solid #1d3557; background:#fff; color:#1d3557; font-weight:700; font-size:12.5px; cursor:pointer;">채팅하기</button>
           ${(!isSelected && isOpen) ? `<button type="button" data-choose-offer="${o.id}" style="flex:1; padding:10px; border-radius:8px; border:none; background:#ff6a3d; color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;">선택하기</button>` : ''}
         </div>
       `;
       box.appendChild(card);
+    });
+
+    box.querySelectorAll('[data-company-detail]').forEach(btn => {
+      btn.addEventListener('click', () => openCompanyDetail(btn.dataset.companyDetail));
     });
 
     box.querySelectorAll('[data-offer-chat]').forEach(btn => {
