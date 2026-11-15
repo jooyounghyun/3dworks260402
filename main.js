@@ -783,6 +783,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // 사업자등록번호 형식 + 검증번호(체크섬) 확인
+  function isValidBizNo(v) {
+    const d = String(v || '').replace(/\D/g, '');
+    if (d.length !== 10) return false;
+    const w = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += Number(d[i]) * w[i];
+    sum += Math.floor((Number(d[8]) * 5) / 10);
+    return (10 - (sum % 10)) % 10 === Number(d[9]);
+  }
+  window.isValidBizNo = isValidBizNo;
+
+  // 번호나 업체명을 고치면 진위 확인을 다시 하도록 '다음 단계'를 잠금
+  ['businessNumInput', 'companyNameInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      const nb = document.getElementById('nextToFinalStepFromCompanyBtn');
+      if (nb) nb.disabled = true;
+    });
+  });
+
   // 업체 정보 단계: 사업자번호 확인
   const checkBusinessBtn = document.getElementById('checkBusinessBtn');
   if (checkBusinessBtn) {
@@ -790,6 +811,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const bNum = document.getElementById('businessNumInput').value;
       const cName = document.getElementById('companyNameInput').value;
       if (!cName || !bNum) return alert('정보를 모두 입력해주세요.');
+      if (!isValidBizNo(bNum)) {
+        document.getElementById('nextToFinalStepFromCompanyBtn').disabled = true;
+        return alert('사업자등록번호가 올바르지 않아요. 숫자 10자리를 다시 확인해주세요.');
+      }
 
       const originalText = checkBusinessBtn.innerText;
       checkBusinessBtn.disabled = true;
