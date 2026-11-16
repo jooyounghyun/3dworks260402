@@ -1,3 +1,14 @@
+// 소셜 로그인(카카오/네이버)으로 받은 이름을 여러 위치에서 찾아 돌려줌
+function getSocialName(user) {
+  if (!user) return '';
+  const pick = (m) => m && (m.full_name || m.name || m.nickname || m.preferred_username || m.user_name || '');
+  let n = pick(user.user_metadata);
+  if (!n && Array.isArray(user.identities)) {
+    for (const idn of user.identities) { n = pick(idn && idn.identity_data); if (n) break; }
+  }
+  return n || '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log("3D Resolver JS Loaded!");
 
@@ -133,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         justCreatedType = pendingType;
       }
 
-      const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+      const socialName = getSocialName(session.user);
       const label = (profile && profile.company_name) || (profile && profile.phone) || socialName || '회원';
       authArea.innerHTML = `
         <span style="font-size:14px; color:#23262b;">${label}님</span>
@@ -508,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .maybeSingle();
           const nameField = document.getElementById('manpowerCompanyName');
           const contactField = document.getElementById('manpowerCompanyContact');
-          const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+          const socialName = getSocialName(session.user);
           if (nameField) nameField.value = (profile && profile.company_name) || socialName || '';
           if (contactField) contactField.value = (profile && profile.phone) || '';
         }
@@ -1861,7 +1872,7 @@ document.addEventListener('DOMContentLoaded', () => {
     myPageCurrentUserId = session.user.id;
 
     const typeLabel = { user: '일반 사용자', company: '업체', worker: '일용구직자' }[profile.user_type] || '일반 사용자';
-    const socialName = session.user.user_metadata && (session.user.user_metadata.nickname || session.user.user_metadata.full_name);
+    const socialName = getSocialName(session.user);
     const displayName = profile.company_name || socialName || profile.phone || '회원';
 
     document.getElementById('myPageDisplayName').innerText = displayName + '님';
