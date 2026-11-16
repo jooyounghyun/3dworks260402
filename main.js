@@ -1,3 +1,12 @@
+// 새 문의가 접수되면 관리자에게 푸시 알림 (실패해도 문의 접수 자체엔 영향 없음)
+function notifyAdminNewInquiry(kind) {
+  try {
+    window.supabaseClient.functions.invoke('notify-new-inquiry', { body: { kind } })
+      .then(({ error }) => { if (error) console.error('문의 알림 발송 실패:', error); })
+      .catch(err => console.error('문의 알림 발송 실패:', err));
+  } catch (e) { console.error(e); }
+}
+
 // 소셜 로그인(카카오/네이버)으로 받은 이름을 여러 위치에서 찾아 돌려줌
 function getSocialName(user) {
   if (!user) return '';
@@ -1687,6 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (photoPaths.length) row.photo_urls = photoPaths;
         const { error } = await supabaseClient.from('support_inquiries').insert(row);
         if (error) throw error;
+        notifyAdminNewInquiry('other');
         if (photoInput && photoInput._resetStoredFiles) photoInput._resetStoredFiles();
         alert(wantedCount > photoPaths.length
           ? `문의가 접수되었습니다. (사진 ${wantedCount - photoPaths.length}장은 올리지 못했어요. 필요하면 채팅이나 문의로 다시 보내주세요.)`
@@ -1717,6 +1727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         content: text
       });
       if (error) { alert('문의 등록에 실패했습니다: ' + error.message); return; }
+      notifyAdminNewInquiry('support');
       input.value = '';
       alert('문의가 등록되었습니다. 확인 후 답변드릴게요.');
       renderMyPageSupportHistory(myPageCurrentUserId);

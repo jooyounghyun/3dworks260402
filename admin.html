@@ -67,6 +67,10 @@
   </div>
 
   <div id="adminArea" class="admin-wrap" style="display:none;">
+    <div id="adminNotifyBar" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+      <button type="button" class="filter-btn" id="adminNotifyBtn">🔔 새 문의 알림 켜기</button>
+      <span id="adminNotifyMsg" class="req-meta"></span>
+    </div>
     <div class="admin-tabs">
       <button type="button" class="admin-tab-btn active" data-admin-tab="requests">요청 관리</button>
       <button type="button" class="admin-tab-btn" data-admin-tab="inquiries">문의 관리</button>
@@ -103,6 +107,13 @@
   </div>
 </div>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({ appId: "425deff8-810f-43ff-b711-9264f3fd6b3c" });
+  });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -138,6 +149,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   gateArea.style.display = 'none';
   adminArea.style.display = 'block';
+
+  // --- 새 문의 알림 (관리자 기기 등록) ---
+  const adminNotifyBtn = document.getElementById('adminNotifyBtn');
+  const adminNotifyMsg = document.getElementById('adminNotifyMsg');
+  function showAdminNotifyState(on) {
+    adminNotifyMsg.textContent = on ? '✅ 이 기기로 새 문의 알림을 받고 있어요' : '이 기기는 알림이 꺼져 있어요';
+    adminNotifyBtn.textContent = on ? '🔔 알림 다시 등록' : '🔔 새 문의 알림 켜기';
+  }
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async (OneSignal) => {
+    try {
+      const sub = OneSignal.User.PushSubscription;
+      showAdminNotifyState(!!OneSignal.Notifications.permission && !!(sub && sub.optedIn));
+    } catch (e) { showAdminNotifyState(false); }
+  });
+  adminNotifyBtn.addEventListener('click', () => {
+    OneSignalDeferred.push(async (OneSignal) => {
+      try {
+        await OneSignal.Notifications.requestPermission();
+        if (!OneSignal.Notifications.permission) {
+          adminNotifyMsg.textContent = '알림 권한이 허용되지 않았어요. 브라우저 설정에서 허용해주세요.';
+          return;
+        }
+        const sub = OneSignal.User.PushSubscription;
+        if (sub && sub.optIn) await sub.optIn();
+        OneSignal.User.addTag('admin', '1');
+        showAdminNotifyState(true);
+        alert('이 기기로 새 문의 알림을 받도록 등록했어요.');
+      } catch (err) {
+        adminNotifyMsg.textContent = '알림 설정 중 문제가 발생했어요: ' + (err.message || err);
+      }
+    });
+  });
 
   // --- 탭 전환 ---
   document.querySelectorAll('[data-admin-tab]').forEach(btn => {
