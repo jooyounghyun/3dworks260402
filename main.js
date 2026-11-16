@@ -1984,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveMyPageInfoBtn.onclick = async () => {
       if (!myPageCurrentUserId) return;
       const { data: currentProfile } = await supabaseClient
-        .from('profiles').select('user_type').eq('id', myPageCurrentUserId).maybeSingle();
+        .from('profiles').select('user_type, business_reg_no').eq('id', myPageCurrentUserId).maybeSingle();
 
       const originalText = saveMyPageInfoBtn.innerText;
       saveMyPageInfoBtn.disabled = true;
@@ -1993,6 +1993,27 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const updateFields = { address: document.getElementById('myPageAddress').value };
         if (currentProfile && currentProfile.user_type === 'company') {
+          // 사업자번호를 바꾼 경우에만, 저장 전에 가입 때와 같은 진위 확인을 거침
+          const newBizNo = document.getElementById('myPageBusinessNum').value.trim();
+          const oldDigits = String(currentProfile.business_reg_no || '').replace(/\D/g, '');
+          const newDigits = newBizNo.replace(/\D/g, '');
+          if (newDigits !== oldDigits) {
+            if (!isValidBizNo(newBizNo)) {
+              alert('사업자등록번호가 올바르지 않아요. 숫자 10자리를 다시 확인해주세요.');
+              return;
+            }
+            const { data: vData, error: vError } = await supabaseClient.functions.invoke('verify-business', {
+              body: { businessNumber: newBizNo }
+            });
+            if (vError || (vData && vData.error)) {
+              alert('사업자 정보 확인에 실패했어요. 잠시 후 다시 시도해주세요.');
+              return;
+            }
+            if (!vData || !vData.valid) {
+              alert((vData && vData.message) || '유효하지 않은 사업자등록번호예요. 저장하지 않았어요.');
+              return;
+            }
+          }
           updateFields.company_name = document.getElementById('myPageCompanyName').value;
           updateFields.business_reg_no = document.getElementById('myPageBusinessNum').value;
           updateFields.intro = document.getElementById('myPageIntro').value;
